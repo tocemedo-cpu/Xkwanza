@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { ROLE_LABELS, TrustLevel } from '../types/user';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
+const TRANSPORTER_ROLE = 'TRANSPORTER';
 
 const TRUST_LEVEL_LABELS: Record<TrustLevel, string> = {
   LEVEL_1_CONTACT_VALIDATED: 'Nível 1 — Contacto validado',
@@ -33,25 +34,43 @@ export function Dashboard() {
             <h2 className="font-semibold text-neutral-900">Minha actividade</h2>
           </div>
           <p className="mb-3 text-sm text-neutral-500">
-            {SELLER_ROLES.includes(user.role)
-              ? 'Consulte o seu catálogo e os pedidos recebidos dos compradores.'
-              : 'Explore o marketplace e acompanhe as suas compras.'}
+            {user.role === TRANSPORTER_ROLE
+              ? 'Consulte fretes disponíveis e acompanhe os transportes atribuídos.'
+              : SELLER_ROLES.includes(user.role)
+                ? 'Consulte o seu catálogo e os pedidos recebidos dos compradores.'
+                : 'Explore o marketplace e acompanhe as suas compras.'}
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-xkwanza-600">
-            <Link to="/marketplace" className="hover:underline">
-              Marketplace
-            </Link>
-            <Link to="/meus-pedidos" className="hover:underline">
-              Meus pedidos
-            </Link>
-            {SELLER_ROLES.includes(user.role) && (
+            {user.role === TRANSPORTER_ROLE ? (
               <>
-                <Link to="/meus-produtos" className="hover:underline">
-                  Meus produtos
+                <Link to="/fretes" className="hover:underline">
+                  Fretes disponíveis
                 </Link>
-                <Link to="/pedidos-recebidos" className="hover:underline">
-                  Pedidos recebidos
+                <Link to="/meus-fretes" className="hover:underline">
+                  Meus fretes
                 </Link>
+                <Link to="/meu-perfil-transportador" className="hover:underline">
+                  Meu veículo
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/marketplace" className="hover:underline">
+                  Marketplace
+                </Link>
+                <Link to="/meus-pedidos" className="hover:underline">
+                  Meus pedidos
+                </Link>
+                {SELLER_ROLES.includes(user.role) && (
+                  <>
+                    <Link to="/meus-produtos" className="hover:underline">
+                      Meus produtos
+                    </Link>
+                    <Link to="/pedidos-recebidos" className="hover:underline">
+                      Pedidos recebidos
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </div>

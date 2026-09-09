@@ -21,7 +21,7 @@ Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modula
 
 - [x] **Fase 1 — Fundação**: arquitectura, base de dados, autenticação, perfis, RBAC, segurança
 - [x] **Fase 2 — Marketplace**: categorias, produtos (CRUD, fotos, publicação), pesquisa e filtros, moradas, carrinho, checkout e gestão de pedidos
-- [ ] Fase 3 — Logística (transportadores, propostas, negociação, recolha, entrega, OTP)
+- [x] **Fase 3 — Logística**: perfil de transportador, pedidos de transporte, propostas e negociação, atribuição, recolha e entrega confirmadas por código OTP (recolha visível apenas ao vendedor, entrega apenas ao comprador)
 - [ ] Fase 4 — Pagamentos (XKWANZA Protect, estados, reconciliação)
 - [ ] Fase 5 — Histórico económico (vendas, rendimento, indicadores, reputação)
 - [ ] Fase 6 — Formalização (diagnóstico, dossiê, documentos, etapas, índice)

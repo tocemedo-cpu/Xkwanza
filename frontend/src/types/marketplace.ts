@@ -149,6 +149,7 @@ export interface Order {
   items: OrderItem[];
   shippingAddress: Address;
   statusHistory: OrderStatusEvent[];
+  transportOrder: { id: string; status: string } | null;
   createdAt: string;
   updatedAt: string;
 }

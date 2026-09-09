@@ -5,6 +5,7 @@ import { useCart } from '../hooks/useCart';
 import { ROLE_LABELS } from '../types/user';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
+const TRANSPORTER_ROLE = 'TRANSPORTER';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-1.5 text-sm font-medium ${
@@ -18,6 +19,7 @@ export function DashboardLayout() {
   if (!user) return null;
 
   const isSeller = SELLER_ROLES.includes(user.role);
+  const isTransporter = user.role === TRANSPORTER_ROLE;
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -43,6 +45,19 @@ export function DashboardLayout() {
                 </NavLink>
                 <NavLink to="/pedidos-recebidos" className={navLinkClass}>
                   Pedidos recebidos
+                </NavLink>
+              </>
+            )}
+            {isTransporter && (
+              <>
+                <NavLink to="/fretes" className={navLinkClass}>
+                  Fretes disponíveis
+                </NavLink>
+                <NavLink to="/meus-fretes" className={navLinkClass}>
+                  Meus fretes
+                </NavLink>
+                <NavLink to="/meu-perfil-transportador" className={navLinkClass}>
+                  Meu veículo
                 </NavLink>
               </>
             )}
@@ -87,6 +102,19 @@ export function DashboardLayout() {
               </NavLink>
               <NavLink to="/pedidos-recebidos" className={navLinkClass}>
                 Recebidos
+              </NavLink>
+            </>
+          )}
+          {isTransporter && (
+            <>
+              <NavLink to="/fretes" className={navLinkClass}>
+                Fretes
+              </NavLink>
+              <NavLink to="/meus-fretes" className={navLinkClass}>
+                Meus fretes
+              </NavLink>
+              <NavLink to="/meu-perfil-transportador" className={navLinkClass}>
+                Veículo
               </NavLink>
             </>
           )}

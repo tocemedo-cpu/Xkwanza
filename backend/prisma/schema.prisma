@@ -463,6 +463,7 @@ model Transporter {
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   transportOrders TransportOrder[]
+  proposals       TransportProposal[]
 
   @@map("transporters")
 }
@@ -501,8 +502,10 @@ model TransportProposal {
   createdAt        DateTime @default(now())
 
   transportOrder TransportOrder @relation(fields: [transportOrderId], references: [id], onDelete: Cascade)
+  transporter    Transporter    @relation(fields: [transporterId], references: [id])
 
   @@index([transportOrderId])
+  @@index([transporterId])
   @@map("transport_proposals")
 }
 

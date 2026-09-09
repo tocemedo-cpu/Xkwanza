@@ -14,6 +14,8 @@ import { categoriesRouter } from './modules/categories/categories.routes';
 import { addressesRouter } from './modules/addresses/addresses.routes';
 import { productsRouter } from './modules/products/products.routes';
 import { ordersRouter } from './modules/orders/orders.routes';
+import { transportersRouter } from './modules/transporters/transporters.routes';
+import { transportRouter } from './modules/transport/transport.routes';
 
 export function createApp() {
   const app = express();
@@ -47,6 +49,8 @@ export function createApp() {
   app.use('/api/addresses', addressesRouter);
   app.use('/api/products', productsRouter);
   app.use('/api/orders', ordersRouter);
+  app.use('/api/transporters', transportersRouter);
+  app.use('/api/transport-orders', transportRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

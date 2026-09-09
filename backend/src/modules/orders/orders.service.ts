@@ -9,10 +9,12 @@ const orderInclude = {
   items: { include: { product: { include: { photos: true, owner: { select: { id: true, name: true } } } } } },
   shippingAddress: true,
   statusHistory: { orderBy: { createdAt: 'asc' } },
+  transportOrder: { select: { id: true, status: true } },
 } satisfies Prisma.OrderInclude;
 
-// Estados alcançáveis a partir de cada estado. PICKED_UP/IN_TRANSIT/DELIVERED ficam reservados
-// para a Fase 3 (logística com transportadores) — até lá, o vendedor conclui a entrega directamente.
+// Estados alcançáveis a partir de cada estado. PICKED_UP/IN_TRANSIT/DELIVERED são normalmente
+// avançados pelo módulo de transporte (Fase 3) através do transportador atribuído; READY_FOR_PICKUP
+// -> COMPLETED continua disponível para entregas geridas directamente pelo vendedor, sem transportador.
 const ORDER_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   CREATED: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
   CONFIRMED: [OrderStatus.PREPARING, OrderStatus.CANCELLED],
@@ -163,9 +165,13 @@ export async function updateOrderStatus(
   const isSeller = isSellerOfOrder(order, userId);
 
   const wantsCancel = newStatus === OrderStatus.CANCELLED;
+  // O comprador pode confirmar a recepção (DELIVERED -> COMPLETED); as restantes transições
+  // ficam a cargo do vendedor (entrega directa) ou são avançadas pelo módulo de transporte.
+  const buyerCanComplete = order.status === OrderStatus.DELIVERED && newStatus === OrderStatus.COMPLETED;
+
   if (wantsCancel) {
     if (!isBuyer && !isSeller && !isAdmin) throw ApiError.forbidden('Sem acesso a este pedido');
-  } else if (!isSeller && !isAdmin) {
+  } else if (!isSeller && !isAdmin && !(isBuyer && buyerCanComplete)) {
     throw ApiError.forbidden('Apenas o vendedor pode avançar o estado do pedido');
   }
 

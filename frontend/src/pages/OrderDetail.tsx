@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { fetchOrder, updateOrderStatus } from '../services/ordersService';
+import { requestTransport } from '../services/transportService';
 import { Order, OrderStatus } from '../types/marketplace';
 import { formatKwanza } from '../utils/angola';
 
@@ -23,6 +24,7 @@ const NEXT_STATUS_LABEL: Partial<Record<OrderStatus, string>> = {
 export function OrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -50,6 +52,23 @@ export function OrderDetail() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Não foi possível actualizar o estado.';
+      setError(message);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleRequestTransport() {
+    if (!id) return;
+    setIsUpdating(true);
+    setError(null);
+    try {
+      const transportOrder = await requestTransport(id);
+      navigate(`/fretes/${transportOrder.id}`);
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível solicitar transporte.';
       setError(message);
     } finally {
       setIsUpdating(false);
@@ -115,6 +134,31 @@ export function OrderDetail() {
           {order.shippingAddress.municipality}, {order.shippingAddress.province}
         </p>
         {order.shippingAddress.reference && <p className="text-neutral-500">{order.shippingAddress.reference}</p>}
+      </div>
+
+      <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm">
+        <p className="mb-1 font-semibold text-neutral-900">Transporte</p>
+        {order.transportOrder ? (
+          <Link to={`/fretes/${order.transportOrder.id}`} className="text-xkwanza-600 hover:underline">
+            Acompanhar transporte →
+          </Link>
+        ) : order.status === 'READY_FOR_PICKUP' && (isBuyer || isSeller) ? (
+          <div className="space-y-2">
+            <p className="text-neutral-500">
+              Peça a um transportador XKWANZA para recolher e entregar esta encomenda, com rastreio e código de
+              confirmação.
+            </p>
+            <button
+              disabled={isUpdating}
+              onClick={handleRequestTransport}
+              className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60"
+            >
+              Solicitar transporte XKWANZA
+            </button>
+          </div>
+        ) : (
+          <p className="text-neutral-500">Sem transporte XKWANZA associado a este pedido.</p>
+        )}
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4">
