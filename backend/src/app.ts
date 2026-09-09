@@ -16,6 +16,9 @@ import { productsRouter } from './modules/products/products.routes';
 import { ordersRouter } from './modules/orders/orders.routes';
 import { transportersRouter } from './modules/transporters/transporters.routes';
 import { transportRouter } from './modules/transport/transport.routes';
+import { paymentsRouter } from './modules/payments/payments.routes';
+import { walletRouter } from './modules/wallet/wallet.routes';
+import { bankAccountsRouter } from './modules/bankAccounts/bankAccounts.routes';
 
 export function createApp() {
   const app = express();
@@ -51,6 +54,9 @@ export function createApp() {
   app.use('/api/orders', ordersRouter);
   app.use('/api/transporters', transportersRouter);
   app.use('/api/transport-orders', transportRouter);
+  app.use('/api/payments', paymentsRouter);
+  app.use('/api/wallet', walletRouter);
+  app.use('/api/bank-accounts', bankAccountsRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

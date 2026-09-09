@@ -3,8 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { createAddress, fetchMyAddresses } from '../services/addressesService';
 import { checkout } from '../services/ordersService';
+import { fetchMyWallet } from '../services/walletService';
 import { Address } from '../types/marketplace';
+import { PAYMENT_METHOD_LABELS, PaymentMethod, Wallet } from '../types/payments';
 import { ANGOLA_PROVINCES, formatKwanza } from '../utils/angola';
+
+const CHECKOUT_PAYMENT_METHODS: PaymentMethod[] = ['BANK_TRANSFER', 'PAYMENT_REFERENCE', 'WALLET'];
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
@@ -22,6 +26,9 @@ export function Checkout() {
   const [locality, setLocality] = useState('');
   const [reference, setReference] = useState('');
 
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('BANK_TRANSFER');
+  const [wallet, setWallet] = useState<Wallet | null>(null);
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,6 +38,7 @@ export function Checkout() {
       if (data.length > 0) setSelectedAddressId(data[0].id);
       else setShowNewAddress(true);
     });
+    fetchMyWallet().then(setWallet).catch(() => setWallet(null));
   }, []);
 
   async function handleAddAddress(event: FormEvent) {
@@ -51,6 +59,7 @@ export function Checkout() {
     try {
       const order = await checkout({
         shippingAddressId: selectedAddressId,
+        paymentMethod,
         items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
       });
       clear();
@@ -143,6 +152,29 @@ export function Checkout() {
             </button>
           </form>
         )}
+      </div>
+
+      <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-6">
+        <h2 className="font-semibold text-neutral-900">Método de pagamento</h2>
+        <p className="text-sm text-neutral-500">
+          Os fundos ficam em custódia XKWANZA Protect até confirmar a recepção da encomenda.
+        </p>
+        {CHECKOUT_PAYMENT_METHODS.map((method) => (
+          <label key={method} className="flex items-center gap-3 rounded-md border border-neutral-200 p-3">
+            <input
+              type="radio"
+              name="paymentMethod"
+              checked={paymentMethod === method}
+              onChange={() => setPaymentMethod(method)}
+            />
+            <span className="text-sm text-neutral-700">
+              {PAYMENT_METHOD_LABELS[method]}
+              {method === 'WALLET' && wallet && (
+                <span className="ml-2 text-neutral-500">(saldo: {formatKwanza(Number(wallet.balance))})</span>
+              )}
+            </span>
+          </label>
+        ))}
       </div>
 
       <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-6">

@@ -16,6 +16,9 @@ import { TransporterProfile } from './pages/TransporterProfile';
 import { TransportJobs } from './pages/TransportJobs';
 import { MyTransportJobs } from './pages/MyTransportJobs';
 import { TransportOrderDetail } from './pages/TransportOrderDetail';
+import { Wallet } from './pages/Wallet';
+import { BankAccounts } from './pages/BankAccounts';
+import { AdminPayments } from './pages/AdminPayments';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -23,6 +26,7 @@ import { DashboardLayout } from './layouts/DashboardLayout';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'] as const;
 const TRANSPORTER_ROLES = ['TRANSPORTER'] as const;
+const STAFF_ROLES = ['ADMIN', 'SUPPORT'] as const;
 
 export default function App() {
   return (
@@ -43,6 +47,8 @@ export default function App() {
           <Route path="/meus-pedidos" element={<MyOrders />} />
           <Route path="/pedidos/:id" element={<OrderDetail />} />
           <Route path="/fretes/:id" element={<TransportOrderDetail />} />
+          <Route path="/carteira" element={<Wallet />} />
+          <Route path="/contas-bancarias" element={<BankAccounts />} />
 
           <Route element={<RoleGuard allowedRoles={[...SELLER_ROLES]} />}>
             <Route path="/meus-produtos" element={<MyProducts />} />
@@ -55,6 +61,10 @@ export default function App() {
             <Route path="/meu-perfil-transportador" element={<TransporterProfile />} />
             <Route path="/fretes" element={<TransportJobs />} />
             <Route path="/meus-fretes" element={<MyTransportJobs />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={[...STAFF_ROLES]} />}>
+            <Route path="/admin/pagamentos" element={<AdminPayments />} />
           </Route>
         </Route>
       </Route>

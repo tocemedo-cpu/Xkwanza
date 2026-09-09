@@ -3,8 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { fetchOrder, updateOrderStatus } from '../services/ordersService';
+import { markPaymentSent } from '../services/paymentsService';
 import { requestTransport } from '../services/transportService';
 import { Order, OrderStatus } from '../types/marketplace';
+import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../types/payments';
 import { formatKwanza } from '../utils/angola';
 
 const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -52,6 +54,23 @@ export function OrderDetail() {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
         'Não foi possível actualizar o estado.';
+      setError(message);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleMarkPaymentSent() {
+    if (!id) return;
+    setIsUpdating(true);
+    setError(null);
+    try {
+      const payment = await markPaymentSent(id);
+      setOrder((prev) => (prev ? { ...prev, payment } : prev));
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível assinalar o pagamento.';
       setError(message);
     } finally {
       setIsUpdating(false);
@@ -126,6 +145,32 @@ export function OrderDetail() {
           <span>{formatKwanza(Number(order.total))}</span>
         </div>
       </div>
+
+      {order.payment && (
+        <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm">
+          <p className="mb-1 font-semibold text-neutral-900">Pagamento — XKWANZA Protect</p>
+          <p className="text-neutral-600">
+            {PAYMENT_METHOD_LABELS[order.payment.method]} · {PAYMENT_STATUS_LABELS[order.payment.status]}
+            {order.payment.custodyHeld && ' · fundos em custódia'}
+          </p>
+          {order.payment.externalRef && (
+            <p className="mt-1 text-neutral-500">
+              Referência: <span className="font-mono font-medium text-neutral-800">{order.payment.externalRef}</span>
+            </p>
+          )}
+          {isBuyer &&
+            order.payment.status === 'PENDING' &&
+            (order.payment.method === 'BANK_TRANSFER' || order.payment.method === 'PAYMENT_REFERENCE') && (
+              <button
+                disabled={isUpdating}
+                onClick={handleMarkPaymentSent}
+                className="mt-2 rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60"
+              >
+                Já efectuei o pagamento
+              </button>
+            )}
+        </div>
+      )}
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
         <p className="font-semibold text-neutral-900">Morada de entrega</p>

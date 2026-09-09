@@ -6,6 +6,7 @@ import { ROLE_LABELS } from '../types/user';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
 const TRANSPORTER_ROLE = 'TRANSPORTER';
+const STAFF_ROLES = ['ADMIN', 'SUPPORT'];
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-1.5 text-sm font-medium ${
@@ -20,6 +21,8 @@ export function DashboardLayout() {
 
   const isSeller = SELLER_ROLES.includes(user.role);
   const isTransporter = user.role === TRANSPORTER_ROLE;
+  const isStaff = STAFF_ROLES.includes(user.role);
+  const hasWallet = isSeller || isTransporter;
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -60,6 +63,16 @@ export function DashboardLayout() {
                   Meu veículo
                 </NavLink>
               </>
+            )}
+            {hasWallet && (
+              <NavLink to="/carteira" className={navLinkClass}>
+                Carteira
+              </NavLink>
+            )}
+            {isStaff && (
+              <NavLink to="/admin/pagamentos" className={navLinkClass}>
+                Pagamentos
+              </NavLink>
             )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
@@ -117,6 +130,16 @@ export function DashboardLayout() {
                 Veículo
               </NavLink>
             </>
+          )}
+          {hasWallet && (
+            <NavLink to="/carteira" className={navLinkClass}>
+              Carteira
+            </NavLink>
+          )}
+          {isStaff && (
+            <NavLink to="/admin/pagamentos" className={navLinkClass}>
+              Pagamentos
+            </NavLink>
           )}
         </nav>
       </header>

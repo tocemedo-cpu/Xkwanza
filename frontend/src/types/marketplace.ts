@@ -150,11 +150,13 @@ export interface Order {
   shippingAddress: Address;
   statusHistory: OrderStatusEvent[];
   transportOrder: { id: string; status: string } | null;
+  payment: import('./payments').Payment | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CheckoutPayload {
   shippingAddressId: string;
+  paymentMethod: import('./payments').PaymentMethod;
   items: { productId: string; quantity: number }[];
 }

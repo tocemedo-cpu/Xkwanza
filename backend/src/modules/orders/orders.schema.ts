@@ -1,9 +1,18 @@
 import { z } from 'zod';
-import { OrderStatus } from '@prisma/client';
+import { OrderStatus, PaymentMethod } from '@prisma/client';
+
+// Métodos seleccionáveis pelo comprador no checkout — BANK_INTEGRATION/FINTECH_INTEGRATION
+// ficam reservados para quando existir integração institucional real (Fase 8/9).
+const CHECKOUT_PAYMENT_METHODS = [
+  PaymentMethod.BANK_TRANSFER,
+  PaymentMethod.PAYMENT_REFERENCE,
+  PaymentMethod.WALLET,
+] as const;
 
 export const createOrderSchema = z.object({
   body: z.object({
     shippingAddressId: z.string().uuid(),
+    paymentMethod: z.enum(CHECKOUT_PAYMENT_METHODS),
     items: z
       .array(
         z.object({

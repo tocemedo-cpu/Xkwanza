@@ -1,5 +1,6 @@
+import { randomInt } from 'crypto';
 import { Request } from 'express';
-import { OrderStatus, Prisma, UserRole } from '@prisma/client';
+import { OrderStatus, PaymentMethod, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
@@ -10,7 +11,33 @@ const orderInclude = {
   shippingAddress: true,
   statusHistory: { orderBy: { createdAt: 'asc' } },
   transportOrder: { select: { id: true, status: true } },
+  payment: { include: { statusHistory: { orderBy: { createdAt: 'asc' } } } },
 } satisfies Prisma.OrderInclude;
+
+function generatePaymentReference(): string {
+  return `XKW-${randomInt(0, 100_000_000).toString().padStart(8, '0')}`;
+}
+
+// Agrupa os itens do pedido por vendedor (uma encomenda pode juntar produtos de vários
+// vendedores) e credita a cada um o valor correspondente aos seus itens.
+async function creditSellersForOrder(
+  tx: Prisma.TransactionClient,
+  order: { items: { lineTotal: Prisma.Decimal; product: { ownerId: string } }[] },
+) {
+  const bySeller = new Map<string, Prisma.Decimal>();
+  for (const item of order.items) {
+    const current = bySeller.get(item.product.ownerId) ?? new Prisma.Decimal(0);
+    bySeller.set(item.product.ownerId, current.plus(item.lineTotal));
+  }
+
+  for (const [sellerId, amount] of bySeller.entries()) {
+    await tx.wallet.upsert({
+      where: { userId: sellerId },
+      update: { balance: { increment: amount } },
+      create: { userId: sellerId, balance: amount },
+    });
+  }
+}
 
 // Estados alcançáveis a partir de cada estado. PICKED_UP/IN_TRANSIT/DELIVERED são normalmente
 // avançados pelo módulo de transporte (Fase 3) através do transportador atribuído; READY_FOR_PICKUP
@@ -64,6 +91,9 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
 
   const subtotal = orderItemsData.reduce((sum, item) => sum.plus(item.lineTotal), new Prisma.Decimal(0));
 
+  // XKWANZA Protect: para WALLET o débito é imediato e os fundos ficam logo em custódia;
+  // para BANK_TRANSFER/PAYMENT_REFERENCE não há gateway real — o pagamento fica PENDING até
+  // o comprador assinalar que pagou e o suporte/administração confirmar manualmente o depósito.
   const order = await prisma.$transaction(async (tx) => {
     for (const item of input.items) {
       const result = await tx.product.updateMany({
@@ -75,6 +105,31 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
       }
     }
 
+    let paymentData: Prisma.PaymentCreateWithoutOrderInput;
+    if (input.paymentMethod === PaymentMethod.WALLET) {
+      const wallet = await tx.wallet.findUnique({ where: { userId: buyerId } });
+      if (!wallet || wallet.balance.lessThan(subtotal)) {
+        throw ApiError.badRequest('Saldo insuficiente na carteira XKWANZA');
+      }
+      await tx.wallet.update({ where: { userId: buyerId }, data: { balance: { decrement: subtotal } } });
+      paymentData = {
+        method: PaymentMethod.WALLET,
+        status: PaymentStatus.PAID,
+        amount: subtotal,
+        custodyHeld: true,
+        statusHistory: { create: { status: PaymentStatus.PAID, note: 'Pago com a carteira XKWANZA' } },
+      };
+    } else {
+      paymentData = {
+        method: input.paymentMethod,
+        status: PaymentStatus.PENDING,
+        amount: subtotal,
+        custodyHeld: false,
+        externalRef: input.paymentMethod === PaymentMethod.PAYMENT_REFERENCE ? generatePaymentReference() : undefined,
+        statusHistory: { create: { status: PaymentStatus.PENDING, note: 'Aguarda pagamento' } },
+      };
+    }
+
     const created = await tx.order.create({
       data: {
         buyerId,
@@ -84,6 +139,7 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
         total: subtotal,
         items: { create: orderItemsData },
         statusHistory: { create: { status: OrderStatus.CREATED, note: 'Pedido criado' } },
+        payment: { create: paymentData },
       },
       include: orderInclude,
     });
@@ -180,12 +236,56 @@ export async function updateOrderStatus(
     throw ApiError.badRequest(`Não é possível mudar de "${order.status}" para "${newStatus}"`);
   }
 
+  // XKWANZA Protect: só se confirma o pedido (o vendedor começa a preparar) depois de o
+  // pagamento estar efectivamente pago e em custódia.
+  if (newStatus === OrderStatus.CONFIRMED && order.payment?.status !== PaymentStatus.PAID) {
+    throw ApiError.badRequest('O pagamento ainda não foi confirmado');
+  }
+
   const updated = await prisma.$transaction(async (tx) => {
     if (newStatus === OrderStatus.CANCELLED) {
       // Repõe o stock reservado ao cancelar.
       for (const item of order.items) {
         await tx.product.update({ where: { id: item.productId }, data: { stock: { increment: item.quantity } } });
       }
+
+      if (order.payment) {
+        if (order.payment.status === PaymentStatus.PAID) {
+          // Fundos já em custódia (inclui carteira, já debitada) — devolve ao comprador.
+          if (order.payment.method === PaymentMethod.WALLET) {
+            await tx.wallet.upsert({
+              where: { userId: order.buyerId },
+              update: { balance: { increment: order.payment.amount } },
+              create: { userId: order.buyerId, balance: order.payment.amount },
+            });
+          }
+          await tx.payment.update({
+            where: { orderId },
+            data: {
+              status: PaymentStatus.REFUNDED,
+              custodyHeld: false,
+              statusHistory: { create: { status: PaymentStatus.REFUNDED, note: 'Pedido cancelado' } },
+            },
+          });
+        } else if (order.payment.status === PaymentStatus.PENDING || order.payment.status === PaymentStatus.PROCESSING) {
+          await tx.payment.update({
+            where: { orderId },
+            data: {
+              status: PaymentStatus.CANCELLED,
+              statusHistory: { create: { status: PaymentStatus.CANCELLED, note: 'Pedido cancelado' } },
+            },
+          });
+        }
+      }
+    }
+
+    if (newStatus === OrderStatus.COMPLETED && order.payment?.custodyHeld) {
+      // Liberta a custódia XKWANZA Protect para o(s) vendedor(es) assim que o comprador confirma a recepção.
+      await creditSellersForOrder(tx, order);
+      await tx.payment.update({
+        where: { orderId },
+        data: { custodyHeld: false, releasedAt: new Date() },
+      });
     }
 
     return tx.order.update({
