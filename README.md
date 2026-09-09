@@ -64,7 +64,7 @@ Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render co
 
 1. Cria o projecto em [supabase.com](https://supabase.com) e guarda a password da base de dados.
 2. **Se ainda não colaste `supabase_schema.sql` no SQL Editor do Supabase**, faz isso agora (cria todas as tabelas, enums, índices e triggers).
-3. **Se já colaste esse ficheiro**, o Prisma não sabe que essas migrações já foram aplicadas. Antes do primeiro deploy, marca-as como aplicadas (uma vez só, a partir da tua máquina, sem guardar a ligação em lado nenhum):
+3. **Se já colaste esse ficheiro**, o Prisma não sabe que essas migrações já foram aplicadas. Antes do primeiro deploy, marca-as como aplicadas (uma vez só, a partir da tua máquina, sem guardar a ligação em lado nenhum) — usa sempre a ligação **directa** (porta 5432), nunca o pooler, para isto:
 
    ```bash
    cd backend
@@ -76,11 +76,17 @@ Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render co
 
    Isto não altera dados — só regista no Prisma que essas duas migrações já existem na base de dados, para que `prisma migrate deploy` (correndo automaticamente a cada deploy no Render) não tente recriá-las.
 
+   **Importante:** se este passo não for feito, `prisma migrate deploy` falha em todos os deploys (tenta criar tabelas que já existem), o `startCommand` do Render nunca chega a `npm start`, e por isso a Render nunca vê uma porta aberta ("No open ports detected") mesmo com o build a passar.
+
+4. Vais precisar de **duas** connection strings do Supabase (Project Settings → Database → Connection string):
+   - **Connection pooling** (porta `6543`, modo *Transaction*) → variável `DATABASE_URL`, usada pela app em runtime. Acrescenta `?pgbouncer=true` no fim.
+   - **Direct connection** (porta `5432`) → variável `DIRECT_URL`, usada só pelo `prisma migrate deploy` no arranque de cada deploy. O pgbouncer do pooler não suporta os locks que o Prisma precisa para migrações — sem isto, `prisma migrate deploy` falha ou fica pendurado indefinidamente.
+
 ### 2. Render — backend + frontend
 
 1. No [dashboard do Render](https://dashboard.render.com), **New → Blueprint**, liga este repositório. O Render lê `render.yaml` e propõe criar dois serviços: `xkwanza-backend` (Web Service) e `xkwanza-frontend` (Static Site).
 2. Durante a criação, preenche as variáveis marcadas como manuais:
-   - **`xkwanza-backend`** → `DATABASE_URL` (a connection string do Supabase) e `CORS_ORIGIN` (deixa em branco por agora, ajusta-se no passo 4)
+   - **`xkwanza-backend`** → `DATABASE_URL` (connection pooling, porta 6543, com `?pgbouncer=true`), `DIRECT_URL` (direct connection, porta 5432) e `CORS_ORIGIN` (deixa em branco por agora, ajusta-se no passo 4)
    - **`xkwanza-frontend`** → `VITE_API_URL` (deixa em branco por agora, ajusta-se no passo 3)
    - `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` são gerados automaticamente pelo Render — não precisas de nada aqui.
 3. Depois do backend ficar online, copia o seu URL (ex: `https://xkwanza-backend.onrender.com`) e define no `xkwanza-frontend`: `VITE_API_URL=https://xkwanza-backend.onrender.com/api`. Isto obriga a um novo build do frontend (o Vite embebe esta variável em tempo de build).
