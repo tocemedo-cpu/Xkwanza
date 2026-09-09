@@ -52,20 +52,19 @@ export async function submitDiagnosis(userId: string, input: SubmitDiagnosisInpu
     const record =
       existing ??
       (await tx.formalizationDossier.create({
-        data: { userId, status: FormalizationStatus.ACTIVITY_IDENTIFIED, currentStage: 1, progress: 17 },
+        data: { userId, status: FormalizationStatus.ACTIVITY_IDENTIFIED, currentStage: 1, progress: 0 },
       }));
 
     if (!existing) {
+      // As 6 etapas começam todas por concluir — incluindo a 1 — para que o utilizador
+      // a possa marcar explicitamente através do painel do dossiê (currentStage fica em 1
+      // até essa acção, mantendo a consistência entre currentStage e o estado de cada etapa).
       await tx.formalizationStage.createMany({
         data: Object.entries(STAGE_NAMES).map(([stageNumber, name]) => ({
           dossierId: record.id,
           stageNumber: Number(stageNumber),
           name,
         })),
-      });
-      await tx.formalizationStage.update({
-        where: { dossierId_stageNumber: { dossierId: record.id, stageNumber: 1 } },
-        data: { completed: true, completedAt: new Date() },
       });
     } else if (existing.status === FormalizationStatus.NOT_STARTED) {
       await tx.formalizationDossier.update({
