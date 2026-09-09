@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
+import { OrderReviews } from '../components/OrderReviews';
 import { useAuth } from '../hooks/useAuth';
 import { fetchOrder, updateOrderStatus } from '../services/ordersService';
 import { markPaymentSent } from '../services/paymentsService';
@@ -205,6 +206,8 @@ export function OrderDetail() {
           <p className="text-neutral-500">Sem transporte XKWANZA associado a este pedido.</p>
         )}
       </div>
+
+      {isBuyer && order.status === 'COMPLETED' && <OrderReviews order={order} />}
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4">
         <p className="mb-2 font-semibold text-neutral-900">Histórico</p>

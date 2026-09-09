@@ -65,9 +65,14 @@ export function DashboardLayout() {
               </>
             )}
             {hasWallet && (
-              <NavLink to="/carteira" className={navLinkClass}>
-                Carteira
-              </NavLink>
+              <>
+                <NavLink to="/historico" className={navLinkClass}>
+                  Histórico
+                </NavLink>
+                <NavLink to="/carteira" className={navLinkClass}>
+                  Carteira
+                </NavLink>
+              </>
             )}
             {isStaff && (
               <NavLink to="/admin/pagamentos" className={navLinkClass}>
@@ -132,9 +137,14 @@ export function DashboardLayout() {
             </>
           )}
           {hasWallet && (
-            <NavLink to="/carteira" className={navLinkClass}>
-              Carteira
-            </NavLink>
+            <>
+              <NavLink to="/historico" className={navLinkClass}>
+                Histórico
+              </NavLink>
+              <NavLink to="/carteira" className={navLinkClass}>
+                Carteira
+              </NavLink>
+            </>
           )}
           {isStaff && (
             <NavLink to="/admin/pagamentos" className={navLinkClass}>

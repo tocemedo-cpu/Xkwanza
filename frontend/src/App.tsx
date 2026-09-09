@@ -19,6 +19,7 @@ import { TransportOrderDetail } from './pages/TransportOrderDetail';
 import { Wallet } from './pages/Wallet';
 import { BankAccounts } from './pages/BankAccounts';
 import { AdminPayments } from './pages/AdminPayments';
+import { EconomicHistory } from './pages/EconomicHistory';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -27,6 +28,7 @@ import { DashboardLayout } from './layouts/DashboardLayout';
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'] as const;
 const TRANSPORTER_ROLES = ['TRANSPORTER'] as const;
 const STAFF_ROLES = ['ADMIN', 'SUPPORT'] as const;
+const EARNER_ROLES = ['PRODUCER', 'MERCHANT', 'TRANSPORTER'] as const;
 
 export default function App() {
   return (
@@ -65,6 +67,10 @@ export default function App() {
 
           <Route element={<RoleGuard allowedRoles={[...STAFF_ROLES]} />}>
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={[...EARNER_ROLES]} />}>
+            <Route path="/historico" element={<EconomicHistory />} />
           </Route>
         </Route>
       </Route>

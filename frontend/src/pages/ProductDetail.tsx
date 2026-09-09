@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ShieldCheck, ShoppingCart } from 'lucide-react';
+import { StarRating } from '../components/StarRating';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { fetchProduct } from '../services/productsService';
+import { fetchProductReviews } from '../services/reviewsService';
 import { Product } from '../types/marketplace';
+import { Review } from '../types/reviews';
 import { formatKwanza } from '../utils/angola';
 
 export function ProductDetail() {
@@ -14,6 +17,7 @@ export function ProductDetail() {
   const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
@@ -23,6 +27,9 @@ export function ProductDetail() {
     fetchProduct(id)
       .then(setProduct)
       .catch(() => setError('Produto não encontrado.'));
+    fetchProductReviews(id)
+      .then((result) => setReviews(result.items))
+      .catch(() => setReviews([]));
   }, [id]);
 
   if (error) {
@@ -74,6 +81,12 @@ export function ProductDetail() {
             <p className="text-sm text-neutral-500">
               {product.municipality}, {product.province}
             </p>
+            {Number(product.averageRating) > 0 && (
+              <div className="mt-1 flex items-center gap-2">
+                <StarRating value={Number(product.averageRating)} size={16} />
+                <span className="text-sm text-neutral-500">({reviews.length} avaliações)</span>
+              </div>
+            )}
           </div>
 
           <p className="text-3xl font-bold text-xkwanza-700">
@@ -124,6 +137,23 @@ export function ProductDetail() {
           )}
         </div>
       </div>
+
+      {reviews.length > 0 && (
+        <div className="max-w-2xl space-y-3">
+          <h2 className="font-semibold text-neutral-900">Avaliações</h2>
+          <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
+            {reviews.map((review) => (
+              <div key={review.id} className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-neutral-800">{review.author?.name}</span>
+                  <StarRating value={review.rating} size={14} />
+                </div>
+                {review.comment && <p className="mt-1 text-sm text-neutral-600">{review.comment}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
