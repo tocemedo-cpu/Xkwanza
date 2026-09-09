@@ -55,3 +55,35 @@ npm run dev:backend
 # Frontend (noutro terminal)
 npm run dev:frontend
 ```
+
+## Deploy (Render + Supabase)
+
+Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render como dois serviços definidos em `render.yaml`.
+
+### 1. Supabase — base de dados
+
+1. Cria o projecto em [supabase.com](https://supabase.com) e guarda a password da base de dados.
+2. **Se ainda não colaste `supabase_schema.sql` no SQL Editor do Supabase**, faz isso agora (cria todas as tabelas, enums, índices e triggers).
+3. **Se já colaste esse ficheiro**, o Prisma não sabe que essas migrações já foram aplicadas. Antes do primeiro deploy, marca-as como aplicadas (uma vez só, a partir da tua máquina, sem guardar a ligação em lado nenhum):
+
+   ```bash
+   cd backend
+   DATABASE_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" \
+     npx prisma migrate resolve --applied 20260909194410_init
+   DATABASE_URL="postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres" \
+     npx prisma migrate resolve --applied 20260909200500_formalization_stage_unique
+   ```
+
+   Isto não altera dados — só regista no Prisma que essas duas migrações já existem na base de dados, para que `prisma migrate deploy` (correndo automaticamente a cada deploy no Render) não tente recriá-las.
+
+### 2. Render — backend + frontend
+
+1. No [dashboard do Render](https://dashboard.render.com), **New → Blueprint**, liga este repositório. O Render lê `render.yaml` e propõe criar dois serviços: `xkwanza-backend` (Web Service) e `xkwanza-frontend` (Static Site).
+2. Durante a criação, preenche as variáveis marcadas como manuais:
+   - **`xkwanza-backend`** → `DATABASE_URL` (a connection string do Supabase) e `CORS_ORIGIN` (deixa em branco por agora, ajusta-se no passo 4)
+   - **`xkwanza-frontend`** → `VITE_API_URL` (deixa em branco por agora, ajusta-se no passo 3)
+   - `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` são gerados automaticamente pelo Render — não precisas de nada aqui.
+3. Depois do backend ficar online, copia o seu URL (ex: `https://xkwanza-backend.onrender.com`) e define no `xkwanza-frontend`: `VITE_API_URL=https://xkwanza-backend.onrender.com/api`. Isto obriga a um novo build do frontend (o Vite embebe esta variável em tempo de build).
+4. Depois do frontend ficar online, copia o seu URL (ex: `https://xkwanza-frontend.onrender.com`) e define no `xkwanza-backend`: `CORS_ORIGIN=https://xkwanza-frontend.onrender.com`. Isto reinicia o backend com o CORS correcto.
+
+Cada deploy do backend corre automaticamente `prisma migrate deploy` antes de arrancar o servidor — qualquer migração nova criada localmente (`npx prisma migrate dev`) é aplicada sozinha no próximo deploy.
