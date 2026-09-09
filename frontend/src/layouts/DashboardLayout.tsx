@@ -44,6 +44,9 @@ export function DashboardLayout() {
             <NavLink to="/formalizacao" className={navLinkClass}>
               Formalização
             </NavLink>
+            <NavLink to="/inss" className={navLinkClass}>
+              INSS
+            </NavLink>
             {isSeller && (
               <>
                 <NavLink to="/meus-produtos" className={navLinkClass}>
@@ -85,6 +88,9 @@ export function DashboardLayout() {
                 <NavLink to="/admin/formalizacao" className={navLinkClass}>
                   Formalização (admin)
                 </NavLink>
+                <NavLink to="/admin/inss" className={navLinkClass}>
+                  INSS (admin)
+                </NavLink>
               </>
             )}
           </nav>
@@ -123,6 +129,9 @@ export function DashboardLayout() {
           </NavLink>
           <NavLink to="/formalizacao" className={navLinkClass}>
             Formalização
+          </NavLink>
+          <NavLink to="/inss" className={navLinkClass}>
+            INSS
           </NavLink>
           {isSeller && (
             <>
@@ -164,6 +173,9 @@ export function DashboardLayout() {
               </NavLink>
               <NavLink to="/admin/formalizacao" className={navLinkClass}>
                 Formalização (admin)
+              </NavLink>
+              <NavLink to="/admin/inss" className={navLinkClass}>
+                INSS (admin)
               </NavLink>
             </>
           )}

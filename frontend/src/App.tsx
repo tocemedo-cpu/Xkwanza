@@ -23,6 +23,8 @@ import { EconomicHistory } from './pages/EconomicHistory';
 import { Formalization } from './pages/Formalization';
 import { FormalizationDiagnosis } from './pages/FormalizationDiagnosis';
 import { AdminFormalization } from './pages/AdminFormalization';
+import { INSS } from './pages/INSS';
+import { AdminINSS } from './pages/AdminINSS';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -56,6 +58,7 @@ export default function App() {
           <Route path="/contas-bancarias" element={<BankAccounts />} />
           <Route path="/formalizacao" element={<Formalization />} />
           <Route path="/formalizacao/diagnostico" element={<FormalizationDiagnosis />} />
+          <Route path="/inss" element={<INSS />} />
 
           <Route element={<RoleGuard allowedRoles={[...SELLER_ROLES]} />}>
             <Route path="/meus-produtos" element={<MyProducts />} />
@@ -73,6 +76,7 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={[...STAFF_ROLES]} />}>
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/formalizacao" element={<AdminFormalization />} />
+            <Route path="/admin/inss" element={<AdminINSS />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={[...EARNER_ROLES]} />}>
