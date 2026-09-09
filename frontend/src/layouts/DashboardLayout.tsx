@@ -41,6 +41,9 @@ export function DashboardLayout() {
             <NavLink to="/meus-pedidos" className={navLinkClass}>
               Meus pedidos
             </NavLink>
+            <NavLink to="/formalizacao" className={navLinkClass}>
+              Formalização
+            </NavLink>
             {isSeller && (
               <>
                 <NavLink to="/meus-produtos" className={navLinkClass}>
@@ -75,9 +78,14 @@ export function DashboardLayout() {
               </>
             )}
             {isStaff && (
-              <NavLink to="/admin/pagamentos" className={navLinkClass}>
-                Pagamentos
-              </NavLink>
+              <>
+                <NavLink to="/admin/pagamentos" className={navLinkClass}>
+                  Pagamentos
+                </NavLink>
+                <NavLink to="/admin/formalizacao" className={navLinkClass}>
+                  Formalização (admin)
+                </NavLink>
+              </>
             )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
@@ -113,6 +121,9 @@ export function DashboardLayout() {
           <NavLink to="/meus-pedidos" className={navLinkClass}>
             Pedidos
           </NavLink>
+          <NavLink to="/formalizacao" className={navLinkClass}>
+            Formalização
+          </NavLink>
           {isSeller && (
             <>
               <NavLink to="/meus-produtos" className={navLinkClass}>
@@ -147,9 +158,14 @@ export function DashboardLayout() {
             </>
           )}
           {isStaff && (
-            <NavLink to="/admin/pagamentos" className={navLinkClass}>
-              Pagamentos
-            </NavLink>
+            <>
+              <NavLink to="/admin/pagamentos" className={navLinkClass}>
+                Pagamentos
+              </NavLink>
+              <NavLink to="/admin/formalizacao" className={navLinkClass}>
+                Formalização (admin)
+              </NavLink>
+            </>
           )}
         </nav>
       </header>

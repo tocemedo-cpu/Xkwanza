@@ -625,7 +625,7 @@ model FormalizationStage {
 
   dossier FormalizationDossier @relation(fields: [dossierId], references: [id], onDelete: Cascade)
 
-  @@index([dossierId])
+  @@unique([dossierId, stageNumber])
   @@map("formalization_stages")
 }
 

@@ -20,6 +20,9 @@ import { Wallet } from './pages/Wallet';
 import { BankAccounts } from './pages/BankAccounts';
 import { AdminPayments } from './pages/AdminPayments';
 import { EconomicHistory } from './pages/EconomicHistory';
+import { Formalization } from './pages/Formalization';
+import { FormalizationDiagnosis } from './pages/FormalizationDiagnosis';
+import { AdminFormalization } from './pages/AdminFormalization';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -51,6 +54,8 @@ export default function App() {
           <Route path="/fretes/:id" element={<TransportOrderDetail />} />
           <Route path="/carteira" element={<Wallet />} />
           <Route path="/contas-bancarias" element={<BankAccounts />} />
+          <Route path="/formalizacao" element={<Formalization />} />
+          <Route path="/formalizacao/diagnostico" element={<FormalizationDiagnosis />} />
 
           <Route element={<RoleGuard allowedRoles={[...SELLER_ROLES]} />}>
             <Route path="/meus-produtos" element={<MyProducts />} />
@@ -67,6 +72,7 @@ export default function App() {
 
           <Route element={<RoleGuard allowedRoles={[...STAFF_ROLES]} />}>
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
+            <Route path="/admin/formalizacao" element={<AdminFormalization />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={[...EARNER_ROLES]} />}>

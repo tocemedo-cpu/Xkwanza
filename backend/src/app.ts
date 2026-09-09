@@ -21,6 +21,7 @@ import { walletRouter } from './modules/wallet/wallet.routes';
 import { bankAccountsRouter } from './modules/bankAccounts/bankAccounts.routes';
 import { reviewsRouter } from './modules/reviews/reviews.routes';
 import { economicsRouter } from './modules/economics/economics.routes';
+import { formalizationRouter } from './modules/formalization/formalization.routes';
 
 export function createApp() {
   const app = express();
@@ -61,6 +62,7 @@ export function createApp() {
   app.use('/api/bank-accounts', bankAccountsRouter);
   app.use('/api/reviews', reviewsRouter);
   app.use('/api/economics', economicsRouter);
+  app.use('/api/formalization', formalizationRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
