@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm install && npm run build --workspace=backend
+    buildCommand: npm install --include=dev && npm run build --workspace=backend
     startCommand: npm run prisma:deploy --workspace=backend && npm start --workspace=backend
     healthCheckPath: /health
     envVars:
@@ -38,7 +38,7 @@ services:
   - type: web
     name: xkwanza-frontend
     runtime: static
-    buildCommand: npm install && npm run build --workspace=frontend
+    buildCommand: npm install --include=dev && npm run build --workspace=frontend
     staticPublishPath: frontend/dist
     envVars:
       - key: VITE_API_URL
