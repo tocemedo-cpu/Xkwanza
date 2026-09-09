@@ -1,0 +1,129 @@
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ShieldCheck, ShoppingCart } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
+import { fetchProduct } from '../services/productsService';
+import { Product } from '../types/marketplace';
+import { formatKwanza } from '../utils/angola';
+
+export function ProductDetail() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addItem } = useCart();
+
+  const [product, setProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    fetchProduct(id)
+      .then(setProduct)
+      .catch(() => setError('Produto não encontrado.'));
+  }, [id]);
+
+  if (error) {
+    return <p className="text-neutral-500">{error}</p>;
+  }
+
+  if (!product) {
+    return <p className="text-neutral-500">A carregar...</p>;
+  }
+
+  const isOwnProduct = user?.id === product.ownerId;
+
+  function handleAddToCart() {
+    if (!product) return;
+    addItem(product, quantity);
+    setAdded(true);
+  }
+
+  return (
+    <div className="space-y-6">
+      <Link to="/marketplace" className="text-sm text-xkwanza-600 hover:underline">
+        ← Voltar ao marketplace
+      </Link>
+
+      <div className="grid gap-6 sm:grid-cols-2">
+        <div className="space-y-2">
+          <div className="aspect-square overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
+            {product.photos[0] ? (
+              <img src={product.photos[0].url} alt={product.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-neutral-400">Sem foto</div>
+            )}
+          </div>
+          {product.photos.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {product.photos.slice(1).map((photo) => (
+                <div key={photo.id} className="aspect-square overflow-hidden rounded-md border border-neutral-200">
+                  <img src={photo.url} alt={product.name} className="h-full w-full object-cover" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-neutral-500">{product.category.name}</p>
+            <h1 className="text-2xl font-bold text-neutral-900">{product.name}</h1>
+            <p className="text-sm text-neutral-500">
+              {product.municipality}, {product.province}
+            </p>
+          </div>
+
+          <p className="text-3xl font-bold text-xkwanza-700">
+            {formatKwanza(Number(product.price))}
+            <span className="ml-1 text-base font-normal text-neutral-500">/{product.unit}</span>
+          </p>
+
+          <p className="whitespace-pre-line text-neutral-700">{product.description}</p>
+
+          <div className="flex items-center gap-2 text-sm text-neutral-600">
+            <span className="font-medium">{product.owner.name}</span>
+            {product.owner.isVerifiedBadge && <ShieldCheck size={16} className="text-xkwanza-600" />}
+          </div>
+
+          <p className="text-sm text-neutral-500">
+            {product.stock > 0 ? `${product.stock} ${product.unit} disponíveis` : 'Sem stock disponível'}
+          </p>
+
+          {isOwnProduct ? (
+            <p className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">Este é o seu produto.</p>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-neutral-700">Quantidade</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={product.stock}
+                  value={quantity}
+                  onChange={(e) => setQuantity(Math.min(Math.max(1, Number(e.target.value)), product.stock))}
+                  className="w-20 rounded-md border border-neutral-300 px-2 py-1"
+                />
+              </div>
+              <button
+                disabled={product.stock === 0}
+                onClick={handleAddToCart}
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700 disabled:opacity-50"
+              >
+                <ShoppingCart size={18} />
+                Adicionar ao carrinho
+              </button>
+              {added && (
+                <button onClick={() => navigate('/carrinho')} className="w-full text-center text-sm text-xkwanza-600 hover:underline">
+                  Adicionado. Ir para o carrinho →
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

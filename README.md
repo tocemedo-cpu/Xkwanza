@@ -20,7 +20,7 @@ Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modula
 ## Estado do desenvolvimento (por fases)
 
 - [x] **Fase 1 — Fundação**: arquitectura, base de dados, autenticação, perfis, RBAC, segurança
-- [ ] Fase 2 — Marketplace (produtos, categorias, pesquisa, carrinho, checkout, pedidos)
+- [x] **Fase 2 — Marketplace**: categorias, produtos (CRUD, fotos, publicação), pesquisa e filtros, moradas, carrinho, checkout e gestão de pedidos
 - [ ] Fase 3 — Logística (transportadores, propostas, negociação, recolha, entrega, OTP)
 - [ ] Fase 4 — Pagamentos (XKWANZA Protect, estados, reconciliação)
 - [ ] Fase 5 — Histórico económico (vendas, rendimento, indicadores, reputação)

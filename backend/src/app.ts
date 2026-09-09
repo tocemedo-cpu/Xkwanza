@@ -10,6 +10,10 @@ import { apiRateLimiter } from './security/rateLimit';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 import { authRouter } from './modules/auth/auth.routes';
 import { usersRouter } from './modules/users/users.routes';
+import { categoriesRouter } from './modules/categories/categories.routes';
+import { addressesRouter } from './modules/addresses/addresses.routes';
+import { productsRouter } from './modules/products/products.routes';
+import { ordersRouter } from './modules/orders/orders.routes';
 
 export function createApp() {
   const app = express();
@@ -39,6 +43,10 @@ export function createApp() {
 
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
+  app.use('/api/categories', categoriesRouter);
+  app.use('/api/addresses', addressesRouter);
+  app.use('/api/products', productsRouter);
+  app.use('/api/orders', ordersRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

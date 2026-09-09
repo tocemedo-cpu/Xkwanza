@@ -1,6 +1,9 @@
+import { Link } from 'react-router-dom';
 import { ShieldCheck, TrendingUp, FileCheck2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { ROLE_LABELS, TrustLevel } from '../types/user';
+
+const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
 
 const TRUST_LEVEL_LABELS: Record<TrustLevel, string> = {
   LEVEL_1_CONTACT_VALIDATED: 'Nível 1 — Contacto validado',
@@ -29,10 +32,29 @@ export function Dashboard() {
             <TrendingUp size={18} />
             <h2 className="font-semibold text-neutral-900">Minha actividade</h2>
           </div>
-          <p className="text-sm text-neutral-500">
-            Vendas, compras, rendimento, pedidos e entregas ficarão disponíveis à medida que o marketplace for
-            activado (Fase 2).
+          <p className="mb-3 text-sm text-neutral-500">
+            {SELLER_ROLES.includes(user.role)
+              ? 'Consulte o seu catálogo e os pedidos recebidos dos compradores.'
+              : 'Explore o marketplace e acompanhe as suas compras.'}
           </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-xkwanza-600">
+            <Link to="/marketplace" className="hover:underline">
+              Marketplace
+            </Link>
+            <Link to="/meus-pedidos" className="hover:underline">
+              Meus pedidos
+            </Link>
+            {SELLER_ROLES.includes(user.role) && (
+              <>
+                <Link to="/meus-produtos" className="hover:underline">
+                  Meus produtos
+                </Link>
+                <Link to="/pedidos-recebidos" className="hover:underline">
+                  Pedidos recebidos
+                </Link>
+              </>
+            )}
+          </div>
         </div>
 
         <div className="rounded-xl border border-neutral-200 bg-white p-5">
