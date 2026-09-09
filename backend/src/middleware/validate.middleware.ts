@@ -8,7 +8,11 @@ export function validate(schema: AnyZodObject) {
     if (!result.success) {
       return next(result.error);
     }
+    // Reatribui os valores coagidos/com defaults do Zod (ex: paginação) — sem isto, filtros e
+    // defaults definidos no schema nunca chegam ao controller/serviço.
     if (result.data.body) req.body = result.data.body;
+    if (result.data.query) Object.assign(req.query, result.data.query);
+    if (result.data.params) Object.assign(req.params, result.data.params);
     next();
   };
 }
