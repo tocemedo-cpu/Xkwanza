@@ -1,0 +1,830 @@
+// XKWANZA — Modelo de dados (Fase 1: Fundação)
+// Nunca criar entidades empresariais (Company, CompanyMember, etc).
+// Dados INSS são sempre MOCK/SANDBOX até existir integração institucional oficial.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  BUYER // Comprador
+  PRODUCER // Produtor
+  MERCHANT // Comerciante
+  TRANSPORTER // Transportador
+  ADMIN // Administrador
+  SUPPORT // Suporte
+}
+
+enum TrustLevel {
+  LEVEL_1_CONTACT_VALIDATED
+  LEVEL_2_IDENTITY_VALIDATED
+  LEVEL_3_ACTIVITY_VALIDATED
+  LEVEL_4_DOCUMENTS_VALIDATED
+  LEVEL_5_FORMALIZATION_VALIDATED
+}
+
+enum ActivityType {
+  AGRICULTOR
+  PESCADOR
+  FABRICANTE
+  ARTESAO
+  CRIADOR
+  PRODUTOR_ALIMENTAR
+  COMERCIANTE_MERCADO
+  COMERCIANTE_RUA
+  REVENDEDOR
+  PRESTADOR_SERVICOS
+  TRANSPORTADOR
+  OUTRO
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+  OUT_OF_STOCK
+  REMOVED
+}
+
+enum OrderStatus {
+  CREATED
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  COMPLETED
+  CANCELLED
+}
+
+enum TransportStatus {
+  REQUESTED
+  ASSIGNED
+  ACCEPTED
+  PICKUP
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  PAYMENT_REFERENCE
+  WALLET
+  BANK_INTEGRATION
+  FINTECH_INTEGRATION
+}
+
+enum QuoteStatus {
+  OPEN
+  PROPOSALS_RECEIVED
+  NEGOTIATING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
+}
+
+enum FormalizationStatus {
+  NOT_STARTED
+  ACTIVITY_IDENTIFIED
+  IDENTITY_VALIDATED
+  TAX_NIF_IN_PROGRESS
+  SOCIAL_SECURITY_IN_PROGRESS
+  DOCUMENTATION_IN_PROGRESS
+  COMPLETED
+}
+
+enum INSSStatus {
+  NOT_STARTED
+  CONSENT_PENDING
+  READY
+  SUBMITTED
+  INSS_PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_CORRECTION
+  SUSPENDED
+  EXPIRED
+}
+
+enum INSSAdapterMode {
+  SANDBOX
+  PRODUCTION
+}
+
+enum DocumentType {
+  IDENTITY
+  DELIVERY_PROOF
+  VEHICLE_DOCUMENT
+  RECEIPT
+  OTHER
+}
+
+enum DocumentStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+}
+
+enum NotificationType {
+  NEW_ORDER
+  ORDER_ACCEPTED
+  ORDER_REJECTED
+  PAYMENT
+  TRANSPORT
+  PICKUP
+  DELIVERY
+  DOCUMENT_PENDING
+  FORMALIZATION
+  INSS
+  STATUS_CHANGE
+}
+
+enum ReviewTargetType {
+  SELLER
+  PRODUCT
+  TRANSPORTER
+  BUYER
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_USER
+  RESOLVED
+  CLOSED
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// UTILIZADOR E IDENTIDADE
+// ─────────────────────────────────────────────────────────────────────────
+
+model User {
+  id                String     @id @default(uuid())
+  name              String
+  phone             String     @unique // formato +244XXXXXXXXX
+  email             String?    @unique
+  passwordHash      String
+  role              UserRole
+  province          String
+  municipality       String
+  activityType       ActivityType?
+  trustLevel        TrustLevel @default(LEVEL_1_CONTACT_VALIDATED)
+  isVerifiedBadge   Boolean    @default(false) // Selo XKWANZA Verificado — só true quando critérios reais forem cumpridos
+  isActive          Boolean    @default(true)
+  mfaEnabled        Boolean    @default(false) // preparado para futura implementação
+  mfaSecret         String?
+  phoneVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  refreshTokens        RefreshToken[]
+  addresses             Address[]
+  products              Product[]              @relation("ProductOwner")
+  buyerOrders           Order[]                @relation("OrderBuyer")
+  transporterProfile    Transporter?
+  quoteRequests         QuoteRequest[]         @relation("QuoteRequester")
+  quoteProposals        QuoteProposal[]        @relation("QuoteProposer")
+  formalizationDossier   FormalizationDossier?
+  inssLinkage            INSSLinkage?
+  documents              Document[]
+  notifications          Notification[]
+  reviewsGiven           Review[]               @relation("ReviewAuthor")
+  bankAccounts           BankAccount[]
+  wallet                 Wallet?
+  supportTicketsOpened   SupportTicket[]        @relation("SupportRequester")
+  supportTicketsHandled  SupportTicket[]        @relation("SupportAgent")
+  auditLogs              AuditLog[]
+
+  @@index([role])
+  @@index([province, municipality])
+  @@map("users")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  replacedBy String?
+  createdByIp String?
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  label        String?
+  province     String
+  municipality String
+  locality     String?
+  reference    String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[] @relation("OrderShippingAddress")
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// MARKETPLACE
+// ─────────────────────────────────────────────────────────────────────────
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  slug     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id            String        @id @default(uuid())
+  ownerId       String
+  categoryId    String
+  name          String
+  description   String
+  price         Decimal       @db.Decimal(14, 2)
+  unit          String // ex: kg, unidade, litro
+  stock         Int           @default(0)
+  weightKg      Decimal?      @db.Decimal(10, 3)
+  origin        String?
+  province      String
+  municipality  String
+  status        ProductStatus @default(DRAFT)
+  isVerified    Boolean       @default(false)
+  averageRating Decimal       @default(0) @db.Decimal(3, 2)
+  photos        ProductPhoto[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  owner      User            @relation("ProductOwner", fields: [ownerId], references: [id])
+  category   Category        @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+  quoteRequests QuoteRequest[]
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("products")
+}
+
+model ProductPhoto {
+  id        String   @id @default(uuid())
+  productId String
+  url       String
+  uploadedComplete Boolean @default(false) // publicação bloqueada até upload terminar com sucesso
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_photos")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PEDIDOS
+// ─────────────────────────────────────────────────────────────────────────
+
+model Order {
+  id                String      @id @default(uuid())
+  buyerId           String
+  shippingAddressId String
+  status            OrderStatus @default(CREATED)
+  subtotal          Decimal     @db.Decimal(14, 2)
+  transportCost     Decimal     @default(0) @db.Decimal(14, 2)
+  total             Decimal     @db.Decimal(14, 2)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  buyer           User             @relation("OrderBuyer", fields: [buyerId], references: [id])
+  shippingAddress Address          @relation("OrderShippingAddress", fields: [shippingAddressId], references: [id])
+  items           OrderItem[]
+  payment         Payment?
+  transportOrder  TransportOrder?
+  reviews         Review[]
+  statusHistory   OrderStatusEvent[]
+
+  @@index([buyerId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderStatusEvent {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_status_events")
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(14, 2)
+  lineTotal Decimal @db.Decimal(14, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PAGAMENTOS — XKWANZA PROTECT
+// ─────────────────────────────────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(uuid())
+  orderId       String        @unique
+  method        PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(14, 2)
+  currency      String        @default("AOA")
+  custodyHeld   Boolean       @default(false) // XKWANZA Protect: fundos em custódia até confirmação de entrega
+  releasedAt    DateTime?
+  externalRef   String? // referência do provedor externo real, quando existir
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order         Order          @relation(fields: [orderId], references: [id])
+  statusHistory PaymentStatusEvent[]
+
+  @@index([status])
+  @@map("payments")
+}
+
+model PaymentStatusEvent {
+  id        String        @id @default(uuid())
+  paymentId String
+  status    PaymentStatus
+  note      String?
+  createdAt DateTime      @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentId])
+  @@map("payment_status_events")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Decimal  @default(0) @db.Decimal(14, 2)
+  currency  String   @default("AOA")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model BankAccount {
+  id            String   @id @default(uuid())
+  userId        String
+  bankName      String
+  iban          String?
+  accountHolder String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("bank_accounts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// LOGÍSTICA
+// ─────────────────────────────────────────────────────────────────────────
+
+model Transporter {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  vehicleType    String?
+  vehiclePlate   String?
+  isAvailable    Boolean  @default(true)
+  averageRating  Decimal  @default(0) @db.Decimal(3, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transportOrders TransportOrder[]
+
+  @@map("transporters")
+}
+
+model TransportOrder {
+  id             String          @id @default(uuid())
+  orderId        String          @unique
+  transporterId  String?
+  status         TransportStatus @default(REQUESTED)
+  proposedPrice  Decimal?        @db.Decimal(14, 2)
+  agreedPrice    Decimal?        @db.Decimal(14, 2)
+  pickupOtp      String?
+  pickupAt       DateTime?
+  deliveryOtp    String?
+  deliveredAt    DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  order       Order              @relation(fields: [orderId], references: [id])
+  transporter Transporter?       @relation(fields: [transporterId], references: [id])
+  proposals   TransportProposal[]
+  statusHistory TransportStatusEvent[]
+
+  @@index([status])
+  @@index([transporterId])
+  @@map("transport_orders")
+}
+
+model TransportProposal {
+  id               String   @id @default(uuid())
+  transportOrderId String
+  transporterId    String
+  price            Decimal  @db.Decimal(14, 2)
+  message          String?
+  accepted         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  transportOrder TransportOrder @relation(fields: [transportOrderId], references: [id], onDelete: Cascade)
+
+  @@index([transportOrderId])
+  @@map("transport_proposals")
+}
+
+model TransportStatusEvent {
+  id               String          @id @default(uuid())
+  transportOrderId String
+  status           TransportStatus
+  note             String?
+  createdAt        DateTime        @default(now())
+
+  transportOrder TransportOrder @relation(fields: [transportOrderId], references: [id], onDelete: Cascade)
+
+  @@index([transportOrderId])
+  @@map("transport_status_events")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COTAÇÕES
+// ─────────────────────────────────────────────────────────────────────────
+
+model QuoteRequest {
+  id          String      @id @default(uuid())
+  requesterId String
+  productId   String?
+  description String
+  quantity    Decimal     @db.Decimal(14, 3)
+  deadline    DateTime?
+  status      QuoteStatus @default(OPEN)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  requester User            @relation("QuoteRequester", fields: [requesterId], references: [id])
+  product   Product?        @relation(fields: [productId], references: [id])
+  proposals QuoteProposal[]
+
+  @@index([requesterId])
+  @@index([status])
+  @@map("quote_requests")
+}
+
+model QuoteProposal {
+  id             String   @id @default(uuid())
+  quoteRequestId String
+  proposerId     String
+  price          Decimal  @db.Decimal(14, 2)
+  message        String?
+  accepted       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  quoteRequest QuoteRequest @relation(fields: [quoteRequestId], references: [id], onDelete: Cascade)
+  proposer     User         @relation("QuoteProposer", fields: [proposerId], references: [id])
+
+  @@index([quoteRequestId])
+  @@map("quote_proposals")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FORMALIZAÇÃO
+// ─────────────────────────────────────────────────────────────────────────
+
+model FormalizationDossier {
+  id             String              @id @default(uuid())
+  userId         String              @unique
+  status         FormalizationStatus @default(NOT_STARTED)
+  activityType   ActivityType?
+  businessName   String?
+  province       String?
+  municipality   String?
+  marketLocation String?
+  nif            String?
+  niss           String?
+  currentStage   Int                 @default(1) // 1..6
+  progress       Int                 @default(0) // índice de formalização 0-100
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user            User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stages          FormalizationStage[]
+  diagnosis       FormalizationDiagnosis?
+  documents       Document[]
+
+  @@map("formalization_dossiers")
+}
+
+model FormalizationDiagnosis {
+  id               String   @id @default(uuid())
+  dossierId        String   @unique
+  activityDescription String
+  workLocation     String
+  hasNif           Boolean
+  hasInss          Boolean
+  worksAlone       Boolean
+  hasHelpers       Boolean
+  sellsInMarket    Boolean
+  worksOnStreet    Boolean
+  worksFromHome    Boolean
+  worksOnFarm      Boolean
+  doesDeliveries   Boolean
+  usesOwnVehicle   Boolean
+  suggestedNextStep String
+  createdAt        DateTime @default(now())
+
+  dossier FormalizationDossier @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  @@map("formalization_diagnoses")
+}
+
+model FormalizationStage {
+  id          String    @id @default(uuid())
+  dossierId   String
+  stageNumber Int // 1-6
+  name        String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  dossier FormalizationDossier @relation(fields: [dossierId], references: [id], onDelete: Cascade)
+
+  @@index([dossierId])
+  @@map("formalization_stages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// INSS — sempre via INSSAdapter (Sandbox/Mock até integração oficial)
+// ─────────────────────────────────────────────────────────────────────────
+
+model INSSLinkage {
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  niss         String? // apenas quando fornecido/validado oficialmente — nunca inventado
+  status       INSSStatus @default(NOT_STARTED)
+  adapterMode  INSSAdapterMode @default(SANDBOX)
+  lastSyncedAt DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consents    INSSConsent[]
+  syncEvents  INSSSyncEvent[]
+  documents   INSSDocument[]
+  simulations INSSSimulation[]
+
+  @@map("inss_linkages")
+}
+
+model INSSConsent {
+  id             String    @id @default(uuid())
+  linkageId      String
+  purpose        String
+  authorizedData String[] // campos/finalidades autorizadas
+  version        String
+  grantedAt      DateTime  @default(now())
+  expiresAt      DateTime?
+  revokedAt      DateTime?
+  origin         String // ex: web, mobile
+  ipAddress      String?
+
+  linkage INSSLinkage @relation(fields: [linkageId], references: [id], onDelete: Cascade)
+
+  @@index([linkageId])
+  @@map("inss_consents")
+}
+
+model INSSSyncEvent {
+  id         String   @id @default(uuid())
+  linkageId  String
+  eventType  String
+  payload    Json?
+  adapterMode INSSAdapterMode
+  success    Boolean
+  message    String?
+  createdAt  DateTime @default(now())
+
+  linkage INSSLinkage @relation(fields: [linkageId], references: [id], onDelete: Cascade)
+
+  @@index([linkageId])
+  @@map("inss_sync_events")
+}
+
+model INSSDocument {
+  id         String         @id @default(uuid())
+  linkageId  String
+  type       DocumentType
+  fileUrl    String
+  status     DocumentStatus @default(PENDING)
+  uploadedAt DateTime       @default(now())
+  verifiedAt DateTime?
+
+  linkage INSSLinkage @relation(fields: [linkageId], references: [id], onDelete: Cascade)
+
+  @@index([linkageId])
+  @@map("inss_documents")
+}
+
+model INSSSimulation {
+  id                 String   @id @default(uuid())
+  linkageId          String
+  declaredBase       Decimal  @db.Decimal(14, 2)
+  contributionRate   Decimal  @db.Decimal(5, 2)
+  monthlyContribution Decimal @db.Decimal(14, 2)
+  annualContribution  Decimal @db.Decimal(14, 2)
+  regime             String
+  isSimulationOnly   Boolean  @default(true) // sempre true — "SIMULAÇÃO — NÃO É UMA GUIA DE PAGAMENTO"
+  createdAt          DateTime @default(now())
+
+  linkage INSSLinkage @relation(fields: [linkageId], references: [id], onDelete: Cascade)
+
+  @@index([linkageId])
+  @@map("inss_simulations")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DOCUMENTOS
+// ─────────────────────────────────────────────────────────────────────────
+
+model Document {
+  id          String         @id @default(uuid())
+  ownerId     String
+  dossierId   String?
+  type        DocumentType
+  fileUrl     String
+  status      DocumentStatus @default(PENDING)
+  validUntil  DateTime?
+  uploadedAt  DateTime       @default(now())
+  verifiedAt  DateTime?
+  verifiedBy  String?
+
+  owner   User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  dossier FormalizationDossier? @relation(fields: [dossierId], references: [id])
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// REPUTAÇÃO
+// ─────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id         String           @id @default(uuid())
+  authorId   String
+  targetType ReviewTargetType
+  targetUserId String?
+  productId  String?
+  orderId    String
+  rating     Int // 1-5
+  comment    String?
+  createdAt  DateTime         @default(now())
+
+  author  User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  order   Order    @relation(fields: [orderId], references: [id])
+
+  @@index([targetUserId])
+  @@index([productId])
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// NOTIFICAÇÕES
+// ─────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String              @id @default(uuid())
+  userId    String
+  type      NotificationType
+  channel   NotificationChannel
+  title     String
+  body      String
+  read      Boolean             @default(false)
+  metadata  Json?
+  createdAt DateTime            @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// SUPORTE
+// ─────────────────────────────────────────────────────────────────────────
+
+model SupportTicket {
+  id          String              @id @default(uuid())
+  requesterId String
+  agentId     String?
+  subject     String
+  description String
+  status      SupportTicketStatus @default(OPEN)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  requester User @relation("SupportRequester", fields: [requesterId], references: [id])
+  agent     User? @relation("SupportAgent", fields: [agentId], references: [id])
+
+  @@index([status])
+  @@map("support_tickets")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// AUDITORIA — eventos críticos são imutáveis (sem update/delete na aplicação)
+// ─────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entity     String
+  entityId   String?
+  result     String // SUCCESS | FAILURE
+  ipAddress  String?
+  origin     String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
