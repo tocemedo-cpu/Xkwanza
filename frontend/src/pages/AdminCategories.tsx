@@ -26,6 +26,7 @@ export function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState('');
+  const [parentId, setParentId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export function AdminCategories() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await createCategory({ name, slug: slugify(name) });
+      await createCategory({ name, slug: slugify(name), parentId: parentId || undefined });
       setName('');
       reload();
     } catch (err: unknown) {
@@ -61,8 +62,15 @@ export function AdminCategories() {
   async function handleRename(category: Category) {
     const newName = prompt('Novo nome da categoria', category.name);
     if (!newName || newName.trim() === category.name) return;
-    await updateCategory(category.id, { name: newName.trim(), slug: slugify(newName) });
-    reload();
+    try {
+      await updateCategory(category.id, { name: newName.trim(), slug: slugify(newName) });
+      reload();
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível renomear a categoria.';
+      setError(message);
+    }
   }
 
   async function handleSeedDefaults() {
@@ -73,8 +81,8 @@ export function AdminCategories() {
       const result = await seedDefaultCategories();
       setSeedMessage(
         result.created > 0
-          ? `${result.created} categoria(s) criada(s).`
-          : 'As categorias padrão já existiam todas — nenhuma nova foi criada.',
+          ? `${result.created} categoria(s)/subcategoria(s) criada(s) ou reorganizada(s).`
+          : 'As categorias padrão já existiam todas, na hierarquia certa — nada foi alterado.',
       );
       reload();
     } catch (err: unknown) {
@@ -95,17 +103,41 @@ export function AdminCategories() {
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Não foi possível remover a categoria (pode ter produtos associados).';
+        'Não foi possível remover a categoria (pode ter subcategorias ou produtos associados).';
       setError(message);
     }
   }
 
+  const mainCategories = categories.filter((c) => !c.parentId);
+
+  function CategoryRow({ category, indented }: { category: Category; indented?: boolean }) {
+    return (
+      <div className={`flex items-center justify-between gap-3 p-4 text-sm ${indented ? 'pl-10' : ''}`}>
+        <div>
+          <p className={indented ? 'text-neutral-800' : 'font-medium text-neutral-900'}>{category.name}</p>
+          <p className="text-neutral-500">{category.slug}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => handleRename(category)} className="text-xs font-medium text-xkwanza-600 hover:underline">
+            Renomear
+          </button>
+          <button onClick={() => handleDelete(category)} className="text-neutral-400 hover:text-red-600">
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Categorias</h1>
-          <p className="text-neutral-500">Catálogo de categorias do marketplace.</p>
+          <p className="text-neutral-500">
+            Catálogo em duas camadas: categoria principal → subcategoria. Quem publica escolhe primeiro a
+            principal e só depois a subcategoria.
+          </p>
         </div>
         <button
           onClick={handleSeedDefaults}
@@ -117,7 +149,7 @@ export function AdminCategories() {
         </button>
       </div>
 
-      <form onSubmit={handleCreate} className="flex gap-2">
+      <form onSubmit={handleCreate} className="flex flex-wrap gap-2">
         <input
           required
           value={name}
@@ -125,6 +157,14 @@ export function AdminCategories() {
           placeholder="Nome da nova categoria"
           className={`${inputClass} flex-1`}
         />
+        <select value={parentId} onChange={(e) => setParentId(e.target.value)} className={inputClass}>
+          <option value="">— Categoria principal (sem mãe) —</option>
+          {mainCategories.map((c) => (
+            <option key={c.id} value={c.id}>
+              Subcategoria de: {c.name}
+            </option>
+          ))}
+        </select>
         <button
           type="submit"
           disabled={isSubmitting}
@@ -147,20 +187,14 @@ export function AdminCategories() {
 
       {!isLoading && categories.length > 0 && (
         <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
-          {categories.map((category) => (
-            <div key={category.id} className="flex items-center justify-between gap-3 p-4 text-sm">
-              <div>
-                <p className="font-medium text-neutral-900">{category.name}</p>
-                <p className="text-neutral-500">{category.slug}</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => handleRename(category)} className="text-xs font-medium text-xkwanza-600 hover:underline">
-                  Renomear
-                </button>
-                <button onClick={() => handleDelete(category)} className="text-neutral-400 hover:text-red-600">
-                  <Trash2 size={16} />
-                </button>
-              </div>
+          {mainCategories.map((main) => (
+            <div key={main.id} className="divide-y divide-neutral-50">
+              <CategoryRow category={main} />
+              {categories
+                .filter((c) => c.parentId === main.id)
+                .map((child) => (
+                  <CategoryRow key={child.id} category={child} indented />
+                ))}
             </div>
           ))}
         </div>

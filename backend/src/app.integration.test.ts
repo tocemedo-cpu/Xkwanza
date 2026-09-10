@@ -902,7 +902,7 @@ describe('Anúncios de Serviço — /api/products (listingType SERVICE)', () => 
 });
 
 describe('POST /api/categories/seed-defaults', () => {
-  it('cria as categorias padrão e é idempotente ao ser chamado uma segunda vez', async () => {
+  it('cria a árvore em duas camadas, permite nomes repetidos em ramos diferentes, e é idempotente', async () => {
     const admin = await createUser('ADMIN');
 
     const forbidden = await request(app)
@@ -914,15 +914,92 @@ describe('POST /api/categories/seed-defaults', () => {
       .post('/api/categories/seed-defaults')
       .set('Authorization', `Bearer ${admin.accessToken}`);
     expect(firstRun.status).toBe(200);
-    expect(firstRun.body.created).toBeGreaterThan(0);
+    expect(firstRun.body.total).toBeGreaterThan(0);
 
     const listRes = await request(app).get('/api/categories');
-    expect(listRes.body.some((c: { slug: string }) => c.slug === 'horticolas')).toBe(true);
+    const bySlug = new Map(listRes.body.map((c: { slug: string; parentId: string | null }) => [c.slug, c]));
+
+    const agricultura = bySlug.get('agricultura-e-produtos-do-campo') as { id: string; parentId: string | null };
+    expect(agricultura).toBeTruthy();
+    expect(agricultura.parentId).toBeNull();
+
+    const frutas = bySlug.get('agricultura-e-produtos-do-campo-frutas') as { parentId: string | null };
+    expect(frutas).toBeTruthy();
+    expect(frutas.parentId).toBe(agricultura.id);
+
+    // "Acessórios" existe em três ramos diferentes — o nome repete-se, mas cada um tem um slug
+    // próprio (prefixado pela categoria mãe) e um parentId distinto.
+    const acessoriosModa = bySlug.get('moda-e-vestuario-acessorios') as { parentId: string | null };
+    const acessoriosEletronica = bySlug.get('eletronica-e-tecnologia-acessorios') as { parentId: string | null };
+    expect(acessoriosModa.parentId).not.toBe(acessoriosEletronica.parentId);
+
+    // Serviços — sem subcategoria, directamente seleccionáveis.
+    const construcaoServico = bySlug.get('construcao-e-reparacao') as { parentId: string | null };
+    expect(construcaoServico).toBeTruthy();
+    expect(construcaoServico.parentId).toBeNull();
 
     const secondRun = await request(app)
       .post('/api/categories/seed-defaults')
       .set('Authorization', `Bearer ${admin.accessToken}`);
     expect(secondRun.status).toBe(200);
     expect(secondRun.body.created).toBe(0);
+  });
+
+  it('reatribui a mãe de uma categoria já existente com o mesmo slug (auto-reparação)', async () => {
+    const admin = await createUser('ADMIN');
+
+    // Simula um resto de um seed antigo sem hierarquia: mesma slug que uma subcategoria nova,
+    // mas sem mãe nenhuma atribuída (limpa primeiro, caso um teste anterior já a tenha criada
+    // com a hierarquia correcta).
+    await prisma.category.deleteMany({ where: { slug: 'alimentos-e-bebidas-bebidas' } });
+    await prisma.category.create({ data: { name: 'Bebidas', slug: 'alimentos-e-bebidas-bebidas', parentId: null } });
+
+    const seedRes = await request(app)
+      .post('/api/categories/seed-defaults')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(seedRes.status).toBe(200);
+
+    const reparented = await prisma.category.findUnique({ where: { slug: 'alimentos-e-bebidas-bebidas' } });
+    const parent = await prisma.category.findUnique({ where: { slug: 'alimentos-e-bebidas' } });
+    expect(reparented?.parentId).toBe(parent?.id);
+  });
+});
+
+describe('Categorias — nome único só entre irmãos', () => {
+  it('permite o mesmo nome em ramos diferentes mas rejeita duplicado no mesmo nível', async () => {
+    const admin = await createUser('ADMIN');
+    const suffix = Date.now();
+
+    const parentA = await request(app)
+      .post('/api/categories')
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ name: `Ramo A ${suffix}`, slug: `ramo-a-${suffix}` });
+    expect(parentA.status).toBe(201);
+
+    const parentB = await request(app)
+      .post('/api/categories')
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ name: `Ramo B ${suffix}`, slug: `ramo-b-${suffix}` });
+    expect(parentB.status).toBe(201);
+
+    const childA = await request(app)
+      .post('/api/categories')
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ name: 'Acessórios Teste', slug: `acessorios-a-${suffix}`, parentId: parentA.body.id });
+    expect(childA.status).toBe(201);
+
+    // Mesmo nome "Acessórios Teste", mas sob uma mãe diferente — deve ser permitido.
+    const childB = await request(app)
+      .post('/api/categories')
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ name: 'Acessórios Teste', slug: `acessorios-b-${suffix}`, parentId: parentB.body.id });
+    expect(childB.status).toBe(201);
+
+    // Mesmo nome outra vez, mas agora sob a MESMA mãe (parentA) — deve ser rejeitado.
+    const duplicateSibling = await request(app)
+      .post('/api/categories')
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ name: 'Acessórios Teste', slug: `acessorios-c-${suffix}`, parentId: parentA.body.id });
+    expect(duplicateSibling.status).toBe(409);
   });
 });

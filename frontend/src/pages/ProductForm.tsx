@@ -44,6 +44,11 @@ export function ProductForm() {
   );
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  // A categoria escolhida pelo utilizador vive sempre em categoryId — mainCategoryId é só o
+  // estado do primeiro select (categoria principal). Quando a principal não tem subcategorias
+  // (ex: Serviços), categoryId = mainCategoryId directamente; quando tem, o utilizador tem de
+  // escolher a subcategoria antes de poder submeter.
+  const [mainCategoryId, setMainCategoryId] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [price, setPrice] = useState('');
   const [isEstimatedPrice, setIsEstimatedPrice] = useState(false);
@@ -72,6 +77,16 @@ export function ProductForm() {
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
   }, []);
+
+  // Quando a lista de categorias e o produto (em edição) já estão ambos carregados, deriva a
+  // categoria principal a partir da categoria guardada: se ela tem mãe, a principal é essa mãe
+  // e a categoria guardada é a subcategoria; se não tem mãe, ela própria é a principal (caso dos
+  // Serviços, sem subcategorias).
+  useEffect(() => {
+    if (!product || categories.length === 0) return;
+    const current = categories.find((c) => c.id === product.categoryId);
+    setMainCategoryId(current?.parentId ?? current?.id ?? '');
+  }, [product, categories]);
 
   useEffect(() => {
     if (!id) return;
@@ -195,6 +210,14 @@ export function ProductForm() {
   }
 
   const isService = listingType === 'SERVICE';
+  const mainCategories = categories.filter((c) => !c.parentId);
+  const subcategories = categories.filter((c) => c.parentId === mainCategoryId);
+
+  function handleMainCategoryChange(nextMainId: string) {
+    setMainCategoryId(nextMainId);
+    const hasChildren = categories.some((c) => c.parentId === nextMainId);
+    setCategoryId(hasChildren ? '' : nextMainId);
+  }
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -225,18 +248,40 @@ export function ProductForm() {
           <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Categoria</label>
-          <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
-            <option value="" disabled>
-              Seleccione...
-            </option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Categoria</label>
+            <select
+              required
+              value={mainCategoryId}
+              onChange={(e) => handleMainCategoryChange(e.target.value)}
+              className={inputClass}
+            >
+              <option value="" disabled>
+                Seleccione...
               </option>
-            ))}
-          </select>
+              {mainCategories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          {subcategories.length > 0 && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Subcategoria</label>
+              <select required value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={inputClass}>
+                <option value="" disabled>
+                  Seleccione...
+                </option>
+                {subcategories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         <div>

@@ -305,7 +305,10 @@ model Address {
 
 model Category {
   id       String     @id @default(uuid())
-  name     String     @unique
+  // Só o slug é globalmente único — o nome só precisa de ser único entre irmãos (a app
+  // garante isto, não a BD), para permitir nomes repetidos como "Acessórios" em ramos
+  // diferentes da árvore (ex: Moda vs Electrónica).
+  name     String
   slug     String     @unique
   parentId String?
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])

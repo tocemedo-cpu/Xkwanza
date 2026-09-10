@@ -97,11 +97,27 @@ export function Marketplace() {
           className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
         >
           <option value="">Todas as categorias</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          {categories
+            .filter((c) => !c.parentId)
+            .map((main) => {
+              const children = categories.filter((c) => c.parentId === main.id);
+              if (children.length === 0) {
+                return (
+                  <option key={main.id} value={main.id}>
+                    {main.name}
+                  </option>
+                );
+              }
+              return (
+                <optgroup key={main.id} label={main.name}>
+                  {children.map((child) => (
+                    <option key={child.id} value={child.id}>
+                      {child.name}
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
         </select>
         {listingType !== 'SERVICE' && (
           <>
