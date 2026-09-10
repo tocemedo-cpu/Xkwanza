@@ -104,3 +104,20 @@ Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render co
 4. Depois do frontend ficar online, copia o seu URL (ex: `https://xkwanza-frontend.onrender.com`) e define no `xkwanza-backend`: `CORS_ORIGIN=https://xkwanza-frontend.onrender.com`. Isto reinicia o backend com o CORS correcto.
 
 Cada deploy do backend corre automaticamente `prisma migrate deploy` antes de arrancar o servidor — qualquer migração nova criada localmente (`npx prisma migrate dev`) é aplicada sozinha no próximo deploy. Se `prisma migrate deploy` falhar (ex: baseline por fazer), o servidor arranca mesmo assim — para não ficar preso num ciclo em que nunca fica acessível para corrigir o problema (ex: via `/internal/tasks/db-baseline`, secção 1 acima). Um `migrate deploy` a falhar aparece nos logs do Render; corrige a causa e o próximo deploy resolve-se sozinho.
+
+### 3. Criar o primeiro administrador
+
+O registo público bloqueia de propósito a criação de contas ADMIN/SUPPORT (só perfis BUYER, PRODUCER, MERCHANT, TRANSPORTER podem auto-registar-se). Para criares a tua própria conta de administrador:
+
+1. Regista-te normalmente na app (`/registar`), com qualquer perfil (ex: Comprador).
+2. Com `ADMIN_TASK_SECRET` definido no `xkwanza-backend` (ver secção 2), promove essa conta a ADMIN:
+
+   ```bash
+   curl -X POST https://xkwanza-backend.onrender.com/internal/tasks/promote-admin \
+     -H "Content-Type: application/json" \
+     -H "x-admin-secret: <o valor que definiste em ADMIN_TASK_SECRET>" \
+     -d '{"phone":"+244900000000"}'
+   ```
+
+   (`role` é opcional — por omissão promove a `ADMIN`; passa `"role":"SUPPORT"` para criar suporte em vez de admin.) Podes correr o mesmo pedido a partir da consola do browser (F12 → Console) com `fetch(...)` em vez de `curl`, se não tiveres terminal à mão.
+3. Termina sessão e volta a entrar — a conta já tem acesso aos painéis `/admin/pagamentos`, `/admin/formalizacao` e `/admin/inss`.
