@@ -23,6 +23,7 @@ import { reviewsRouter } from './modules/reviews/reviews.routes';
 import { economicsRouter } from './modules/economics/economics.routes';
 import { formalizationRouter } from './modules/formalization/formalization.routes';
 import { inssRouter } from './modules/inss/inss.routes';
+import { dbTasksRouter } from './admin/dbTasks.routes';
 
 export function createApp() {
   const app = express();
@@ -65,6 +66,7 @@ export function createApp() {
   app.use('/api/economics', economicsRouter);
   app.use('/api/formalization', formalizationRouter);
   app.use('/api/inss', inssRouter);
+  app.use('/internal/tasks', dbTasksRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

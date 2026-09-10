@@ -15,6 +15,7 @@ export const env = {
   isProduction: process.env.NODE_ENV === 'production',
   port: Number(process.env.PORT ?? 4000),
   corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  adminTaskSecret: process.env.ADMIN_TASK_SECRET ?? '',
 
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET'),

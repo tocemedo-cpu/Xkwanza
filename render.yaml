@@ -36,6 +36,8 @@ services:
         value: "10"
       - key: INSS_ADAPTER_MODE
         value: sandbox
+      - key: ADMIN_TASK_SECRET
+        sync: false
 
   - type: web
     name: xkwanza-frontend
