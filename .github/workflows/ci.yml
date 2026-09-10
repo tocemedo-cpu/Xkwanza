@@ -36,11 +36,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Instalar dependências
         run: npm ci
+
+      - name: Gerar Prisma Client
+        run: npm run prisma:generate --workspace=backend
 
       - name: Aplicar schema à base de dados de teste
         run: npx prisma migrate deploy
@@ -62,7 +65,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Instalar dependências
