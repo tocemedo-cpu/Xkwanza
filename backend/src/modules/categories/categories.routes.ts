@@ -8,6 +8,7 @@ import {
   createCategoryHandler,
   deleteCategoryHandler,
   listCategoriesHandler,
+  seedDefaultCategoriesHandler,
   updateCategoryHandler,
 } from './categories.controller';
 
@@ -15,6 +16,10 @@ export const categoriesRouter = Router();
 
 // Pública — necessária para navegação e filtros do marketplace sem sessão.
 categoriesRouter.get('/', listCategoriesHandler);
+
+// Ponto de partida para uma base de dados sem nenhuma categoria — nunca há seed automático,
+// por isso isto fica disponível como acção manual de administração (idempotente).
+categoriesRouter.post('/seed-defaults', authenticate, requireRole(UserRole.ADMIN), seedDefaultCategoriesHandler);
 
 categoriesRouter.post(
   '/',

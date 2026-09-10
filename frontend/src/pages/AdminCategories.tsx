@@ -1,6 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
-import { createCategory, deleteCategory, fetchCategories, updateCategory } from '../services/categoriesService';
+import { Sparkles, Trash2 } from 'lucide-react';
+import {
+  createCategory,
+  deleteCategory,
+  fetchCategories,
+  seedDefaultCategories,
+  updateCategory,
+} from '../services/categoriesService';
 import { Category } from '../types/marketplace';
 
 const inputClass =
@@ -21,7 +27,9 @@ export function AdminCategories() {
   const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [seedMessage, setSeedMessage] = useState<string | null>(null);
 
   function reload() {
     setIsLoading(true);
@@ -57,6 +65,28 @@ export function AdminCategories() {
     reload();
   }
 
+  async function handleSeedDefaults() {
+    setError(null);
+    setSeedMessage(null);
+    setIsSeeding(true);
+    try {
+      const result = await seedDefaultCategories();
+      setSeedMessage(
+        result.created > 0
+          ? `${result.created} categoria(s) criada(s).`
+          : 'As categorias padrão já existiam todas — nenhuma nova foi criada.',
+      );
+      reload();
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível criar as categorias padrão.';
+      setError(message);
+    } finally {
+      setIsSeeding(false);
+    }
+  }
+
   async function handleDelete(category: Category) {
     if (!confirm(`Remover a categoria "${category.name}"?`)) return;
     try {
@@ -72,9 +102,19 @@ export function AdminCategories() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Categorias</h1>
-        <p className="text-neutral-500">Catálogo de categorias do marketplace.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">Categorias</h1>
+          <p className="text-neutral-500">Catálogo de categorias do marketplace.</p>
+        </div>
+        <button
+          onClick={handleSeedDefaults}
+          disabled={isSeeding}
+          className="flex shrink-0 items-center gap-2 rounded-md border border-xkwanza-300 px-3 py-2 text-sm font-medium text-xkwanza-700 hover:bg-xkwanza-50 disabled:opacity-60"
+        >
+          <Sparkles size={16} />
+          {isSeeding ? 'A criar...' : 'Criar categorias padrão'}
+        </button>
       </div>
 
       <form onSubmit={handleCreate} className="flex gap-2">
@@ -95,7 +135,15 @@ export function AdminCategories() {
       </form>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+      {seedMessage && <p className="text-sm text-green-700">{seedMessage}</p>}
       {isLoading && <p className="text-neutral-500">A carregar...</p>}
+
+      {!isLoading && categories.length === 0 && (
+        <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+          Ainda não há nenhuma categoria — produtores e comerciantes não vão conseguir publicar até existir
+          pelo menos uma. Use "Criar categorias padrão" acima para começar, ou adicione as suas próprias.
+        </p>
+      )}
 
       {!isLoading && categories.length > 0 && (
         <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">

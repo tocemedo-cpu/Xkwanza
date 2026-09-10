@@ -900,3 +900,29 @@ describe('Anúncios de Serviço — /api/products (listingType SERVICE)', () => 
     expect(checkoutAttempt.status).toBe(400);
   });
 });
+
+describe('POST /api/categories/seed-defaults', () => {
+  it('cria as categorias padrão e é idempotente ao ser chamado uma segunda vez', async () => {
+    const admin = await createUser('ADMIN');
+
+    const forbidden = await request(app)
+      .post('/api/categories/seed-defaults')
+      .set('Authorization', `Bearer ${(await createUser('BUYER')).accessToken}`);
+    expect(forbidden.status).toBe(403);
+
+    const firstRun = await request(app)
+      .post('/api/categories/seed-defaults')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(firstRun.status).toBe(200);
+    expect(firstRun.body.created).toBeGreaterThan(0);
+
+    const listRes = await request(app).get('/api/categories');
+    expect(listRes.body.some((c: { slug: string }) => c.slug === 'horticolas')).toBe(true);
+
+    const secondRun = await request(app)
+      .post('/api/categories/seed-defaults')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(secondRun.status).toBe(200);
+    expect(secondRun.body.created).toBe(0);
+  });
+});

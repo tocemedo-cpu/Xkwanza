@@ -8,6 +8,19 @@ export const listCategoriesHandler = asyncHandler(async (_req: Request, res: Res
   res.status(200).json(categories);
 });
 
+export const seedDefaultCategoriesHandler = asyncHandler(async (req: Request, res: Response) => {
+  const result = await categoriesService.seedDefaultCategories();
+  await recordAudit({
+    userId: req.user?.id,
+    action: 'CATEGORIES_SEEDED',
+    entity: 'Category',
+    result: 'SUCCESS',
+    metadata: { created: result.created, total: result.total },
+    req,
+  });
+  res.status(200).json(result);
+});
+
 export const createCategoryHandler = asyncHandler(async (req: Request, res: Response) => {
   const category = await categoriesService.createCategory(req.body);
   await recordAudit({

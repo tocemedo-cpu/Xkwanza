@@ -26,3 +26,10 @@ export async function updateCategory(id: string, payload: Partial<CategoryPayloa
 export async function deleteCategory(id: string): Promise<void> {
   await apiClient.delete(`/categories/${id}`);
 }
+
+// Ponto de partida para uma base de dados sem nenhuma categoria — idempotente, ignora as que
+// já existem (por nome ou slug).
+export async function seedDefaultCategories(): Promise<{ created: number; total: number }> {
+  const { data } = await apiClient.post<{ created: number; total: number }>('/categories/seed-defaults');
+  return data;
+}
