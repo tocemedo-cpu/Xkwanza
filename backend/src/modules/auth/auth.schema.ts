@@ -1,6 +1,11 @@
 import { z } from 'zod';
-import { UserRole } from '@prisma/client';
+import { ActivityType, UserRole } from '@prisma/client';
 import { ANGOLA_PHONE_REGEX, ANGOLA_PROVINCES } from '../../utils/angola';
+
+// NIF angolano: alfanumérico, sem formato oficial validável aqui (auto-declarado, nunca
+// verificado contra a AGT) — apenas um comprimento plausível para apanhar erros óbvios de
+// digitação. Nunca obrigatório: a plataforma tem de aceitar utilizadores informais sem NIF.
+const NIF_REGEX = /^[A-Za-z0-9]{5,20}$/;
 
 const passwordSchema = z
   .string()
@@ -23,7 +28,8 @@ export const registerSchema = z.object({
       province: z.enum(ANGOLA_PROVINCES, { errorMap: () => ({ message: 'Província inválida' }) }),
       municipality: z.string().trim().min(2).max(120),
       role: z.nativeEnum(UserRole),
-      activityType: z.string().trim().max(60).optional(),
+      activityType: z.nativeEnum(ActivityType).optional(),
+      nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
     })
     .refine((data) => Boolean(data.phone) || Boolean(data.email), {
       message: 'Indica um telefone ou um email para criar a conta',

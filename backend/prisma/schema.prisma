@@ -197,6 +197,7 @@ model User {
   province          String
   municipality       String
   activityType       ActivityType?
+  nif                String?    @unique // opcional — nunca bloqueia utilizadores informais sem NIF
   trustLevel        TrustLevel @default(LEVEL_1_CONTACT_VALIDATED)
   isVerifiedBadge   Boolean    @default(false) // Selo XKWANZA Verificado — só true quando critérios reais forem cumpridos
   isActive          Boolean    @default(true)

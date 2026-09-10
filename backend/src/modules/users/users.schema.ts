@@ -1,5 +1,8 @@
 import { z } from 'zod';
+import { ActivityType } from '@prisma/client';
 import { ANGOLA_PROVINCES } from '../../utils/angola';
+
+const NIF_REGEX = /^[A-Za-z0-9]{5,20}$/;
 
 export const updateProfileSchema = z.object({
   body: z.object({
@@ -7,7 +10,8 @@ export const updateProfileSchema = z.object({
     email: z.string().trim().toLowerCase().email().optional(),
     province: z.enum(ANGOLA_PROVINCES).optional(),
     municipality: z.string().trim().min(2).max(120).optional(),
-    activityType: z.string().trim().max(60).optional(),
+    activityType: z.nativeEnum(ActivityType).optional(),
+    nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
   }),
 });
 

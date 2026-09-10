@@ -35,14 +35,25 @@ Estas fases dependem, por definição, de integrações reais com instituições
 
 ## Autenticação e requisitos de registo
 
+### Fluxo de registo
+
+`Criar conta` (`/registar`) → **escolher perfil** (Comprador / Produtor / Comerciante / Transportador, em
+cartões) → **formulário específico** do perfil escolhido (`/registar/:role`) → conta criada e sessão iniciada
+→ **completar perfil depois**, já dentro da app (ex: o transportador indica o veículo em "Meu veículo", o
+vendedor cria o catálogo em "Meus produtos", NIF/formalização podem ser preenchidos mais tarde em
+"Formalização" se ainda não tiverem sido dados no registo).
+
+Só **BUYER, PRODUCER, MERCHANT e TRANSPORTER** aparecem no registo público. **ADMIN e SUPPORT nunca
+aparecem** — são criados internamente (ver secção "Criar o primeiro administrador" no deploy).
+
 O registo e o login aceitam **telefone ou email** como identificador da conta — a pessoa escolhe um dos dois
 no formulário (`Registar com telefone` / `Registar com email`); a conta guarda o que for escolhido e usa isso
 para entrar depois. Uma conta pode ter só telefone, só email, ou os dois (se adicionar o outro mais tarde),
 mas nunca nenhum dos dois.
 
-Os requisitos de registo são **iguais para os 4 perfis com auto-registo** — não há campos extra por perfil
-nesta fase; a diferenciação acontece depois de criar a conta (ex: o transportador completa o veículo em
-"Meu veículo", o vendedor cria produtos em "Meus produtos"):
+### Campos por perfil
+
+Campos comuns aos 4 perfis:
 
 | Campo | Regra |
 |---|---|
@@ -51,7 +62,19 @@ nesta fase; a diferenciação acontece depois de criar a conta (ex: o transporta
 | Palavra-passe | mín. 8 caracteres, com maiúscula + minúscula + número |
 | Província | uma das 18 províncias angolanas |
 | Município | mín. 2 caracteres |
-| Perfil (Sou...) | Comprador / Produtor / Comerciante / Transportador — ADMIN/SUPPORT nunca por auto-registo |
+
+Campos adicionais — **sempre opcionais**, para nunca bloquear quem trabalha informalmente:
+
+| Perfil | Campos extra no registo | Completa-se depois |
+|---|---|---|
+| Comprador | — | — |
+| Produtor | Tipo de actividade (Agricultor, Pescador, Fabricante, Artesão, Criador, Produtor alimentar, Outro), NIF | Formalização (NIF/documentos), histórico económico |
+| Comerciante | Tipo de actividade (Comerciante de mercado, Comerciante de rua, Revendedor, Prestador de serviços, Outro), NIF | Catálogo de produtos, formalização |
+| Transportador | — | Veículo e disponibilidade ("Meu veículo") |
+
+NIF é validado apenas quanto à forma (alfanumérico, 5-20 caracteres) — nunca verificado contra a AGT — e é
+único por conta, tal como o telefone e o email: `POST /api/auth/register` responde `409` se o telefone, email
+ou NIF já pertencerem a outra conta.
 
 ## Regras absolutas do projecto
 

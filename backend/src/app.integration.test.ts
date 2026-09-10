@@ -72,6 +72,52 @@ describe('POST /api/auth/register', () => {
       });
     expect(res.status).toBe(403);
   });
+
+  it('regista um produtor sem NIF (utilizador informal) — NIF nunca bloqueia o registo', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Produtor Informal',
+        phone: randomPhone(),
+        password: 'Password123',
+        province: 'Huambo',
+        municipality: 'Huambo',
+        role: 'PRODUCER',
+        activityType: 'AGRICULTOR',
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.user.nif).toBeNull();
+    expect(res.body.user.activityType).toBe('AGRICULTOR');
+  });
+
+  it('rejeita um segundo registo com o mesmo NIF (409)', async () => {
+    const nif = `NIF${Date.now()}`;
+    const first = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Comerciante A',
+        phone: randomPhone(),
+        password: 'Password123',
+        province: 'Luanda',
+        municipality: 'Luanda',
+        role: 'MERCHANT',
+        nif,
+      });
+    expect(first.status).toBe(201);
+
+    const second = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Comerciante B',
+        phone: randomPhone(),
+        password: 'Password123',
+        province: 'Luanda',
+        municipality: 'Luanda',
+        role: 'MERCHANT',
+        nif,
+      });
+    expect(second.status).toBe(409);
+  });
 });
 
 describe('POST /api/auth/login', () => {

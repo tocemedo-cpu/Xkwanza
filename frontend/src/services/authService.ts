@@ -1,5 +1,5 @@
 import { apiClient } from '../api/client';
-import { User, UserRole } from '../types/user';
+import { ActivityType, User, UserRole } from '../types/user';
 import { clearTokens, getRefreshToken, setTokens } from './tokenStorage';
 
 interface AuthResponse {
@@ -16,7 +16,8 @@ export interface RegisterPayload {
   province: string;
   municipality: string;
   role: UserRole;
-  activityType?: string;
+  activityType?: ActivityType;
+  nif?: string;
 }
 
 export async function registerRequest(payload: RegisterPayload): Promise<User> {

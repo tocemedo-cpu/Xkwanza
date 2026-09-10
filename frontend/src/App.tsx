@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
+import { RegisterRoleSelect } from './pages/RegisterRoleSelect';
 import { Register } from './pages/Register';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
@@ -43,7 +44,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/entrar" element={<Login />} />
-      <Route path="/registar" element={<Register />} />
+      <Route path="/registar" element={<RegisterRoleSelect />} />
+      <Route path="/registar/:role" element={<Register />} />
       <Route path="/termos" element={<Terms />} />
       <Route path="/privacidade" element={<Privacy />} />
 

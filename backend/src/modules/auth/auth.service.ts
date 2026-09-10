@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
-import { UserRole } from '@prisma/client';
+import { ActivityType, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { hashPassword, verifyPassword } from '../../security/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../security/jwt';
@@ -19,6 +19,8 @@ function publicUser(user: {
   name: string;
   phone: string | null;
   email: string | null;
+  nif: string | null;
+  activityType: ActivityType | null;
   role: UserRole;
   province: string;
   municipality: string;
@@ -31,6 +33,8 @@ function publicUser(user: {
     name: user.name,
     phone: user.phone,
     email: user.email,
+    nif: user.nif,
+    activityType: user.activityType,
     role: user.role,
     province: user.province,
     municipality: user.municipality,
@@ -66,11 +70,15 @@ export async function register(input: RegisterInput, req: Request) {
 
   const existing = await prisma.user.findFirst({
     where: {
-      OR: [...(input.phone ? [{ phone: input.phone }] : []), ...(input.email ? [{ email: input.email }] : [])],
+      OR: [
+        ...(input.phone ? [{ phone: input.phone }] : []),
+        ...(input.email ? [{ email: input.email }] : []),
+        ...(input.nif ? [{ nif: input.nif }] : []),
+      ],
     },
   });
   if (existing) {
-    throw ApiError.conflict('Já existe uma conta com este telefone ou email');
+    throw ApiError.conflict('Já existe uma conta com este telefone, email ou NIF');
   }
 
   const passwordHash = await hashPassword(input.password);
@@ -80,11 +88,12 @@ export async function register(input: RegisterInput, req: Request) {
       name: input.name,
       phone: input.phone,
       email: input.email,
+      nif: input.nif,
       passwordHash,
       role: input.role,
       province: input.province,
       municipality: input.municipality,
-      activityType: input.activityType as never,
+      activityType: input.activityType,
     },
   });
 

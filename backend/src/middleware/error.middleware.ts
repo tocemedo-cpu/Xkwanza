@@ -1,8 +1,15 @@
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { MulterError } from 'multer';
+import { Prisma } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
 import { logger } from '../utils/logger';
+
+const UNIQUE_FIELD_LABELS: Record<string, string> = {
+  phone: 'telefone',
+  email: 'email',
+  nif: 'NIF',
+};
 
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({ message: `Rota não encontrada: ${req.method} ${req.originalUrl}` });
@@ -20,6 +27,12 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
   if (err instanceof MulterError) {
     const message = err.code === 'LIMIT_FILE_SIZE' ? 'Imagem demasiado grande — o limite é 5MB' : err.message;
     return res.status(400).json({ message });
+  }
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+    const fields = (err.meta?.target as string[] | undefined) ?? [];
+    const label = fields.map((f) => UNIQUE_FIELD_LABELS[f] ?? f).join('/') || 'valor';
+    return res.status(409).json({ message: `Já existe uma conta com este ${label}` });
   }
 
   if (err instanceof ApiError) {

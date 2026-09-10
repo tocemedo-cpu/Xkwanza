@@ -64,6 +64,31 @@ describe('registerSchema', () => {
     const result = registerSchema.safeParse({ body: withoutPhone });
     expect(result.success).toBe(false);
   });
+
+  it('NIF é opcional — regista sem NIF (utilizador informal)', () => {
+    const result = registerSchema.safeParse({ body: validRegisterBody });
+    expect(result.success).toBe(true);
+  });
+
+  it('aceita NIF alfanumérico válido', () => {
+    const result = registerSchema.safeParse({ body: { ...validRegisterBody, nif: 'ABC123456' } });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita NIF demasiado curto ou com caracteres inválidos', () => {
+    expect(registerSchema.safeParse({ body: { ...validRegisterBody, nif: 'AB' } }).success).toBe(false);
+    expect(registerSchema.safeParse({ body: { ...validRegisterBody, nif: 'ABC-123' } }).success).toBe(false);
+  });
+
+  it('aceita um tipo de actividade válido do enum', () => {
+    const result = registerSchema.safeParse({ body: { ...validRegisterBody, activityType: 'AGRICULTOR' } });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita um tipo de actividade fora do enum', () => {
+    const result = registerSchema.safeParse({ body: { ...validRegisterBody, activityType: 'EMPRESARIO' } });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('loginSchema', () => {
