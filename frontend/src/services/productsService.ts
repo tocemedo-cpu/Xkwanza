@@ -69,6 +69,7 @@ export async function removeProductPhoto(id: string, photoId: string): Promise<v
 export async function fetchProductsForAdmin(filters: {
   search?: string;
   status?: string;
+  listingType?: string;
   page?: number;
   pageSize?: number;
 }): Promise<PaginatedResult<Product>> {

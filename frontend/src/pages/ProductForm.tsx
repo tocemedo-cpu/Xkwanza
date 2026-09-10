@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Trash2, Upload } from 'lucide-react';
 import { fetchCategories } from '../services/categoriesService';
 import {
@@ -10,7 +10,15 @@ import {
   updateProduct,
   uploadProductPhoto,
 } from '../services/productsService';
-import { Category, Product } from '../types/marketplace';
+import {
+  Category,
+  CreateProductPayload,
+  DELIVERY_OPTION_LABELS,
+  DeliveryOption,
+  LISTING_TYPE_LABELS,
+  ListingType,
+  Product,
+} from '../types/marketplace';
 import { useAuth } from '../hooks/useAuth';
 import { getRolePrefix } from '../types/user';
 import { ANGOLA_PROVINCES } from '../utils/angola';
@@ -18,8 +26,11 @@ import { ANGOLA_PROVINCES } from '../utils/angola';
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
 
+const DELIVERY_OPTIONS: DeliveryOption[] = ['SELLER_DELIVERS', 'BUYER_PICKUP', 'XKWANZA_TRANSPORT'];
+
 export function ProductForm() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,15 +39,28 @@ export function ProductForm() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
 
+  const [listingType, setListingType] = useState<ListingType>(
+    searchParams.get('tipo') === 'servico' ? 'SERVICE' : 'PRODUCT',
+  );
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [price, setPrice] = useState('');
+  const [isEstimatedPrice, setIsEstimatedPrice] = useState(false);
+
+  // Produto
   const [unit, setUnit] = useState('unidade');
   const [stock, setStock] = useState('0');
   const [province, setProvince] = useState<string>(ANGOLA_PROVINCES[0]);
   const [municipality, setMunicipality] = useState('');
   const [origin, setOrigin] = useState('');
+  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>('BUYER_PICKUP');
+
+  // Serviço
+  const [serviceArea, setServiceArea] = useState('');
+  const [availability, setAvailability] = useState('');
+  const [contact, setContact] = useState(user?.phone ?? user?.email ?? '');
+
   const [photoUrl, setPhotoUrl] = useState('');
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -53,15 +77,21 @@ export function ProductForm() {
     if (!id) return;
     fetchProduct(id).then((p) => {
       setProduct(p);
+      setListingType(p.listingType);
       setName(p.name);
       setDescription(p.description);
       setCategoryId(p.categoryId);
       setPrice(p.price);
-      setUnit(p.unit);
-      setStock(String(p.stock));
-      setProvince(p.province);
-      setMunicipality(p.municipality);
+      setIsEstimatedPrice(p.isEstimatedPrice);
+      setUnit(p.unit ?? 'unidade');
+      setStock(String(p.stock ?? 0));
+      setProvince(p.province ?? ANGOLA_PROVINCES[0]);
+      setMunicipality(p.municipality ?? '');
       setOrigin(p.origin ?? '');
+      setDeliveryOption(p.deliveryOption ?? 'BUYER_PICKUP');
+      setServiceArea(p.serviceArea ?? '');
+      setAvailability(p.availability ?? '');
+      setContact(p.contact ?? '');
     });
   }, [id]);
 
@@ -70,29 +100,53 @@ export function ProductForm() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const payload = {
-        name,
-        description,
-        categoryId,
-        price: Number(price),
-        unit,
-        stock: Number(stock),
-        province,
-        municipality,
-        origin: origin || undefined,
-      };
-
       if (isEditing && id) {
-        await updateProduct(id, payload);
+        await updateProduct(id, {
+          name,
+          description,
+          categoryId,
+          price: Number(price),
+          isEstimatedPrice,
+          ...(listingType === 'PRODUCT'
+            ? { unit, stock: Number(stock), province, municipality, deliveryOption, origin: origin || undefined }
+            : { serviceArea, availability, contact }),
+        });
         navigate(`/${prefix}/stock`);
       } else {
+        const payload: CreateProductPayload =
+          listingType === 'PRODUCT'
+            ? {
+                listingType: 'PRODUCT',
+                name,
+                description,
+                categoryId,
+                price: Number(price),
+                isEstimatedPrice,
+                unit,
+                stock: Number(stock),
+                province,
+                municipality,
+                deliveryOption,
+                origin: origin || undefined,
+              }
+            : {
+                listingType: 'SERVICE',
+                name,
+                description,
+                categoryId,
+                price: Number(price),
+                isEstimatedPrice,
+                serviceArea,
+                availability,
+                contact,
+              };
         const created = await createProduct(payload);
         navigate(`/${prefix}/stock/${created.id}/editar`);
       }
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        'Não foi possível guardar o produto.';
+        'Não foi possível guardar o anúncio.';
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -140,26 +194,35 @@ export function ProductForm() {
     setProduct((prev) => (prev ? { ...prev, photos: prev.photos.filter((p) => p.id !== photoId) } : prev));
   }
 
+  const isService = listingType === 'SERVICE';
+
   return (
     <div className="max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold text-neutral-900">{isEditing ? 'Editar produto' : 'Novo produto'}</h1>
+      <h1 className="text-2xl font-bold text-neutral-900">
+        {isEditing ? `Editar ${LISTING_TYPE_LABELS[listingType].toLowerCase()}` : 'Novo anúncio'}
+      </h1>
+
+      {!isEditing && (
+        <div className="flex gap-1 rounded-full bg-neutral-100 p-1 w-fit">
+          {(['PRODUCT', 'SERVICE'] as ListingType[]).map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setListingType(type)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                listingType === type ? 'bg-white text-xkwanza-700 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
+              }`}
+            >
+              {LISTING_TYPE_LABELS[type]}
+            </button>
+          ))}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Nome</label>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">{isService ? 'Nome' : 'Título'}</label>
           <input required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Descrição</label>
-          <textarea
-            required
-            minLength={10}
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className={inputClass}
-          />
         </div>
 
         <div>
@@ -176,62 +239,147 @@ export function ProductForm() {
           </select>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Preço (Kz)</label>
-            <input
-              required
-              type="number"
-              min={0}
-              step="0.01"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Unidade</label>
-            <input required value={unit} onChange={(e) => setUnit(e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Stock</label>
-            <input
-              required
-              type="number"
-              min={0}
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              className={inputClass}
-            />
-          </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Descrição</label>
+          <textarea
+            required
+            minLength={10}
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={inputClass}
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Província</label>
-            <select value={province} onChange={(e) => setProvince(e.target.value)} className={inputClass}>
-              {ANGOLA_PROVINCES.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Município</label>
-            <input
-              required
-              value={municipality}
-              onChange={(e) => setMunicipality(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
+        {!isEditing && (
+          <p className="rounded-md bg-neutral-50 p-3 text-xs text-neutral-500">
+            A fotografia é adicionada a seguir, depois de guardar este primeiro passo — é obrigatória antes de
+            publicar.
+          </p>
+        )}
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Origem (opcional)</label>
-          <input value={origin} onChange={(e) => setOrigin(e.target.value)} className={inputClass} />
+          <label className="mb-1 flex items-center justify-between text-sm font-medium text-neutral-700">
+            <span>{isService ? 'Preço/Orçamento (Kz)' : 'Preço (Kz)'}</span>
+            {isService && (
+              <span className="flex items-center gap-1 font-normal text-neutral-500">
+                <input
+                  type="checkbox"
+                  checked={isEstimatedPrice}
+                  onChange={(e) => setIsEstimatedPrice(e.target.checked)}
+                />
+                É um orçamento (mostrar "a partir de")
+              </span>
+            )}
+          </label>
+          <input
+            required
+            type="number"
+            min={0}
+            step="0.01"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className={inputClass}
+          />
         </div>
+
+        {isService ? (
+          <>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Área de atendimento</label>
+              <input
+                required
+                value={serviceArea}
+                onChange={(e) => setServiceArea(e.target.value)}
+                placeholder="Ex: Luanda, Belas, Viana"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Disponibilidade</label>
+              <input
+                required
+                value={availability}
+                onChange={(e) => setAvailability(e.target.value)}
+                placeholder="Ex: Segunda a sábado, 8h-18h"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Contacto</label>
+              <input
+                required
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="Telefone ou email para contacto"
+                className={inputClass}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Unidade</label>
+                <input required value={unit} onChange={(e) => setUnit(e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Stock</label>
+                <input
+                  required
+                  type="number"
+                  min={0}
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Província</label>
+                <select value={province} onChange={(e) => setProvince(e.target.value)} className={inputClass}>
+                  {ANGOLA_PROVINCES.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Município</label>
+                <input
+                  required
+                  value={municipality}
+                  onChange={(e) => setMunicipality(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Entrega</label>
+              <select
+                required
+                value={deliveryOption}
+                onChange={(e) => setDeliveryOption(e.target.value as DeliveryOption)}
+                className={inputClass}
+              >
+                {DELIVERY_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {DELIVERY_OPTION_LABELS[option]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Origem (opcional)</label>
+              <input value={origin} onChange={(e) => setOrigin(e.target.value)} className={inputClass} />
+            </div>
+          </>
+        )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -249,7 +397,8 @@ export function ProductForm() {
           <h2 className="font-semibold text-neutral-900">Fotografias</h2>
           <p className="text-sm text-neutral-500">
             Envie uma foto do seu dispositivo, ou cole o URL de uma imagem já alojada noutro sítio. É necessária
-            pelo menos uma fotografia para publicar o produto.
+            pelo menos uma fotografia para publicar {isService ? 'o serviço' : 'o produto'}. Depois de a
+            adicionar, publique a partir de "Stock".
           </p>
 
           {photoError && <p className="text-sm text-red-600">{photoError}</p>}

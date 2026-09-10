@@ -72,13 +72,16 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
 
   for (const item of input.items) {
     const product = products.find((p) => p.id === item.productId)!;
+    if (product.listingType !== 'PRODUCT') {
+      throw ApiError.badRequest(`"${product.name}" é um serviço — peça uma cotação em vez de o adicionar ao carrinho`);
+    }
     if (product.status !== 'PUBLISHED') {
       throw ApiError.badRequest(`Produto "${product.name}" não está disponível`);
     }
     if (product.ownerId === buyerId) {
       throw ApiError.badRequest('Não pode comprar o seu próprio produto');
     }
-    if (product.stock < item.quantity) {
+    if ((product.stock ?? 0) < item.quantity) {
       throw ApiError.badRequest(`Stock insuficiente para "${product.name}"`);
     }
   }

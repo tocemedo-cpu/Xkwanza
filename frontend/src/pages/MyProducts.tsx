@@ -7,7 +7,7 @@ import {
   publishProduct,
   unpublishProduct,
 } from '../services/productsService';
-import { Product, ProductStatus } from '../types/marketplace';
+import { LISTING_TYPE_LABELS, Product, ProductStatus } from '../types/marketplace';
 import { useAuth } from '../hooks/useAuth';
 import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
@@ -66,13 +66,22 @@ export function MyProducts() {
           <h1 className="text-2xl font-bold text-neutral-900">Stock</h1>
           <p className="text-neutral-500">Gira o seu catálogo no marketplace XKWANZA.</p>
         </div>
-        <Link
-          to={`/${prefix}/stock/novo`}
-          className="flex items-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700"
-        >
-          <Plus size={18} />
-          Novo produto
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            to={`/${prefix}/stock/novo`}
+            className="flex items-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700"
+          >
+            <Plus size={18} />
+            Novo produto
+          </Link>
+          <Link
+            to={`/${prefix}/stock/novo?tipo=servico`}
+            className="flex items-center gap-2 rounded-md border border-xkwanza-300 px-4 py-2 font-medium text-xkwanza-700 hover:bg-xkwanza-50"
+          >
+            <Plus size={18} />
+            Novo serviço
+          </Link>
+        </div>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -81,7 +90,7 @@ export function MyProducts() {
 
       {!isLoading && products.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          Ainda não tem produtos. Crie o primeiro.
+          Ainda não tem produtos nem serviços. Crie o primeiro.
         </p>
       )}
 
@@ -90,7 +99,7 @@ export function MyProducts() {
           <table className="w-full text-sm">
             <thead className="bg-neutral-50 text-left text-neutral-500">
               <tr>
-                <th className="px-4 py-2 font-medium">Produto</th>
+                <th className="px-4 py-2 font-medium">Anúncio</th>
                 <th className="px-4 py-2 font-medium">Preço</th>
                 <th className="px-4 py-2 font-medium">Stock</th>
                 <th className="px-4 py-2 font-medium">Estado</th>
@@ -100,10 +109,18 @@ export function MyProducts() {
             <tbody className="divide-y divide-neutral-100">
               {products.map((product) => (
                 <tr key={product.id}>
-                  <td className="px-4 py-2 font-medium text-neutral-900">{product.name}</td>
-                  <td className="px-4 py-2 text-neutral-700">{formatKwanza(Number(product.price))}</td>
+                  <td className="px-4 py-2 font-medium text-neutral-900">
+                    <span className="mr-1.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-neutral-500">
+                      {LISTING_TYPE_LABELS[product.listingType]}
+                    </span>
+                    {product.name}
+                  </td>
                   <td className="px-4 py-2 text-neutral-700">
-                    {product.stock} {product.unit}
+                    {product.isEstimatedPrice && 'A partir de '}
+                    {formatKwanza(Number(product.price))}
+                  </td>
+                  <td className="px-4 py-2 text-neutral-700">
+                    {product.listingType === 'SERVICE' ? '—' : `${product.stock} ${product.unit}`}
                   </td>
                   <td className="px-4 py-2">
                     <span className="rounded-full bg-neutral-100 px-2.5 py-1 text-xs font-medium text-neutral-700">

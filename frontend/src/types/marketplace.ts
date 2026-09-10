@@ -14,6 +14,21 @@ export interface ProductPhoto {
 
 export type ProductStatus = 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED' | 'OUT_OF_STOCK' | 'REMOVED';
 
+export type ListingType = 'PRODUCT' | 'SERVICE';
+
+export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
+  PRODUCT: 'Produto',
+  SERVICE: 'Serviço',
+};
+
+export type DeliveryOption = 'SELLER_DELIVERS' | 'BUYER_PICKUP' | 'XKWANZA_TRANSPORT';
+
+export const DELIVERY_OPTION_LABELS: Record<DeliveryOption, string> = {
+  SELLER_DELIVERS: 'O vendedor entrega',
+  BUYER_PICKUP: 'O comprador levanta',
+  XKWANZA_TRANSPORT: 'Usa um transportador XKWANZA',
+};
+
 export interface ProductOwner {
   id: string;
   name: string;
@@ -25,15 +40,23 @@ export interface Product {
   id: string;
   ownerId: string;
   categoryId: string;
+  listingType: ListingType;
   name: string;
   description: string;
   price: string;
-  unit: string;
-  stock: number;
+  isEstimatedPrice: boolean;
+  // Produto
+  unit: string | null;
+  stock: number | null;
   weightKg: string | null;
   origin: string | null;
-  province: string;
-  municipality: string;
+  province: string | null;
+  municipality: string | null;
+  deliveryOption: DeliveryOption | null;
+  // Serviço
+  serviceArea: string | null;
+  availability: string | null;
+  contact: string | null;
   status: ProductStatus;
   isVerified: boolean;
   averageRating: string;
@@ -54,6 +77,7 @@ export interface PaginatedResult<T> {
 export interface ProductFilters {
   search?: string;
   categoryId?: string;
+  listingType?: ListingType;
   province?: string;
   municipality?: string;
   minPrice?: number;
@@ -62,20 +86,48 @@ export interface ProductFilters {
   pageSize?: number;
 }
 
-export interface CreateProductPayload {
+interface CreateListingBaseFields {
   categoryId: string;
   name: string;
   description: string;
   price: number;
+  isEstimatedPrice?: boolean;
+}
+
+export interface CreateProductListingPayload extends CreateListingBaseFields {
+  listingType: 'PRODUCT';
   unit: string;
   stock: number;
   weightKg?: number;
   origin?: string;
   province: string;
   municipality: string;
+  deliveryOption: DeliveryOption;
 }
 
-export type UpdateProductPayload = Partial<CreateProductPayload>;
+export interface CreateServiceListingPayload extends CreateListingBaseFields {
+  listingType: 'SERVICE';
+  serviceArea: string;
+  availability: string;
+  contact: string;
+}
+
+export type CreateProductPayload = CreateProductListingPayload | CreateServiceListingPayload;
+
+export type UpdateProductPayload = Partial<
+  CreateListingBaseFields & {
+    unit: string;
+    stock: number;
+    weightKg: number;
+    origin: string;
+    province: string;
+    municipality: string;
+    deliveryOption: DeliveryOption;
+    serviceArea: string;
+    availability: string;
+    contact: string;
+  }
+>;
 
 export interface Address {
   id: string;

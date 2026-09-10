@@ -164,6 +164,33 @@ chave de API, que ainda não foi configurada).
   (o que disseram sobre um vendedor/transportador — `GET /api/reviews/received`), em
   `/{prefixo}/avaliacoes`.
 
+## Publicar um anúncio — Produto vs Serviço
+
+`Product` (mapeado para a tabela `products`) representa tanto um Produto físico como um Serviço,
+distinguidos pelo campo `listingType` (`PRODUCT` | `SERVICE`, imutável depois de criado). A validação
+de criação usa um discriminated union no Zod (`createProductSchema`) — cada tipo exige o seu próprio
+conjunto de campos, e os campos do outro tipo ficam a `null`:
+
+| Passo | Produto (`/{prefixo}/stock/novo`) | Serviço (`/{prefixo}/stock/novo?tipo=servico`) |
+|---|---|---|
+| 1 | Título | Nome |
+| 2 | Categoria | Categoria |
+| 3 | Descrição | Descrição |
+| 4 | Foto (depois de guardar o 1º passo, tal como hoje — precisa do ID do anúncio) | Foto (idem) |
+| 5 | Preço | Preço/Orçamento (opção "é um orçamento" mostra "A partir de" em vez de preço fixo) |
+| 6 | Unidade | Área de atendimento |
+| 7 | Stock | Disponibilidade |
+| 8 | Localização (província/município) | Contacto |
+| 9 | Entrega (`SELLER_DELIVERS` / `BUYER_PICKUP` / `XKWANZA_TRANSPORT`) | — |
+| 10 | Publicar (`/stock`, exige pelo menos 1 foto + stock > 0) | Publicar (idem, exige área/disponibilidade/contacto preenchidos) |
+
+Quem publica: Produtor e Comerciante, para ambos os tipos (o formulário mostra um selector
+Produto/Serviço só na criação). No Marketplace (`/{prefixo}/marketplace`) os separadores
+"Produtos"/"Serviços"/"Tudo" filtram por `listingType`. Um Serviço nunca entra no carrinho —
+`ProductDetail` mostra sempre "Pedir orçamento" (via Negociações) em vez de "Adicionar ao
+carrinho", e o backend rejeita no checkout qualquer item cujo `listingType` não seja `PRODUCT`
+(defesa em profundidade, mesmo que o frontend já não ofereça essa opção).
+
 ## Regras absolutas do projecto
 
 - Nunca inventar API, NISS ou dados oficiais do INSS/AGT.

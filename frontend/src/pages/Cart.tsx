@@ -42,7 +42,7 @@ export function Cart() {
             <input
               type="number"
               min={1}
-              max={item.product.stock}
+              max={item.product.stock ?? undefined}
               value={item.quantity}
               onChange={(e) => updateQuantity(item.productId, Number(e.target.value))}
               className="w-16 rounded-md border border-neutral-300 px-2 py-1"

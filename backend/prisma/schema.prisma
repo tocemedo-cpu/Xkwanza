@@ -56,6 +56,17 @@ enum ProductStatus {
   REMOVED
 }
 
+enum ListingType {
+  PRODUCT
+  SERVICE
+}
+
+enum DeliveryOption {
+  SELLER_DELIVERS
+  BUYER_PICKUP
+  XKWANZA_TRANSPORT
+}
+
 enum OrderStatus {
   CREATED
   CONFIRMED
@@ -308,15 +319,23 @@ model Product {
   id            String        @id @default(uuid())
   ownerId       String
   categoryId    String
+  listingType   ListingType   @default(PRODUCT)
   name          String
   description   String
   price         Decimal       @db.Decimal(14, 2)
-  unit          String // ex: kg, unidade, litro
-  stock         Int           @default(0)
+  isEstimatedPrice Boolean    @default(false) // Serviço: mostra "A partir de" em vez de preço fixo.
+  // Campos de Produto — obrigatórios quando listingType = PRODUCT, ficam a null para Serviço.
+  unit          String? // ex: kg, unidade, litro
+  stock         Int?
   weightKg      Decimal?      @db.Decimal(10, 3)
   origin        String?
-  province      String
-  municipality  String
+  province      String?
+  municipality  String?
+  deliveryOption DeliveryOption?
+  // Campos de Serviço — obrigatórios quando listingType = SERVICE, ficam a null para Produto.
+  serviceArea   String?
+  availability  String?
+  contact       String?
   status        ProductStatus @default(DRAFT)
   isVerified    Boolean       @default(false)
   averageRating Decimal       @default(0) @db.Decimal(3, 2)
@@ -333,6 +352,7 @@ model Product {
   @@index([ownerId])
   @@index([categoryId])
   @@index([status])
+  @@index([listingType])
   @@map("products")
 }
 

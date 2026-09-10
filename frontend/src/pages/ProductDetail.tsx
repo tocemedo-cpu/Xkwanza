@@ -82,7 +82,7 @@ export function ProductDetail() {
             <p className="text-sm text-neutral-500">{product.category.name}</p>
             <h1 className="text-2xl font-bold text-neutral-900">{product.name}</h1>
             <p className="text-sm text-neutral-500">
-              {product.municipality}, {product.province}
+              {product.listingType === 'SERVICE' ? product.serviceArea : `${product.municipality}, ${product.province}`}
             </p>
             {Number(product.averageRating) > 0 && (
               <div className="mt-1 flex items-center gap-2">
@@ -93,8 +93,11 @@ export function ProductDetail() {
           </div>
 
           <p className="text-3xl font-bold text-xkwanza-700">
+            {product.isEstimatedPrice && <span className="mr-1 text-base font-normal text-neutral-500">A partir de</span>}
             {formatKwanza(Number(product.price))}
-            <span className="ml-1 text-base font-normal text-neutral-500">/{product.unit}</span>
+            {product.listingType === 'PRODUCT' && (
+              <span className="ml-1 text-base font-normal text-neutral-500">/{product.unit}</span>
+            )}
           </p>
 
           <p className="whitespace-pre-line text-neutral-700">{product.description}</p>
@@ -104,12 +107,32 @@ export function ProductDetail() {
             {product.owner.isVerifiedBadge && <ShieldCheck size={16} className="text-xkwanza-600" />}
           </div>
 
-          <p className="text-sm text-neutral-500">
-            {product.stock > 0 ? `${product.stock} ${product.unit} disponíveis` : 'Sem stock disponível'}
-          </p>
+          {product.listingType === 'SERVICE' ? (
+            <div className="space-y-1 rounded-md bg-neutral-50 p-3 text-sm text-neutral-600">
+              <p>
+                <span className="font-medium text-neutral-700">Disponibilidade:</span> {product.availability}
+              </p>
+              <p>
+                <span className="font-medium text-neutral-700">Contacto:</span> {product.contact}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500">
+              {(product.stock ?? 0) > 0 ? `${product.stock} ${product.unit} disponíveis` : 'Sem stock disponível'}
+            </p>
+          )}
 
           {isOwnProduct ? (
-            <p className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">Este é o seu produto.</p>
+            <p className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">
+              Este é o seu {product.listingType === 'SERVICE' ? 'serviço' : 'produto'}.
+            </p>
+          ) : product.listingType === 'SERVICE' ? (
+            <Link
+              to={`/${prefix}/negociacoes`}
+              className="block w-full rounded-md bg-xkwanza-600 px-4 py-2 text-center font-medium text-white hover:bg-xkwanza-700"
+            >
+              Pedir orçamento para este serviço
+            </Link>
           ) : isBuyer ? (
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -117,14 +140,14 @@ export function ProductDetail() {
                 <input
                   type="number"
                   min={1}
-                  max={product.stock}
+                  max={product.stock ?? undefined}
                   value={quantity}
-                  onChange={(e) => setQuantity(Math.min(Math.max(1, Number(e.target.value)), product.stock))}
+                  onChange={(e) => setQuantity(Math.min(Math.max(1, Number(e.target.value)), product.stock ?? 1))}
                   className="w-20 rounded-md border border-neutral-300 px-2 py-1"
                 />
               </div>
               <button
-                disabled={product.stock === 0}
+                disabled={(product.stock ?? 0) === 0}
                 onClick={handleAddToCart}
                 className="flex w-full items-center justify-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700 disabled:opacity-50"
               >

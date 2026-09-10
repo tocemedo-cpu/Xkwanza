@@ -478,6 +478,7 @@ describe('Administração — produtos, pedidos, transportadores e auditoria', (
       .set('Authorization', `Bearer ${producer.accessToken}`)
       .send({
         categoryId,
+        listingType: 'PRODUCT',
         name: 'Produto Moderação',
         description: 'Produto de teste para moderação administrativa.',
         price: 1000,
@@ -485,6 +486,7 @@ describe('Administração — produtos, pedidos, transportadores e auditoria', (
         stock: 10,
         province: 'Luanda',
         municipality: 'Luanda',
+        deliveryOption: 'BUYER_PICKUP',
       });
     expect(productRes.status).toBe(201);
 
@@ -565,6 +567,7 @@ describe('Marketplace — filtro por município', () => {
       .set('Authorization', `Bearer ${producer.accessToken}`)
       .send({
         categoryId,
+        listingType: 'PRODUCT',
         name: 'Produto Kilamba',
         description: 'Produto de teste para filtro de município.',
         price: 500,
@@ -572,6 +575,7 @@ describe('Marketplace — filtro por município', () => {
         stock: 5,
         province: 'Luanda',
         municipality: 'Kilamba Kiaxi',
+        deliveryOption: 'BUYER_PICKUP',
       });
     expect(created.status).toBe(201);
     await request(app)
@@ -712,6 +716,7 @@ describe('Avaliações — recebidas, minhas, e moderação administrativa', () 
       .set('Authorization', `Bearer ${producer.accessToken}`)
       .send({
         categoryId: category.id,
+        listingType: 'PRODUCT',
         name: 'Produto Avaliado',
         description: 'Produto de teste para avaliações.',
         price: 800,
@@ -719,6 +724,7 @@ describe('Avaliações — recebidas, minhas, e moderação administrativa', () 
         stock: 20,
         province: 'Luanda',
         municipality: 'Luanda',
+        deliveryOption: 'BUYER_PICKUP',
       });
     await request(app)
       .post(`/api/products/${productRes.body.id}/photos`)
@@ -814,5 +820,83 @@ describe('Administração — fretes e relatório da plataforma', () => {
       .get('/api/economics/admin')
       .set('Authorization', `Bearer ${(await createUser('TRANSPORTER')).accessToken}`);
     expect(forbiddenReport.status).toBe(403);
+  });
+});
+
+describe('Anúncios de Serviço — /api/products (listingType SERVICE)', () => {
+  it('cria, publica e lista um serviço sem stock/unidade/localização', async () => {
+    const merchant = await createUser('MERCHANT');
+    const category = await prisma.category.create({
+      data: { name: `Categoria Serviço ${Date.now()}`, slug: `categoria-servico-${Date.now()}` },
+    });
+
+    const rejectedMissingFields = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${merchant.accessToken}`)
+      .send({
+        categoryId: category.id,
+        listingType: 'SERVICE',
+        name: 'Reparação de electrodomésticos',
+        description: 'Reparação de frigoríficos, fogões e máquinas de lavar ao domicílio.',
+        price: 5000,
+      });
+    expect(rejectedMissingFields.status).toBe(400);
+
+    const createRes = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${merchant.accessToken}`)
+      .send({
+        categoryId: category.id,
+        listingType: 'SERVICE',
+        name: 'Reparação de electrodomésticos',
+        description: 'Reparação de frigoríficos, fogões e máquinas de lavar ao domicílio.',
+        price: 5000,
+        isEstimatedPrice: true,
+        serviceArea: 'Luanda, Belas, Viana',
+        availability: 'Segunda a sábado, 8h-18h',
+        contact: '+244923000000',
+      });
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.listingType).toBe('SERVICE');
+    expect(createRes.body.unit).toBeNull();
+    expect(createRes.body.stock).toBeNull();
+    expect(createRes.body.province).toBeNull();
+    const serviceId = createRes.body.id;
+
+    const publishWithoutPhoto = await request(app)
+      .post(`/api/products/${serviceId}/publish`)
+      .set('Authorization', `Bearer ${merchant.accessToken}`);
+    expect(publishWithoutPhoto.status).toBe(400);
+
+    await request(app)
+      .post(`/api/products/${serviceId}/photos`)
+      .set('Authorization', `Bearer ${merchant.accessToken}`)
+      .send({ url: 'https://example.com/servico.jpg' });
+
+    const publishRes = await request(app)
+      .post(`/api/products/${serviceId}/publish`)
+      .set('Authorization', `Bearer ${merchant.accessToken}`);
+    expect(publishRes.status).toBe(200);
+    expect(publishRes.body.status).toBe('PUBLISHED');
+
+    const listRes = await request(app).get('/api/products').query({ listingType: 'SERVICE' });
+    expect(listRes.status).toBe(200);
+    expect(listRes.body.items.some((p: { id: string }) => p.id === serviceId)).toBe(true);
+
+    const buyer = await createUser('BUYER');
+    const address = await request(app)
+      .post('/api/addresses')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ province: 'Luanda', municipality: 'Luanda', isDefault: true });
+
+    const checkoutAttempt = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({
+        shippingAddressId: address.body.id,
+        paymentMethod: 'BANK_TRANSFER',
+        items: [{ productId: serviceId, quantity: 1 }],
+      });
+    expect(checkoutAttempt.status).toBe(400);
   });
 });

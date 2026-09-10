@@ -40,7 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addItem = useCallback((product: Product, quantity = 1) => {
     setItems((prev) => {
       const existing = prev.find((item) => item.productId === product.id);
-      const maxQuantity = product.stock;
+      const maxQuantity = product.stock ?? 0;
       if (existing) {
         return prev.map((item) =>
           item.productId === product.id

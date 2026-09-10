@@ -3,15 +3,27 @@ import { Search } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { fetchCategories } from '../services/categoriesService';
 import { fetchProducts } from '../services/productsService';
-import { Category, PaginatedResult, Product } from '../types/marketplace';
+import { Category, ListingType, PaginatedResult, Product } from '../types/marketplace';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { ANGOLA_PROVINCES } from '../utils/angola';
 
+const TYPE_TABS: { value: ListingType | ''; label: string }[] = [
+  { value: '', label: 'Tudo' },
+  { value: 'PRODUCT', label: 'Produtos' },
+  { value: 'SERVICE', label: 'Serviços' },
+];
+
 export function Marketplace() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [result, setResult] = useState<PaginatedResult<Product> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [search, setSearch] = useState('');
+  const [listingType, setListingType] = useState<ListingType | ''>('');
   const [categoryId, setCategoryId] = useState('');
   const [province, setProvince] = useState('');
   const [municipality, setMunicipality] = useState('');
@@ -25,6 +37,7 @@ export function Marketplace() {
     setIsLoading(true);
     fetchProducts({
       search: search || undefined,
+      listingType: listingType || undefined,
       categoryId: categoryId || undefined,
       province: province || undefined,
       municipality: municipality || undefined,
@@ -34,7 +47,7 @@ export function Marketplace() {
       .then(setResult)
       .catch(() => setResult(null))
       .finally(() => setIsLoading(false));
-  }, [search, categoryId, province, municipality, page]);
+  }, [search, listingType, categoryId, province, municipality, page]);
 
   const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
@@ -42,7 +55,24 @@ export function Marketplace() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Marketplace</h1>
-        <p className="text-neutral-500">Produtos de produtores e comerciantes de todo o país.</p>
+        <p className="text-neutral-500">Produtos e serviços de produtores e comerciantes de todo o país.</p>
+      </div>
+
+      <div className="flex gap-1 rounded-full bg-neutral-100 p-1 w-fit">
+        {TYPE_TABS.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => {
+              setPage(1);
+              setListingType(tab.value);
+            }}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+              listingType === tab.value ? 'bg-white text-xkwanza-700 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -54,7 +84,7 @@ export function Marketplace() {
               setPage(1);
               setSearch(e.target.value);
             }}
-            placeholder="Pesquisar produtos..."
+            placeholder={listingType === 'SERVICE' ? 'Pesquisar serviços...' : 'Pesquisar produtos...'}
             className="w-full rounded-md border border-neutral-300 py-2 pl-9 pr-3 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
           />
         </div>
@@ -73,30 +103,34 @@ export function Marketplace() {
             </option>
           ))}
         </select>
-        <select
-          value={province}
-          onChange={(e) => {
-            setPage(1);
-            setProvince(e.target.value);
-          }}
-          className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
-        >
-          <option value="">Todas as províncias</option>
-          {ANGOLA_PROVINCES.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
-        <input
-          value={municipality}
-          onChange={(e) => {
-            setPage(1);
-            setMunicipality(e.target.value);
-          }}
-          placeholder="Município..."
-          className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
-        />
+        {listingType !== 'SERVICE' && (
+          <>
+            <select
+              value={province}
+              onChange={(e) => {
+                setPage(1);
+                setProvince(e.target.value);
+              }}
+              className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+            >
+              <option value="">Todas as províncias</option>
+              {ANGOLA_PROVINCES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <input
+              value={municipality}
+              onChange={(e) => {
+                setPage(1);
+                setMunicipality(e.target.value);
+              }}
+              placeholder="Município..."
+              className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+            />
+          </>
+        )}
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar produtos...</p>}
@@ -111,7 +145,7 @@ export function Marketplace() {
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {result.items.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} linkTo={`/${prefix}/produtos/${product.id}`} />
             ))}
           </div>
 

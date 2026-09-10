@@ -37,6 +37,7 @@ export async function listProducts(query: ListProductsQuery) {
     status: query.ownerId ? undefined : ProductStatus.PUBLISHED,
     ownerId: query.ownerId,
     categoryId: query.categoryId,
+    listingType: query.listingType,
     province: query.province,
     municipality: query.municipality ? { contains: query.municipality, mode: 'insensitive' } : undefined,
     ...(query.search
@@ -104,7 +105,14 @@ export async function setProductPublished(ownerId: string, id: string, publish: 
   if (publish) {
     const photoCount = await prisma.productPhoto.count({ where: { productId: id, uploadedComplete: true } });
     if (photoCount === 0) throw ApiError.badRequest('Adicione pelo menos uma fotografia antes de publicar');
-    if (product.stock <= 0) throw ApiError.badRequest('Defina stock disponível antes de publicar');
+
+    if (product.listingType === 'PRODUCT') {
+      if (!product.stock || product.stock <= 0) throw ApiError.badRequest('Defina stock disponível antes de publicar');
+    } else {
+      if (!product.serviceArea || !product.availability || !product.contact) {
+        throw ApiError.badRequest('Preencha a área de atendimento, disponibilidade e contacto antes de publicar');
+      }
+    }
   }
 
   const updated = await prisma.product.update({
@@ -142,6 +150,7 @@ export async function removeProductPhoto(ownerId: string, id: string, photoId: s
 export async function listProductsForAdmin(query: AdminListProductsQuery) {
   const where: Prisma.ProductWhereInput = {
     status: query.status,
+    listingType: query.listingType,
     ...(query.search
       ? { OR: [{ name: { contains: query.search, mode: 'insensitive' } }, { description: { contains: query.search, mode: 'insensitive' } }] }
       : {}),
