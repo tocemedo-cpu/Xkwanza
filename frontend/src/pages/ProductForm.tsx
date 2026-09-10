@@ -1,6 +1,6 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Upload } from 'lucide-react';
 import { fetchCategories } from '../services/categoriesService';
 import {
   addProductPhoto,
@@ -8,6 +8,7 @@ import {
   fetchProduct,
   removeProductPhoto,
   updateProduct,
+  uploadProductPhoto,
 } from '../services/productsService';
 import { Category, Product } from '../types/marketplace';
 import { ANGOLA_PROVINCES } from '../utils/angola';
@@ -33,6 +34,9 @@ export function ProductForm() {
   const [municipality, setMunicipality] = useState('');
   const [origin, setOrigin] = useState('');
   const [photoUrl, setPhotoUrl] = useState('');
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,9 +97,37 @@ export function ProductForm() {
 
   async function handleAddPhoto() {
     if (!id || !photoUrl.trim()) return;
-    const photo = await addProductPhoto(id, photoUrl.trim());
-    setProduct((prev) => (prev ? { ...prev, photos: [...prev.photos, photo] } : prev));
-    setPhotoUrl('');
+    setPhotoError(null);
+    try {
+      const photo = await addProductPhoto(id, photoUrl.trim());
+      setProduct((prev) => (prev ? { ...prev, photos: [...prev.photos, photo] } : prev));
+      setPhotoUrl('');
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível adicionar a fotografia.';
+      setPhotoError(message);
+    }
+  }
+
+  async function handleFileSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!id || !file) return;
+
+    setPhotoError(null);
+    setIsUploadingPhoto(true);
+    try {
+      const photo = await uploadProductPhoto(id, file);
+      setProduct((prev) => (prev ? { ...prev, photos: [...prev.photos, photo] } : prev));
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível enviar a imagem.';
+      setPhotoError(message);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   }
 
   async function handleRemovePhoto(photoId: string) {
@@ -212,9 +244,11 @@ export function ProductForm() {
         <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-6">
           <h2 className="font-semibold text-neutral-900">Fotografias</h2>
           <p className="text-sm text-neutral-500">
-            Adicione o URL de uma imagem já alojada (ex: link público de uma foto). É necessária pelo menos uma
-            fotografia para publicar o produto.
+            Envie uma foto do seu dispositivo, ou cole o URL de uma imagem já alojada noutro sítio. É necessária
+            pelo menos uma fotografia para publicar o produto.
           </p>
+
+          {photoError && <p className="text-sm text-red-600">{photoError}</p>}
 
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
             {product.photos.map((photo) => (
@@ -228,6 +262,23 @@ export function ProductForm() {
                 </button>
               </div>
             ))}
+          </div>
+
+          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileSelected} />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploadingPhoto}
+            className="flex w-full items-center justify-center gap-2 rounded-md border border-dashed border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-600 hover:bg-neutral-50 disabled:opacity-60"
+          >
+            <Upload size={16} />
+            {isUploadingPhoto ? 'A enviar...' : 'Enviar foto do dispositivo (JPEG/PNG/WEBP, até 5MB)'}
+          </button>
+
+          <div className="flex items-center gap-2 text-xs text-neutral-400">
+            <span className="h-px flex-1 bg-neutral-200" />
+            ou por URL
+            <span className="h-px flex-1 bg-neutral-200" />
           </div>
 
           <div className="flex gap-2">

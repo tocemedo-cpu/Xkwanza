@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { ApiError } from '../../utils/apiError';
 import * as productsService from './products.service';
+import { uploadProductPhoto } from '../../storage/productPhotoStorage';
 
 export const listProductsHandler = asyncHandler(async (req: Request, res: Response) => {
   const result = await productsService.listProducts(req.query as never);
@@ -60,4 +61,17 @@ export const removeProductPhotoHandler = asyncHandler(async (req: Request, res: 
   if (!req.user) throw ApiError.unauthorized();
   await productsService.removeProductPhoto(req.user.id, req.params.id, req.params.photoId);
   res.status(204).send();
+});
+
+export const uploadProductPhotoHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  if (!req.file) throw ApiError.badRequest('Ficheiro de imagem em falta (campo "file")');
+
+  const url = await uploadProductPhoto({
+    buffer: req.file.buffer,
+    mimeType: req.file.mimetype,
+    ownerId: req.user.id,
+  });
+  const photo = await productsService.addProductPhoto(req.user.id, req.params.id, url);
+  res.status(201).json(photo);
 });

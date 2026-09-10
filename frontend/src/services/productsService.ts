@@ -52,6 +52,15 @@ export async function addProductPhoto(id: string, url: string): Promise<ProductP
   return data;
 }
 
+export async function uploadProductPhoto(id: string, file: File): Promise<ProductPhoto> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const { data } = await apiClient.post<ProductPhoto>(`/products/${id}/photos/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+}
+
 export async function removeProductPhoto(id: string, photoId: string): Promise<void> {
   await apiClient.delete(`/products/${id}/photos/${photoId}`);
 }

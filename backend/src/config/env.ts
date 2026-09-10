@@ -35,4 +35,12 @@ export const env = {
     // Nunca "production" sem acordo institucional formal e credenciais oficiais.
     adapterMode: (process.env.INSS_ADAPTER_MODE ?? 'sandbox') as 'sandbox' | 'production',
   },
+
+  // Upload de imagens de produto via Supabase Storage. Sem estas variáveis definidas, o
+  // upload fica desactivado (mas a app continua a funcionar — fotos por URL continuam a dar).
+  supabaseStorage: {
+    url: process.env.SUPABASE_URL ?? '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+    bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'product-photos',
+  },
 };

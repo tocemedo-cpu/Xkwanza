@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { authenticate } from '../../middleware/auth.middleware';
 import { validate } from '../../middleware/validate.middleware';
+import { MAX_PHOTO_BYTES } from '../../storage/productPhotoStorage';
 import {
   addProductPhotoSchema,
   createProductSchema,
@@ -20,7 +22,10 @@ import {
   removeProductPhotoHandler,
   unpublishProductHandler,
   updateProductHandler,
+  uploadProductPhotoHandler,
 } from './products.controller';
+
+const photoUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX_PHOTO_BYTES } });
 
 export const productsRouter = Router();
 
@@ -37,6 +42,13 @@ productsRouter.post('/:id/publish', authenticate, validate(productIdParamSchema)
 productsRouter.post('/:id/unpublish', authenticate, validate(productIdParamSchema), unpublishProductHandler);
 
 productsRouter.post('/:id/photos', authenticate, validate(addProductPhotoSchema), addProductPhotoHandler);
+productsRouter.post(
+  '/:id/photos/upload',
+  authenticate,
+  validate(productIdParamSchema),
+  photoUpload.single('file'),
+  uploadProductPhotoHandler,
+);
 productsRouter.delete(
   '/:id/photos/:photoId',
   authenticate,

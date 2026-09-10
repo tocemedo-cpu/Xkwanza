@@ -38,6 +38,12 @@ services:
         value: sandbox
       - key: ADMIN_TASK_SECRET
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: product-photos
 
   - type: web
     name: xkwanza-frontend

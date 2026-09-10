@@ -120,4 +120,22 @@ O registo público bloqueia de propósito a criação de contas ADMIN/SUPPORT (s
    ```
 
    (`role` é opcional — por omissão promove a `ADMIN`; passa `"role":"SUPPORT"` para criar suporte em vez de admin.) Podes correr o mesmo pedido a partir da consola do browser (F12 → Console) com `fetch(...)` em vez de `curl`, se não tiveres terminal à mão.
-3. Termina sessão e volta a entrar — a conta já tem acesso aos painéis `/admin/pagamentos`, `/admin/formalizacao` e `/admin/inss`.
+3. Termina sessão e volta a entrar — a conta já tem acesso aos painéis `/admin/utilizadores`, `/admin/pagamentos`, `/admin/formalizacao` e `/admin/inss`.
+
+### 4. Upload de fotos de produto (Supabase Storage)
+
+Por omissão, os vendedores só conseguem colar o URL de uma imagem já alojada noutro sítio. Para activar o
+upload real a partir do dispositivo:
+
+1. No [dashboard do Supabase](https://supabase.com/dashboard), abre o teu projecto → **Storage** → **New
+   bucket**. Nome sugerido: `product-photos`. Marca-o como **Public bucket** (as fotos de produto são
+   públicas por natureza — aparecem no marketplace).
+2. Em **Project Settings → API**, copia o **Project URL** e a **service_role key** (não a `anon` key — esta
+   precisa de permissão de escrita no bucket, e nunca deve ser usada no frontend).
+3. No Render, define no `xkwanza-backend`:
+   - `SUPABASE_URL` — o Project URL do passo 2
+   - `SUPABASE_SERVICE_ROLE_KEY` — a service_role key do passo 2
+   - `SUPABASE_STORAGE_BUCKET` — `product-photos` (ou o nome que escolheste; já vem pré-definido no
+     `render.yaml`)
+4. Sem estas variáveis, a app continua a funcionar normalmente — o botão de upload mostra um erro claro e o
+   vendedor pode sempre usar o campo de URL.

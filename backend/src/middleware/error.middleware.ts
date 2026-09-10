@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { MulterError } from 'multer';
 import { ApiError } from '../utils/apiError';
 import { logger } from '../utils/logger';
 
@@ -14,6 +15,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
       message: 'Dados inválidos',
       details: err.flatten(),
     });
+  }
+
+  if (err instanceof MulterError) {
+    const message = err.code === 'LIMIT_FILE_SIZE' ? 'Imagem demasiado grande — o limite é 5MB' : err.message;
+    return res.status(400).json({ message });
   }
 
   if (err instanceof ApiError) {
