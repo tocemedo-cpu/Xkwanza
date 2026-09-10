@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
 import { Dashboard } from './pages/Dashboard';
 import { Marketplace } from './pages/Marketplace';
 import { ProductDetail } from './pages/ProductDetail';
@@ -23,6 +25,7 @@ import { EconomicHistory } from './pages/EconomicHistory';
 import { Formalization } from './pages/Formalization';
 import { FormalizationDiagnosis } from './pages/FormalizationDiagnosis';
 import { AdminFormalization } from './pages/AdminFormalization';
+import { AdminUsers } from './pages/AdminUsers';
 import { INSS } from './pages/INSS';
 import { AdminINSS } from './pages/AdminINSS';
 import { NotFound } from './pages/NotFound';
@@ -41,6 +44,8 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/entrar" element={<Login />} />
       <Route path="/registar" element={<Register />} />
+      <Route path="/termos" element={<Terms />} />
+      <Route path="/privacidade" element={<Privacy />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
@@ -74,6 +79,7 @@ export default function App() {
           </Route>
 
           <Route element={<RoleGuard allowedRoles={[...STAFF_ROLES]} />}>
+            <Route path="/admin/utilizadores" element={<AdminUsers />} />
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/formalizacao" element={<AdminFormalization />} />
             <Route path="/admin/inss" element={<AdminINSS />} />

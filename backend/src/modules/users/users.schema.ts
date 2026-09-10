@@ -10,3 +10,11 @@ export const updateProfileSchema = z.object({
     activityType: z.string().trim().max(60).optional(),
   }),
 });
+
+// Recuperação de conta continua assistida por suporte/administração enquanto não existir
+// canal de SMS/email para um fluxo de "esqueci-me da password" self-service.
+export const adminResetPasswordSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Identificador de utilizador inválido'),
+  }),
+});

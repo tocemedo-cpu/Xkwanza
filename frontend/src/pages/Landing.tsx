@@ -274,6 +274,14 @@ export function Landing() {
         <Link to="/entrar" className="font-medium text-green-900 hover:underline">
           Já tem conta? Entrar
         </Link>
+        <div className="mt-3 flex items-center justify-center gap-4 text-xs text-neutral-400">
+          <Link to="/termos" className="hover:text-green-900 hover:underline">
+            Termos de Uso
+          </Link>
+          <Link to="/privacidade" className="hover:text-green-900 hover:underline">
+            Política de Privacidade
+          </Link>
+        </div>
       </footer>
     </div>
   );

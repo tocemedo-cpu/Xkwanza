@@ -34,7 +34,7 @@ export function DashboardLayout() {
             </span>
             <span className="hidden text-lg font-bold tracking-tight text-white sm:inline">XKWANZA</span>
           </NavLink>
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden min-w-0 flex-1 flex-wrap items-center gap-1 md:flex">
             <NavLink to="/painel" className={navLinkClass} end>
               Painel
             </NavLink>
@@ -85,6 +85,9 @@ export function DashboardLayout() {
             )}
             {isStaff && (
               <>
+                <NavLink to="/admin/utilizadores" className={navLinkClass}>
+                  Utilizadores
+                </NavLink>
                 <NavLink to="/admin/pagamentos" className={navLinkClass}>
                   Pagamentos
                 </NavLink>
@@ -97,7 +100,7 @@ export function DashboardLayout() {
               </>
             )}
           </nav>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex shrink-0 items-center gap-4 text-sm">
             <NavLink to="/carrinho" className="relative text-white/75 hover:text-white">
               <ShoppingCart size={20} />
               {totalItems > 0 && (
@@ -171,6 +174,9 @@ export function DashboardLayout() {
           )}
           {isStaff && (
             <>
+              <NavLink to="/admin/utilizadores" className={navLinkClass}>
+                Utilizadores
+              </NavLink>
               <NavLink to="/admin/pagamentos" className={navLinkClass}>
                 Pagamentos
               </NavLink>

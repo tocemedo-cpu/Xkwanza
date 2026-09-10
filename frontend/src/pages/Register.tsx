@@ -109,6 +109,17 @@ export function Register() {
           </select>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
+        <p className="text-xs text-neutral-500">
+          Ao criar conta, aceitas os{' '}
+          <Link to="/termos" target="_blank" className="font-medium text-xkwanza-600 hover:underline">
+            Termos de Uso
+          </Link>{' '}
+          e a{' '}
+          <Link to="/privacidade" target="_blank" className="font-medium text-xkwanza-600 hover:underline">
+            Política de Privacidade
+          </Link>{' '}
+          da XKWANZA.
+        </p>
         <button
           type="submit"
           disabled={isSubmitting}
