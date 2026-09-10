@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: xkwanza
+          POSTGRES_PASSWORD: xkwanza
+          POSTGRES_DB: xkwanza_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://xkwanza:xkwanza@localhost:5432/xkwanza_test
+      DIRECT_URL: postgresql://xkwanza:xkwanza@localhost:5432/xkwanza_test
+      JWT_ACCESS_SECRET: ci-test-access-secret
+      JWT_REFRESH_SECRET: ci-test-refresh-secret
+      CORS_ORIGIN: http://localhost:5173
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Aplicar schema à base de dados de teste
+        run: npx prisma migrate deploy
+        working-directory: backend
+
+      - name: Typecheck
+        run: npm run typecheck --workspace=backend
+
+      - name: Testes
+        run: npm run test --workspace=backend
+
+      - name: Build
+        run: npm run build --workspace=backend
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck --workspace=frontend
+
+      - name: Testes
+        run: npm run test --workspace=frontend
+
+      - name: Build
+        run: npm run build --workspace=frontend

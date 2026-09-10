@@ -56,6 +56,20 @@ npm run dev:backend
 npm run dev:frontend
 ```
 
+## Testes e CI
+
+```bash
+npm run test --workspace=backend    # unitários + integração (precisa de DATABASE_URL/DIRECT_URL)
+npm run test --workspace=frontend   # unitários + componentes (vitest + Testing Library)
+```
+
+Os testes de integração do backend (`backend/src/app.integration.test.ts`) correm contra uma base de dados
+Postgres real (a mesma usada em desenvolvimento local) — sem mocks, exercitam o fluxo HTTP completo:
+validação, Prisma, hashing de password e RBAC.
+
+O GitHub Actions (`.github/workflows/ci.yml`) corre em cada `push`/PR: typecheck, testes e build para os dois
+workspaces, com um serviço Postgres efémero para os testes do backend.
+
 ## Deploy (Render + Supabase)
 
 Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render como dois serviços definidos em `render.yaml`.
