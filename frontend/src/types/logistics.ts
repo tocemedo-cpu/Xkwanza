@@ -24,7 +24,7 @@ export const TRANSPORT_STATUS_LABELS: Record<TransportStatus, string> = {
 export interface TransporterUserSummary {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
 }
 
 export interface Transporter {

@@ -3,24 +3,33 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
 import { ANGOLA_PHONE_PREFIX } from '../utils/angola';
+import { IdentifierMethod, IdentifierMethodToggle } from '../components/IdentifierMethodToggle';
 
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [method, setMethod] = useState<IdentifierMethod>('phone');
   const [phone, setPhone] = useState(ANGOLA_PHONE_PREFIX);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  function handleMethodChange(next: IdentifierMethod) {
+    setMethod(next);
+    setError(null);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(phone, password);
+      const identifier = method === 'phone' ? phone : email;
+      await login(identifier, password);
       navigate('/painel');
     } catch {
-      setError('Telefone ou palavra-passe incorrectos.');
+      setError('Telefone/email ou palavra-passe incorrectos.');
     } finally {
       setIsSubmitting(false);
     }
@@ -29,17 +38,34 @@ export function Login() {
   return (
     <AuthLayout title="Entrar" subtitle="Aceda à sua conta XKWANZA">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
-          <input
-            type="tel"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
-            placeholder="+244900000000"
-          />
-        </div>
+        <IdentifierMethodToggle value={method} onChange={handleMethodChange} />
+
+        {method === 'phone' ? (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
+            <input
+              type="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+              placeholder="+244900000000"
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+              placeholder="tu@exemplo.com"
+            />
+          </div>
+        )}
+
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Palavra-passe</label>
           <input

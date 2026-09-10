@@ -66,7 +66,7 @@ export function AdminPayments() {
             <div key={order.id} className="flex items-center justify-between p-4 text-sm">
               <div>
                 <p className="font-medium text-neutral-900">
-                  Pedido #{order.id.slice(0, 8)} · {order.buyer.name} ({order.buyer.phone})
+                  Pedido #{order.id.slice(0, 8)} · {order.buyer.name} ({order.buyer.phone ?? '—'})
                 </p>
                 <p className="text-neutral-500">
                   {PAYMENT_METHOD_LABELS[order.payment.method]} · {PAYMENT_STATUS_LABELS[order.payment.status]}

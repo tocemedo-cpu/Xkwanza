@@ -40,6 +40,7 @@ export async function listUsers(params: { page: number; pageSize: number; role?:
       ? {
           OR: [
             { phone: { contains: params.search, mode: 'insensitive' as const } },
+            { email: { contains: params.search, mode: 'insensitive' as const } },
             { name: { contains: params.search, mode: 'insensitive' as const } },
           ],
         }

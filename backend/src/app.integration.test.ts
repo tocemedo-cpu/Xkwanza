@@ -75,7 +75,7 @@ describe('POST /api/auth/register', () => {
 });
 
 describe('POST /api/auth/login', () => {
-  it('autentica com a password certa e rejeita a errada', async () => {
+  it('autentica por telefone com a password certa e rejeita a errada', async () => {
     const phone = randomPhone();
     await request(app).post('/api/auth/register').send({
       name: 'Login Test',
@@ -86,11 +86,30 @@ describe('POST /api/auth/login', () => {
       role: 'BUYER',
     });
 
-    const ok = await request(app).post('/api/auth/login').send({ phone, password: 'Password123' });
+    const ok = await request(app).post('/api/auth/login').send({ identifier: phone, password: 'Password123' });
     expect(ok.status).toBe(200);
 
-    const wrong = await request(app).post('/api/auth/login').send({ phone, password: 'PasswordErrada1' });
+    const wrong = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: phone, password: 'PasswordErrada1' });
     expect(wrong.status).toBe(401);
+  });
+
+  it('regista e autentica apenas com email (sem telefone)', async () => {
+    const email = `${randomPhone().slice(-9)}@example.com`;
+    const registerRes = await request(app).post('/api/auth/register').send({
+      name: 'Email Only',
+      email,
+      password: 'Password123',
+      province: 'Luanda',
+      municipality: 'Luanda',
+      role: 'BUYER',
+    });
+    expect(registerRes.status).toBe(201);
+    expect(registerRes.body.user.phone).toBeNull();
+
+    const ok = await request(app).post('/api/auth/login').send({ identifier: email, password: 'Password123' });
+    expect(ok.status).toBe(200);
   });
 });
 

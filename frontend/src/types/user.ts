@@ -10,7 +10,7 @@ export type TrustLevel =
 export interface User {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   role: UserRole;
   province: string;
@@ -31,3 +31,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 
 // Perfis disponíveis para auto-registo público (ADMIN e SUPPORT são criados internamente).
 export const SELF_REGISTRABLE_ROLES: UserRole[] = ['BUYER', 'PRODUCER', 'MERCHANT', 'TRANSPORTER'];
+
+// Uma conta tem sempre telefone OU email (nunca nenhum) — usa isto em vez de assumir
+// que .phone existe, já que a conta pode ter sido criada só com email.
+export function getContact(user: { phone: string | null; email: string | null }): string {
+  return user.phone ?? user.email ?? '—';
+}

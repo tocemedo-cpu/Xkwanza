@@ -78,7 +78,7 @@ export interface FormalizationDocument {
   uploadedAt: string;
   verifiedAt: string | null;
   verifiedBy: string | null;
-  owner?: { id: string; name: string; phone: string };
+  owner?: { id: string; name: string; phone: string | null };
 }
 
 export interface FormalizationDossier {
@@ -114,5 +114,5 @@ export interface DossierReadyToFinalize {
   id: string;
   userId: string;
   currentStage: number;
-  user: { id: string; name: string; phone: string };
+  user: { id: string; name: string; phone: string | null };
 }

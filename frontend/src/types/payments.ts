@@ -71,6 +71,6 @@ export interface CreateBankAccountPayload {
 export interface PendingPaymentOrder {
   id: string;
   createdAt: string;
-  buyer: { id: string; name: string; phone: string };
+  buyer: { id: string; name: string; phone: string | null };
   payment: Payment;
 }

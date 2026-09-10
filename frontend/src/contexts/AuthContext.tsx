@@ -6,7 +6,7 @@ import { getAccessToken } from '../services/tokenStorage';
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (phone: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -35,8 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     bootstrap();
   }, []);
 
-  const login = useCallback(async (phone: string, password: string) => {
-    const loggedInUser = await loginRequest(phone, password);
+  const login = useCallback(async (identifier: string, password: string) => {
+    const loggedInUser = await loginRequest(identifier, password);
     setUser(loggedInUser);
   }, []);
 

@@ -33,6 +33,26 @@ Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modula
 
 Estas fases dependem, por definição, de integrações reais com instituições externas (INSS, AGT, bancos, fintechs, seguradoras) que exigem acordos institucionais formais, credenciais oficiais e homologação — nada disto existe nem pode ser criado por desenvolvimento de software isoladamente. Implementá-las "a sério" sem esse acordo violaria directamente as regras absolutas do projecto (nunca inventar API/dados oficiais do INSS/AGT, nunca expor credenciais institucionais). As Fases 6 e 7 já preparam o terreno: o padrão `Adapter + Mock/Sandbox` (ver `backend/src/modules/inss/inss.adapter.ts`) está pronto para, no futuro, ser substituído por uma implementação real assim que a integração for autorizada — bastará trocar o adapter, sem alterar o resto do sistema.
 
+## Autenticação e requisitos de registo
+
+O registo e o login aceitam **telefone ou email** como identificador da conta — a pessoa escolhe um dos dois
+no formulário (`Registar com telefone` / `Registar com email`); a conta guarda o que for escolhido e usa isso
+para entrar depois. Uma conta pode ter só telefone, só email, ou os dois (se adicionar o outro mais tarde),
+mas nunca nenhum dos dois.
+
+Os requisitos de registo são **iguais para os 4 perfis com auto-registo** — não há campos extra por perfil
+nesta fase; a diferenciação acontece depois de criar a conta (ex: o transportador completa o veículo em
+"Meu veículo", o vendedor cria produtos em "Meus produtos"):
+
+| Campo | Regra |
+|---|---|
+| Nome completo | mín. 2 caracteres |
+| Telefone **ou** Email | pelo menos um dos dois — telefone no formato `+244XXXXXXXXX`, email num formato válido |
+| Palavra-passe | mín. 8 caracteres, com maiúscula + minúscula + número |
+| Província | uma das 18 províncias angolanas |
+| Município | mín. 2 caracteres |
+| Perfil (Sou...) | Comprador / Produtor / Comerciante / Transportador — ADMIN/SUPPORT nunca por auto-registo |
+
 ## Regras absolutas do projecto
 
 - Nunca inventar API, NISS ou dados oficiais do INSS/AGT.
@@ -106,6 +126,16 @@ Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render co
 4. Vais precisar de **duas** connection strings do Supabase (Project Settings → Database → Connection string):
    - **Connection pooling** (porta `6543`, modo *Transaction*) → variável `DATABASE_URL`, usada pela app em runtime. Acrescenta `?pgbouncer=true` no fim.
    - **Direct connection** (porta `5432`) → variável `DIRECT_URL`, usada só pelo `prisma migrate deploy` no arranque de cada deploy. O pgbouncer do pooler não suporta os locks que o Prisma precisa para migrações — sem isto, `prisma migrate deploy` falha ou fica pendurado indefinidamente.
+
+   Depois do baseline acima feito uma vez, migrações novas (como `20260910153110_optional_phone_login`, que
+   torna o telefone opcional para suportar registo/login por email) aplicam-se sozinhas em cada deploy — não
+   precisas de repetir o processo manual. Se mesmo assim vires `P3005` nos logs do Render outra vez, corre o
+   SQL correspondente directamente no SQL Editor do Supabase:
+   ```sql
+   ALTER TABLE "users" ALTER COLUMN "phone" DROP NOT NULL;
+   ```
+   e depois marca-a como aplicada com o endpoint `/internal/tasks/db-baseline` (secção acima) ou
+   `npx prisma migrate resolve --applied 20260910153110_optional_phone_login`.
 
 ### 2. Render — backend + frontend
 

@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { KeyRound } from 'lucide-react';
 import { adminResetPassword, fetchUsers } from '../services/usersService';
-import { ROLE_LABELS, User } from '../types/user';
+import { getContact, ROLE_LABELS, User } from '../types/user';
 
 export function AdminUsers() {
   const [search, setSearch] = useState('');
@@ -28,7 +28,7 @@ export function AdminUsers() {
   async function handleReset(user: User) {
     setError(null);
     setResetResult(null);
-    if (!confirm(`Repor a palavra-passe de ${user.name} (${user.phone})? A sessão actual dele(a) será terminada.`)) {
+    if (!confirm(`Repor a palavra-passe de ${user.name} (${getContact(user)})? A sessão actual dele(a) será terminada.`)) {
       return;
     }
     setResettingId(user.id);
@@ -60,7 +60,7 @@ export function AdminUsers() {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Pesquisar por nome ou telefone..."
+          placeholder="Pesquisar por nome, telefone ou email..."
           className="w-full max-w-sm rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
         />
         <button type="submit" className="rounded-md bg-xkwanza-600 px-4 py-2 text-sm font-medium text-white hover:bg-xkwanza-700">
@@ -73,7 +73,7 @@ export function AdminUsers() {
       {resetResult && (
         <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm">
           <p className="font-semibold text-amber-900">
-            Palavra-passe temporária para {resetResult.user.name} ({resetResult.user.phone}):
+            Palavra-passe temporária para {resetResult.user.name} ({getContact(resetResult.user)}):
           </p>
           <p className="mt-1 select-all font-mono text-lg font-bold text-amber-900">{resetResult.tempPassword}</p>
           <p className="mt-1 text-amber-800">
@@ -106,7 +106,7 @@ export function AdminUsers() {
                   {user.name} <span className="text-neutral-400">· {ROLE_LABELS[user.role]}</span>
                 </p>
                 <p className="text-neutral-500">
-                  {user.phone} · {user.municipality}, {user.province}
+                  {getContact(user)} · {user.municipality}, {user.province}
                 </p>
               </div>
               <button

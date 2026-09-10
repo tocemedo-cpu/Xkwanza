@@ -17,7 +17,7 @@ const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 function publicUser(user: {
   id: string;
   name: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   role: UserRole;
   province: string;
@@ -65,7 +65,9 @@ export async function register(input: RegisterInput, req: Request) {
   }
 
   const existing = await prisma.user.findFirst({
-    where: { OR: [{ phone: input.phone }, ...(input.email ? [{ email: input.email }] : [])] },
+    where: {
+      OR: [...(input.phone ? [{ phone: input.phone }] : []), ...(input.email ? [{ email: input.email }] : [])],
+    },
   });
   if (existing) {
     throw ApiError.conflict('Já existe uma conta com este telefone ou email');
@@ -100,17 +102,22 @@ export async function register(input: RegisterInput, req: Request) {
 }
 
 export async function login(input: LoginInput, req: Request) {
-  const user = await prisma.user.findUnique({ where: { phone: input.phone } });
+  // O identificador pode ser telefone ou email — procura-se pelos dois em vez de tentar
+  // adivinhar o formato, para não rejeitar por engano um formato ligeiramente diferente.
+  const identifier = input.identifier.trim().toLowerCase();
+  const user = await prisma.user.findFirst({
+    where: { OR: [{ phone: identifier }, { email: identifier }] },
+  });
 
   if (!user || !(await verifyPassword(user.passwordHash, input.password))) {
     await recordAudit({
       action: 'USER_LOGIN',
       entity: 'User',
       result: 'FAILURE',
-      metadata: { phone: input.phone },
+      metadata: { identifier },
       req,
     });
-    throw ApiError.unauthorized('Telefone ou palavra-passe incorrectos');
+    throw ApiError.unauthorized('Telefone/email ou palavra-passe incorrectos');
   }
 
   if (!user.isActive) {

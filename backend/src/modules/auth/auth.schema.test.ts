@@ -48,20 +48,42 @@ describe('registerSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('email é opcional', () => {
+  it('email é opcional quando o telefone está presente', () => {
     const result = registerSchema.safeParse({ body: validRegisterBody });
     expect(result.success).toBe(true);
+  });
+
+  it('aceita registo apenas com email (sem telefone)', () => {
+    const { phone: _phone, ...withoutPhone } = validRegisterBody;
+    const result = registerSchema.safeParse({ body: { ...withoutPhone, email: 'ana@example.com' } });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita registo sem telefone nem email', () => {
+    const { phone: _phone, ...withoutPhone } = validRegisterBody;
+    const result = registerSchema.safeParse({ body: withoutPhone });
+    expect(result.success).toBe(false);
   });
 });
 
 describe('loginSchema', () => {
-  it('aceita telefone e password não vazios', () => {
-    const result = loginSchema.safeParse({ body: { phone: '+244923456789', password: 'qualquer' } });
+  it('aceita telefone como identifier', () => {
+    const result = loginSchema.safeParse({ body: { identifier: '+244923456789', password: 'qualquer' } });
+    expect(result.success).toBe(true);
+  });
+
+  it('aceita email como identifier', () => {
+    const result = loginSchema.safeParse({ body: { identifier: 'ana@example.com', password: 'qualquer' } });
     expect(result.success).toBe(true);
   });
 
   it('rejeita password vazia', () => {
-    const result = loginSchema.safeParse({ body: { phone: '+244923456789', password: '' } });
+    const result = loginSchema.safeParse({ body: { identifier: '+244923456789', password: '' } });
+    expect(result.success).toBe(false);
+  });
+
+  it('rejeita identifier demasiado curto', () => {
+    const result = loginSchema.safeParse({ body: { identifier: 'ab', password: 'qualquer' } });
     expect(result.success).toBe(false);
   });
 });

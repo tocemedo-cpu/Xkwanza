@@ -4,13 +4,16 @@ import { AuthLayout } from '../layouts/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
 import { ANGOLA_PHONE_PREFIX, ANGOLA_PROVINCES } from '../utils/angola';
 import { ROLE_LABELS, SELF_REGISTRABLE_ROLES, UserRole } from '../types/user';
+import { IdentifierMethod, IdentifierMethodToggle } from '../components/IdentifierMethodToggle';
 
 export function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
+  const [method, setMethod] = useState<IdentifierMethod>('phone');
   const [phone, setPhone] = useState(ANGOLA_PHONE_PREFIX);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [province, setProvince] = useState<string>(ANGOLA_PROVINCES[0]);
   const [municipality, setMunicipality] = useState('');
@@ -18,12 +21,25 @@ export function Register() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function handleMethodChange(next: IdentifierMethod) {
+    setMethod(next);
+    setError(null);
+  }
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
     try {
-      await register({ name, phone, password, province, municipality, role });
+      await register({
+        name,
+        phone: method === 'phone' ? phone : undefined,
+        email: method === 'email' ? email : undefined,
+        password,
+        province,
+        municipality,
+        role,
+      });
       navigate('/painel');
     } catch (err: unknown) {
       const message =
@@ -47,17 +63,38 @@ export function Register() {
             className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
           />
         </div>
+
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
-          <input
-            type="tel"
-            required
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
-            placeholder="+244900000000"
-          />
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Como queres entrar na conta?</label>
+          <IdentifierMethodToggle value={method} onChange={handleMethodChange} />
         </div>
+
+        {method === 'phone' ? (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
+            <input
+              type="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+              placeholder="+244900000000"
+            />
+          </div>
+        ) : (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+              placeholder="tu@exemplo.com"
+            />
+          </div>
+        )}
+
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Palavra-passe</label>
           <input

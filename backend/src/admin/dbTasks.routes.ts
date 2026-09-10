@@ -54,26 +54,32 @@ dbTasksRouter.post('/promote-admin', async (req, res) => {
     return res.status(404).json({ message: `Rota não encontrada: ${req.method} ${req.originalUrl}` });
   }
 
-  const phone = typeof req.body?.phone === 'string' ? req.body.phone.trim() : '';
+  // Aceita "identifier" (telefone ou email); "phone" continua a funcionar por compatibilidade
+  // com pedidos antigos, já que era o único campo antes de o login/registo passar a aceitar email.
+  const identifierRaw = req.body?.identifier ?? req.body?.phone;
+  const identifier = typeof identifierRaw === 'string' ? identifierRaw.trim().toLowerCase() : '';
   const role = typeof req.body?.role === 'string' ? req.body.role : UserRole.ADMIN;
 
-  if (!phone) {
-    return res.status(400).json({ message: 'phone é obrigatório (o telefone com que a conta já está registada)' });
+  if (!identifier) {
+    return res.status(400).json({ message: 'identifier é obrigatório (o telefone ou email com que a conta já está registada)' });
   }
   if (!PROMOTABLE_ROLES.includes(role as UserRole)) {
     return res.status(400).json({ message: `role deve ser um de: ${PROMOTABLE_ROLES.join(', ')}` });
   }
 
-  const user = await prisma.user.findUnique({ where: { phone } });
+  const user = await prisma.user.findFirst({ where: { OR: [{ phone: identifier }, { email: identifier }] } });
   if (!user) {
-    return res.status(404).json({ message: `Nenhuma conta encontrada com o telefone ${phone}. Regista-te primeiro na app.` });
+    return res
+      .status(404)
+      .json({ message: `Nenhuma conta encontrada com o telefone/email ${identifier}. Regista-te primeiro na app.` });
   }
 
   const updated = await prisma.user.update({ where: { id: user.id }, data: { role: role as UserRole } });
 
-  logger.info('Utilizador promovido via promote-admin', { userId: updated.id, phone: updated.phone, role: updated.role });
+  const contact = updated.phone ?? updated.email;
+  logger.info('Utilizador promovido via promote-admin', { userId: updated.id, contact, role: updated.role });
   return res.status(200).json({
-    message: `Conta ${updated.phone} promovida a ${updated.role}.`,
-    user: { id: updated.id, name: updated.name, phone: updated.phone, role: updated.role },
+    message: `Conta ${contact} promovida a ${updated.role}.`,
+    user: { id: updated.id, name: updated.name, phone: updated.phone, email: updated.email, role: updated.role },
   });
 });

@@ -73,7 +73,7 @@ export function AdminFormalization() {
               <div key={doc.id} className="flex items-center justify-between p-4 text-sm">
                 <div>
                   <p className="font-medium text-neutral-900">
-                    {doc.owner?.name} ({doc.owner?.phone})
+                    {doc.owner?.name} ({doc.owner?.phone ?? '—'})
                   </p>
                   <p className="text-neutral-500">
                     {DOCUMENT_TYPE_LABELS[doc.type]} ·{' '}
@@ -113,7 +113,7 @@ export function AdminFormalization() {
             {dossiers.map((dossier) => (
               <div key={dossier.id} className="flex items-center justify-between p-4 text-sm">
                 <p className="font-medium text-neutral-900">
-                  {dossier.user.name} ({dossier.user.phone})
+                  {dossier.user.name} ({dossier.user.phone ?? '—'})
                 </p>
                 <button
                   onClick={() => handleFinalize(dossier.userId)}

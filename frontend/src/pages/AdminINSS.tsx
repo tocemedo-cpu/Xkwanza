@@ -54,7 +54,7 @@ export function AdminINSS() {
             <div key={doc.id} className="flex items-center justify-between p-4 text-sm">
               <div>
                 <p className="font-medium text-neutral-900">
-                  {doc.linkage?.user.name} ({doc.linkage?.user.phone})
+                  {doc.linkage?.user.name} ({doc.linkage?.user.phone ?? '—'})
                 </p>
                 <p className="text-neutral-500">
                   {DOCUMENT_TYPE_LABELS[doc.type]} ·{' '}

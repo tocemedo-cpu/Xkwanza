@@ -55,7 +55,7 @@ export interface INSSDocument {
   status: INSSDocumentStatus;
   uploadedAt: string;
   verifiedAt: string | null;
-  linkage?: { user: { id: string; name: string; phone: string } };
+  linkage?: { user: { id: string; name: string; phone: string | null } };
 }
 
 export interface INSSSimulation {

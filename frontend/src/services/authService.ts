@@ -10,7 +10,7 @@ interface AuthResponse {
 
 export interface RegisterPayload {
   name: string;
-  phone: string;
+  phone?: string;
   email?: string;
   password: string;
   province: string;
@@ -25,8 +25,9 @@ export async function registerRequest(payload: RegisterPayload): Promise<User> {
   return data.user;
 }
 
-export async function loginRequest(phone: string, password: string): Promise<User> {
-  const { data } = await apiClient.post<AuthResponse>('/auth/login', { phone, password });
+// identifier: telefone (+244XXXXXXXXX) ou email — o backend procura pelos dois.
+export async function loginRequest(identifier: string, password: string): Promise<User> {
+  const { data } = await apiClient.post<AuthResponse>('/auth/login', { identifier, password });
   setTokens(data.accessToken, data.refreshToken);
   return data.user;
 }
