@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import { WalletIcon } from 'lucide-react';
 import { fetchMyWallet } from '../services/walletService';
 import { Wallet as WalletType } from '../types/payments';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 export function Wallet() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [wallet, setWallet] = useState<WalletType | null>(null);
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export function Wallet() {
           Para levantamentos, registe uma conta bancária e contacte o suporte — ainda não existe integração
           bancária automática.
         </p>
-        <Link to="/contas-bancarias" className="mt-3 inline-block text-sm font-medium text-xkwanza-600 hover:underline">
+        <Link to={`/${prefix}/contas-bancarias`} className="mt-3 inline-block text-sm font-medium text-xkwanza-600 hover:underline">
           Gerir contas bancárias →
         </Link>
       </div>

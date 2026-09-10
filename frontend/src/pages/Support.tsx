@@ -2,11 +2,15 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createTicket, fetchMyTickets } from '../services/supportService';
 import { SUPPORT_TICKET_STATUS_LABELS, SupportTicket } from '../types/support';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
 
 export function Support() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -100,7 +104,7 @@ export function Support() {
           {tickets.map((ticket) => (
             <Link
               key={ticket.id}
-              to={`/suporte/${ticket.id}`}
+              to={`/${prefix}/suporte/${ticket.id}`}
               className="flex items-center justify-between gap-3 p-4 text-sm hover:bg-neutral-50"
             >
               <div>

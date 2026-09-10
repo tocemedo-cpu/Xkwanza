@@ -92,6 +92,34 @@ perfil reaproveita o endpoint genérico de documentos (`POST /api/formalization/
 `VEHICLE_DOCUMENT`/`SERVICE_REQUIREMENT` para o Transportador, `IDENTITY`/`ACTIVITY_PROOF` para
 Produtor/Comerciante).
 
+## Esquema de rotas do frontend
+
+Todas as rotas autenticadas vivem sob um prefixo por perfil — `/produtor/*`, `/comerciante/*`,
+`/comprador/*`, `/transportador/*` e `/admin/*` (ADMIN e SUPPORT) — imposto pelo componente
+`RoleGuard`: quem tenta aceder a um prefixo que não é o seu é reencaminhado para o seu próprio
+`/{prefixo}/dashboard`. `getRolePrefix(role)` (`frontend/src/types/user.ts`) é a única fonte de
+verdade para o mapeamento perfil → prefixo, usada tanto no router (`App.tsx`) como em qualquer
+página que precise de construir um link consciente do perfil de quem está a ver (ex: `OrderDetail`,
+`ProductDetail`). Páginas partilhadas entre perfis (ex: `Support`, `OrderDetail`,
+`TransportOrderDetail`) são montadas várias vezes — uma por prefixo — apontando para o mesmo
+componente React.
+
+| Perfil | Prefixo | Páginas principais |
+|---|---|---|
+| Produtor | `/produtor` | `dashboard`, `marketplace`, `stock` (catálogo), `pedidos` (recebidos), `negociacoes`, `entregas`, `avaliacoes`, `documentos` (formalização), `inss`, `carteira`, `historico`, `notificacoes`, `suporte`, `perfil`, `conta` |
+| Comerciante | `/comerciante` | Mesmo conjunto do Produtor (perfis MERCHANT e PRODUCER partilham as mesmas páginas de vendedor) |
+| Comprador | `/comprador` | `dashboard`, `marketplace`, `carrinho`, `checkout`, `pedidos`, `negociacoes`, `entregas`, `avaliacoes`, `notificacoes`, `suporte`, `conta` |
+| Transportador | `/transportador` | `dashboard`, `fretes`, `meus-fretes`, `veiculo`, `rotas` (placeholder — ver nota abaixo), `rendimentos`, `avaliacoes`, `documentos`, `inss`, `carteira`, `notificacoes`, `suporte`, `conta` |
+| Administrador | `/admin` | `dashboard`, `utilizadores`, `produtores`, `compradores`, `transportadores`, `categorias`, `produtos`, `pedidos`, `entregas`, `negociacoes`, `avaliacoes`, `pagamentos`, `notificacoes`, `formalizacao`, `inss`, `reclamacoes`, `auditoria`, `relatorios`, `conta` |
+
+Carrinho/checkout (`/comprador/carrinho`, `/comprador/checkout`) são exclusivos do perfil
+Comprador — um Produtor/Comerciante/Transportador que quiser pedir um preço a outro vendedor usa
+Negociações (`/{prefixo}/negociacoes`), não o carrinho de compras.
+
+`/admin/configuracoes` foi deliberadamente deixado de fora: não existe ainda nenhum modelo de
+dados para configurações da plataforma, por isso a rota não é criada até haver algo real para
+mostrar aí — evita construir uma página vazia.
+
 ## Administração e suporte
 
 ADMIN e SUPPORT nunca aparecem no registo público (ver secção acima) — a sua autoridade vem
@@ -100,16 +128,41 @@ o mesmo acesso a estas ferramentas (não há distinção de permissões entre AD
 
 | Área | Onde | O que faz |
 |---|---|---|
-| Utilizadores | `/admin/utilizadores` | Listar/pesquisar, repor password, **bloquear/desbloquear conta** (`isActive`), **validar perfil** (`isVerifiedBadge`) — `PATCH /api/users/:id/status`. Um admin nunca se pode bloquear a si próprio. Uma conta bloqueada (`isActive: false`) não consegue entrar (login responde 403), mesmo com a password certa. |
+| Painel | `/admin/dashboard` | Indicadores agregados da plataforma (utilizadores por perfil, pedidos por estado, receita concluída, pagamentos pendentes, tickets/negociações abertas, produtos activos — `GET /api/economics/admin`) e atalhos para as restantes áreas. |
+| Utilizadores | `/admin/utilizadores`, `/admin/produtores`, `/admin/compradores` | Listar/pesquisar (as duas últimas pré-filtram por perfil), repor password, **bloquear/desbloquear conta** (`isActive`), **validar perfil** (`isVerifiedBadge`) — `PATCH /api/users/:id/status`. Um admin nunca se pode bloquear a si próprio. Uma conta bloqueada (`isActive: false`) não consegue entrar (login responde 403), mesmo com a password certa. |
+| Categorias | `/admin/categorias` | Criar, renomear e remover categorias do catálogo (`POST`/`PATCH`/`DELETE /api/categories`). |
 | Produtos | `/admin/produtos` | Vê anúncios de qualquer vendedor em qualquer estado (`GET /api/products/admin`) e modera (`PATCH /api/products/:id/moderate`): despublicar ou **remover** (estado `REMOVED`, nunca apagado da base de dados). |
-| Pedidos | `/admin/pedidos` | Visão geral de todos os pedidos e transacções da plataforma (`GET /api/orders/admin`), com o mesmo detalhe (`/pedidos/:id`) que compradores/vendedores já têm. |
+| Pedidos | `/admin/pedidos` | Visão geral de todos os pedidos e transacções da plataforma (`GET /api/orders/admin`), com o mesmo detalhe (`/admin/pedidos/:id`) que compradores/vendedores já têm. |
+| Entregas | `/admin/entregas` | Todos os fretes/entregas da plataforma, com transportador atribuído e estado (`GET /api/transport-orders/admin`). |
+| Negociações | `/admin/negociacoes` | Todos os pedidos de cotação e propostas entre compradores e vendedores (`GET /api/quotes/admin`). |
+| Avaliações | `/admin/avaliacoes` | Modera avaliações de qualquer utilizador — remove conteúdo impróprio e recalcula a classificação média do produto/transportador afectado (`GET`/`DELETE /api/reviews/admin`, `/api/reviews/:id`). |
 | Transportadores | `/admin/transportadores` | Lista todos os transportadores registados com contacto e estado da conta (`GET /api/transporters/admin`); bloqueio/desbloqueio usa o mesmo endpoint de utilizadores. |
+| Notificações | `/admin/notificacoes` | Consulta só de leitura a todas as notificações enviadas a utilizadores (`GET /api/notifications/admin`) — não compõe nem dispara notificações novas. |
+| Relatórios | `/admin/relatorios` | Mesmos indicadores do painel, em formato de relatório mais detalhado. |
 | Auditoria | `/admin/auditoria` | Consulta só de leitura ao `AuditLog` (`GET /api/audit-logs`, filtros por entidade/acção/utilizador/resultado) — a tabela nunca é actualizada nem apagada pela aplicação. |
-| Suporte/reclamações | `/admin/suporte` (staff) e `/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). Reclamações usam o mesmo sistema — não há um modelo de dados separado. |
+| Suporte/reclamações | `/admin/reclamacoes` (staff) e `/{prefixo}/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). Reclamações usam o mesmo sistema — não há um modelo de dados separado. |
 
 Ainda não implementado: um passo formal de "validação de perfil" além do selo `isVerifiedBadge`
-acima, e "acompanhar rotas" do transportador em tempo real (precisa de um fornecedor de mapas —
-Google Maps/Mapbox — e da respectiva chave de API, que ainda não foi configurada).
+acima, "configurações da plataforma" (`/admin/configuracoes` — deixado de fora até existir um
+modelo de dados real), e "acompanhar rotas" do transportador em tempo real (`/transportador/rotas`
+é hoje um placeholder — precisa de um fornecedor de mapas — Google Maps/Mapbox — e da respectiva
+chave de API, que ainda não foi configurada).
+
+## Negociações, notificações e avaliações
+
+- **Negociações** (`QuoteRequest`/`QuoteProposal`) — um comprador pede uma cotação (descrição,
+  quantidade, prazo opcional); produtores/comerciantes respondem com uma proposta de preço; o
+  comprador aceita a que preferir. Acessível em `/{prefixo}/negociacoes` para produtor, comerciante
+  e comprador (`POST /api/quotes`, `GET /api/quotes` ou `/mine`, `POST /api/quotes/:id/proposals`,
+  `POST /api/quotes/:id/proposals/:proposalId/accept`).
+- **Notificações** (`Notification`) — geradas automaticamente por outros módulos (pedidos, suporte,
+  negociações) via `recordNotification()`; só o canal `IN_APP` é real — não há envio de
+  email/push configurado, por isso não é simulado. Consultadas em `/{prefixo}/notificacoes`
+  (`GET /api/notifications/mine`, `PATCH .../read`, `PATCH .../read-all`).
+- **Avaliações** — além da avaliação já existente por pedido, agora também "Minhas avaliações"
+  (tudo o que o próprio utilizador escreveu — `GET /api/reviews/mine`) e "Avaliações recebidas"
+  (o que disseram sobre um vendedor/transportador — `GET /api/reviews/received`), em
+  `/{prefixo}/avaliacoes`.
 
 ## Regras absolutas do projecto
 

@@ -52,7 +52,7 @@ export function AdminSupport() {
           {tickets.map((ticket) => (
             <Link
               key={ticket.id}
-              to={`/suporte/${ticket.id}`}
+              to={`/admin/reclamacoes/${ticket.id}`}
               className="flex items-center justify-between gap-3 p-4 text-sm hover:bg-neutral-50"
             >
               <div>

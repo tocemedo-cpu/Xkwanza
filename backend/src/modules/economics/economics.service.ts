@@ -1,4 +1,4 @@
-import { OrderStatus, ReviewTargetType, TransportStatus } from '@prisma/client';
+import { OrderStatus, PaymentStatus, QuoteStatus, ReviewTargetType, SupportTicketStatus, TransportStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 
 function monthKey(date: Date): string {
@@ -92,5 +92,38 @@ export async function getTransporterStats(transporterUserId: string) {
     averageRating: ratingAgg._avg.rating ?? null,
     ratingCount: ratingAgg._count,
     monthlyEarnings,
+  };
+}
+
+// Uso administrativo — indicadores agregados de toda a plataforma, para "/admin/relatorios".
+export async function getPlatformReport() {
+  const [
+    usersByRole,
+    ordersByStatus,
+    completedRevenue,
+    pendingPayments,
+    openSupportTickets,
+    openQuoteRequests,
+    activeProducts,
+  ] = await Promise.all([
+    prisma.user.groupBy({ by: ['role'], _count: true }),
+    prisma.order.groupBy({ by: ['status'], _count: true }),
+    prisma.order.aggregate({ where: { status: OrderStatus.COMPLETED }, _sum: { total: true } }),
+    prisma.payment.count({ where: { status: PaymentStatus.PENDING } }),
+    prisma.supportTicket.count({
+      where: { status: { in: [SupportTicketStatus.OPEN, SupportTicketStatus.IN_PROGRESS, SupportTicketStatus.WAITING_ON_USER] } },
+    }),
+    prisma.quoteRequest.count({ where: { status: { in: [QuoteStatus.OPEN, QuoteStatus.PROPOSALS_RECEIVED, QuoteStatus.NEGOTIATING] } } }),
+    prisma.product.count({ where: { status: 'PUBLISHED' } }),
+  ]);
+
+  return {
+    usersByRole: Object.fromEntries(usersByRole.map((r) => [r.role, r._count])) as Record<UserRole, number>,
+    ordersByStatus: Object.fromEntries(ordersByStatus.map((o) => [o.status, o._count])),
+    totalRevenue: Number(completedRevenue._sum.total ?? 0),
+    pendingPayments,
+    openSupportTickets,
+    openQuoteRequests,
+    activeProducts,
   };
 }

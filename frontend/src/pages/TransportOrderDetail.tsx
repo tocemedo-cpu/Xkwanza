@@ -14,6 +14,7 @@ import {
   submitProposal,
 } from '../services/transportService';
 import { TransportOrder, TransportProposal } from '../types/logistics';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 const inputClass =
@@ -96,7 +97,10 @@ export function TransportOrderDetail() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Link to={user.role === 'TRANSPORTER' ? '/meus-fretes' : `/pedidos/${job.orderId}`} className="text-sm text-xkwanza-600 hover:underline">
+      <Link
+        to={user.role === 'TRANSPORTER' ? '/transportador/meus-fretes' : `/${getRolePrefix(user.role)}/pedidos/${job.orderId}`}
+        className="text-sm text-xkwanza-600 hover:underline"
+      >
         ← Voltar
       </Link>
 
@@ -105,9 +109,13 @@ export function TransportOrderDetail() {
           <h1 className="text-2xl font-bold text-neutral-900">Transporte #{job.id.slice(0, 8)}</h1>
           <p className="text-sm text-neutral-500">
             Pedido{' '}
-            <Link to={`/pedidos/${job.orderId}`} className="text-xkwanza-600 hover:underline">
-              #{job.orderId.slice(0, 8)}
-            </Link>
+            {user.role === 'TRANSPORTER' ? (
+              <span className="font-medium text-neutral-700">#{job.orderId.slice(0, 8)}</span>
+            ) : (
+              <Link to={`/${getRolePrefix(user.role)}/pedidos/${job.orderId}`} className="text-xkwanza-600 hover:underline">
+                #{job.orderId.slice(0, 8)}
+              </Link>
+            )}
           </p>
         </div>
         <TransportStatusBadge status={job.status} />

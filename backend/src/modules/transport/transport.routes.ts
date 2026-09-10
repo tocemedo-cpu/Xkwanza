@@ -1,5 +1,7 @@
 import { Router } from 'express';
+import { UserRole } from '@prisma/client';
 import { authenticate } from '../../middleware/auth.middleware';
+import { requireRole } from '../../security/rbac';
 import { validate } from '../../middleware/validate.middleware';
 import {
   acceptProposalParamSchema,
@@ -20,6 +22,7 @@ import {
   listMyProposalsHandler,
   listOpenTransportOrdersHandler,
   listProposalsHandler,
+  listTransportOrdersForAdminHandler,
   requestTransportHandler,
   startTransitHandler,
   transporterAcceptAssignmentHandler,
@@ -33,6 +36,7 @@ transportRouter.post('/', validate(createTransportOrderSchema), requestTransport
 transportRouter.get('/open', validate(listOpenTransportOrdersQuerySchema), listOpenTransportOrdersHandler);
 transportRouter.get('/mine', listMyAssignedJobsHandler);
 transportRouter.get('/my-proposals', listMyProposalsHandler);
+transportRouter.get('/admin', requireRole(UserRole.ADMIN, UserRole.SUPPORT), listTransportOrdersForAdminHandler);
 
 transportRouter.get('/:id', validate(transportOrderIdParamSchema), getTransportOrderHandler);
 transportRouter.get('/:id/proposals', validate(transportOrderIdParamSchema), listProposalsHandler);

@@ -51,7 +51,7 @@ export function AdminOrders() {
           {result.items.map((order) => (
             <Link
               key={order.id}
-              to={`/pedidos/${order.id}`}
+              to={`/admin/pedidos/${order.id}`}
               className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm hover:bg-neutral-50"
             >
               <div>

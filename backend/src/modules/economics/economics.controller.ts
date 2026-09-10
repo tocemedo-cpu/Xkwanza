@@ -14,3 +14,8 @@ export const getTransporterStatsHandler = asyncHandler(async (req: Request, res:
   const stats = await economicsService.getTransporterStats(req.user.id);
   res.status(200).json(stats);
 });
+
+export const getPlatformReportHandler = asyncHandler(async (_req: Request, res: Response) => {
+  const report = await economicsService.getPlatformReport();
+  res.status(200).json(report);
+});

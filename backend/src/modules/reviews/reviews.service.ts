@@ -119,6 +119,56 @@ export async function listMyReviewsForOrder(authorId: string, orderId: string) {
   return prisma.review.findMany({ where: { authorId, orderId }, orderBy: { createdAt: 'asc' } });
 }
 
+// "Minhas avaliações" — todas as avaliações que o próprio utilizador escreveu, não só de um pedido.
+export async function listMyReviews(authorId: string) {
+  return prisma.review.findMany({
+    where: { authorId },
+    include: { product: { select: { id: true, name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+// Avaliações recebidas — vendedor/transportador vê o que disseram sobre eles (targetUserId).
+export async function listReceivedReviews(targetUserId: string) {
+  return prisma.review.findMany({
+    where: { targetUserId },
+    include: { author: { select: { id: true, name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
+// Uso administrativo — modera avaliações de qualquer utilizador (remove conteúdo impróprio).
+export async function listAllReviewsForAdmin() {
+  return prisma.review.findMany({
+    include: { author: { select: { id: true, name: true } }, product: { select: { id: true, name: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+  });
+}
+
+export async function deleteReview(adminId: string, id: string, req: Request) {
+  const review = await prisma.review.findUnique({ where: { id } });
+  if (!review) throw ApiError.notFound('Avaliação não encontrada');
+
+  await prisma.review.delete({ where: { id } });
+
+  if (review.targetType === ReviewTargetType.PRODUCT && review.productId) {
+    await recomputeProductRating(review.productId);
+  }
+  if (review.targetType === ReviewTargetType.TRANSPORTER && review.targetUserId) {
+    await recomputeTransporterRating(review.targetUserId);
+  }
+
+  await recordAudit({
+    userId: adminId,
+    action: 'REVIEW_REMOVED_BY_ADMIN',
+    entity: 'Review',
+    entityId: id,
+    result: 'SUCCESS',
+    req,
+  });
+}
+
 export async function listProductReviews(productId: string, query: ProductReviewsQuery) {
   const where = { targetType: ReviewTargetType.PRODUCT, productId } as const;
   const [items, total] = await Promise.all([

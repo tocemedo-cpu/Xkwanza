@@ -22,6 +22,13 @@ export const listMyAssignedJobsHandler = asyncHandler(async (req: Request, res: 
   res.status(200).json(jobs);
 });
 
+export const listTransportOrdersForAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number(req.query.page ?? 1);
+  const pageSize = Math.min(Number(req.query.pageSize ?? 20), 100);
+  const result = await transportService.listTransportOrdersForAdmin(page, pageSize);
+  res.status(200).json(result);
+});
+
 export const listMyProposalsHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw ApiError.unauthorized();
   const proposals = await transportService.listMyProposals(req.user.id);

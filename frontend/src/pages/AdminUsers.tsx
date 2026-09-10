@@ -1,9 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { KeyRound, ShieldCheck, ShieldOff } from 'lucide-react';
 import { adminResetPassword, fetchUsers, updateUserStatus } from '../services/usersService';
-import { getContact, ROLE_LABELS, User } from '../types/user';
+import { getContact, ROLE_LABELS, User, UserRole } from '../types/user';
 
-export function AdminUsers() {
+const PAGE_TITLES: Partial<Record<UserRole, { title: string; subtitle: string }>> = {
+  PRODUCER: { title: 'Produtores', subtitle: 'Todas as contas de produtores registadas na plataforma.' },
+  BUYER: { title: 'Compradores', subtitle: 'Todas as contas de compradores registadas na plataforma.' },
+};
+
+export function AdminUsers({ role }: { role?: UserRole } = {}) {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,12 +18,12 @@ export function AdminUsers() {
 
   function reload(query?: string) {
     setIsLoading(true);
-    fetchUsers({ search: query || undefined, pageSize: 30 })
+    fetchUsers({ search: query || undefined, role, pageSize: 30 })
       .then((result) => setUsers(result.items))
       .finally(() => setIsLoading(false));
   }
 
-  useEffect(() => reload(), []);
+  useEffect(() => reload(), [role]);
 
   function handleSearch(event: FormEvent) {
     event.preventDefault();
@@ -78,11 +83,10 @@ export function AdminUsers() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Utilizadores</h1>
+        <h1 className="text-2xl font-bold text-neutral-900">{PAGE_TITLES[role ?? 'ADMIN']?.title ?? 'Utilizadores'}</h1>
         <p className="text-neutral-500">
-          Enquanto não existir SMS/email para um fluxo de recuperação self-service, a reposição de
-          palavra-passe é feita aqui, por um administrador ou suporte, após confirmar a identidade do
-          utilizador por um canal já confiado (ex: chamada telefónica).
+          {PAGE_TITLES[role ?? 'ADMIN']?.subtitle ??
+            'Enquanto não existir SMS/email para um fluxo de recuperação self-service, a reposição de palavra-passe é feita aqui, por um administrador ou suporte, após confirmar a identidade do utilizador por um canal já confiado (ex: chamada telefónica).'}
         </p>
       </div>
 

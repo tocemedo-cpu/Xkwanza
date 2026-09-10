@@ -8,6 +8,7 @@ import {
   ACTIVITY_TYPE_LABELS,
   ACTIVITY_TYPES_BY_ROLE,
   ActivityType,
+  getRolePrefix,
   ROLE_LABELS,
   SELF_REGISTRABLE_ROLES,
   UserRole,
@@ -126,7 +127,7 @@ export function Register() {
           productsSold: parseCsv(productsSoldText),
         }),
       });
-      navigate('/painel');
+      navigate(`/${getRolePrefix(role as UserRole)}/dashboard`);
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

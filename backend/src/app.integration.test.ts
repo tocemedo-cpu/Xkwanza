@@ -590,3 +590,229 @@ describe('Marketplace — filtro por município', () => {
     expect(noMatch.body.items.some((p: { id: string }) => p.id === created.body.id)).toBe(false);
   });
 });
+
+describe('Negociações — /api/quotes', () => {
+  it('comprador pede cotação, vendedor propõe preço, comprador aceita', async () => {
+    const buyer = await createUser('BUYER');
+    const producer = await createUser('PRODUCER');
+    const admin = await createUser('ADMIN');
+
+    const createRes = await request(app)
+      .post('/api/quotes')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ description: 'Preciso de 200kg de tomate por semana', quantity: 200 });
+    expect(createRes.status).toBe(201);
+    expect(createRes.body.status).toBe('OPEN');
+    const quoteId = createRes.body.id;
+
+    const mineRes = await request(app)
+      .get('/api/quotes/mine')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(mineRes.status).toBe(200);
+    expect(mineRes.body.some((q: { id: string }) => q.id === quoteId)).toBe(true);
+
+    const openForSeller = await request(app)
+      .get('/api/quotes')
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+    expect(openForSeller.status).toBe(200);
+    expect(openForSeller.body.some((q: { id: string }) => q.id === quoteId)).toBe(true);
+
+    const proposalRes = await request(app)
+      .post(`/api/quotes/${quoteId}/proposals`)
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({ price: 350, message: 'Posso entregar semanalmente' });
+    expect(proposalRes.status).toBe(200);
+    expect(proposalRes.body.status).toBe('PROPOSALS_RECEIVED');
+    expect(proposalRes.body.proposals).toHaveLength(1);
+    const proposalId = proposalRes.body.proposals[0].id;
+
+    const buyerProposalAttempt = await request(app)
+      .post(`/api/quotes/${quoteId}/proposals`)
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ price: 300 });
+    expect(buyerProposalAttempt.status).toBe(403);
+
+    const acceptRes = await request(app)
+      .post(`/api/quotes/${quoteId}/proposals/${proposalId}/accept`)
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(acceptRes.status).toBe(200);
+    expect(acceptRes.body.status).toBe('ACCEPTED');
+    expect(acceptRes.body.proposals[0].accepted).toBe(true);
+
+    const notificationsRes = await request(app)
+      .get('/api/notifications/mine')
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+    expect(notificationsRes.status).toBe(200);
+    expect(notificationsRes.body.some((n: { type: string }) => n.type === 'QUOTE')).toBe(true);
+
+    const adminListRes = await request(app)
+      .get('/api/quotes/admin')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(adminListRes.status).toBe(200);
+    expect(adminListRes.body.items.some((q: { id: string }) => q.id === quoteId)).toBe(true);
+
+    const forbiddenAdmin = await request(app)
+      .get('/api/quotes/admin')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(forbiddenAdmin.status).toBe(403);
+  });
+});
+
+describe('Notificações — /api/notifications', () => {
+  it('marca uma notificação como lida e todas de uma vez', async () => {
+    const buyer = await createUser('BUYER');
+    const producer = await createUser('PRODUCER');
+
+    const quoteRes = await request(app)
+      .post('/api/quotes')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ description: 'Preciso de banana prata', quantity: 50 });
+    await request(app)
+      .post(`/api/quotes/${quoteRes.body.id}/proposals`)
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({ price: 120 });
+
+    const mineRes = await request(app)
+      .get('/api/notifications/mine')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(mineRes.status).toBe(200);
+    expect(mineRes.body.length).toBeGreaterThan(0);
+    expect(mineRes.body[0].read).toBe(false);
+    const notificationId = mineRes.body[0].id;
+
+    const readRes = await request(app)
+      .patch(`/api/notifications/${notificationId}/read`)
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(readRes.status).toBe(200);
+    expect(readRes.body.read).toBe(true);
+
+    const readAllRes = await request(app)
+      .patch('/api/notifications/read-all')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(readAllRes.status).toBe(204);
+
+    const afterRes = await request(app)
+      .get('/api/notifications/mine')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(afterRes.body.every((n: { read: boolean }) => n.read)).toBe(true);
+  });
+});
+
+describe('Avaliações — recebidas, minhas, e moderação administrativa', () => {
+  it('lista avaliações recebidas e escritas, e permite ao admin remover uma', async () => {
+    const buyer = await createUser('BUYER');
+    const producer = await createUser('PRODUCER');
+    const admin = await createUser('ADMIN');
+
+    const category = await prisma.category.create({
+      data: { name: `Categoria Avaliação ${Date.now()}`, slug: `categoria-avaliacao-${Date.now()}` },
+    });
+    const productRes = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({
+        categoryId: category.id,
+        name: 'Produto Avaliado',
+        description: 'Produto de teste para avaliações.',
+        price: 800,
+        unit: 'kg',
+        stock: 20,
+        province: 'Luanda',
+        municipality: 'Luanda',
+      });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/photos`)
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({ url: 'https://example.com/foto.jpg' });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/publish`)
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+
+    const address = await request(app)
+      .post('/api/addresses')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ province: 'Luanda', municipality: 'Luanda', isDefault: true });
+
+    const orderRes = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({
+        shippingAddressId: address.body.id,
+        paymentMethod: 'BANK_TRANSFER',
+        items: [{ productId: productRes.body.id, quantity: 2 }],
+      });
+    expect(orderRes.status).toBe(201);
+
+    await prisma.order.update({ where: { id: orderRes.body.id }, data: { status: 'COMPLETED' } });
+
+    const reviewRes = await request(app)
+      .post('/api/reviews')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({
+        orderId: orderRes.body.id,
+        targetType: 'SELLER',
+        targetUserId: producer.userId,
+        rating: 5,
+        comment: 'Excelente vendedor',
+      });
+    expect(reviewRes.status).toBe(201);
+
+    const receivedRes = await request(app)
+      .get('/api/reviews/received')
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+    expect(receivedRes.status).toBe(200);
+    expect(receivedRes.body.some((r: { id: string }) => r.id === reviewRes.body.id)).toBe(true);
+
+    const mineRes = await request(app)
+      .get('/api/reviews/mine')
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(mineRes.status).toBe(200);
+    expect(mineRes.body.some((r: { id: string }) => r.id === reviewRes.body.id)).toBe(true);
+
+    const adminListRes = await request(app)
+      .get('/api/reviews/admin')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(adminListRes.status).toBe(200);
+    expect(adminListRes.body.some((r: { id: string }) => r.id === reviewRes.body.id)).toBe(true);
+
+    const deleteRes = await request(app)
+      .delete(`/api/reviews/${reviewRes.body.id}`)
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(deleteRes.status).toBe(204);
+
+    const forbiddenDelete = await request(app)
+      .delete(`/api/reviews/${reviewRes.body.id}`)
+      .set('Authorization', `Bearer ${buyer.accessToken}`);
+    expect(forbiddenDelete.status).toBe(403);
+  });
+});
+
+describe('Administração — fretes e relatório da plataforma', () => {
+  it('lista todos os fretes e devolve indicadores agregados', async () => {
+    const admin = await createUser('ADMIN');
+
+    const transportersRes = await request(app)
+      .get('/api/transport-orders/admin')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(transportersRes.status).toBe(200);
+    expect(transportersRes.body).toHaveProperty('items');
+
+    const forbiddenList = await request(app)
+      .get('/api/transport-orders/admin')
+      .set('Authorization', `Bearer ${(await createUser('BUYER')).accessToken}`);
+    expect(forbiddenList.status).toBe(403);
+
+    const reportRes = await request(app)
+      .get('/api/economics/admin')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(reportRes.status).toBe(200);
+    expect(reportRes.body).toHaveProperty('usersByRole');
+    expect(reportRes.body).toHaveProperty('ordersByStatus');
+    expect(typeof reportRes.body.totalRevenue).toBe('number');
+
+    const forbiddenReport = await request(app)
+      .get('/api/economics/admin')
+      .set('Authorization', `Bearer ${(await createUser('TRANSPORTER')).accessToken}`);
+    expect(forbiddenReport.status).toBe(403);
+  });
+});

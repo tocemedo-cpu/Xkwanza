@@ -13,7 +13,7 @@ export function Cart() {
         <h1 className="text-2xl font-bold text-neutral-900">Carrinho</h1>
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           O seu carrinho está vazio.{' '}
-          <Link to="/marketplace" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to="/comprador/marketplace" className="font-medium text-xkwanza-600 hover:underline">
             Explorar produtos
           </Link>
         </p>
@@ -63,7 +63,7 @@ export function Cart() {
       </div>
 
       <button
-        onClick={() => navigate('/checkout')}
+        onClick={() => navigate('/comprador/checkout')}
         className="w-full rounded-md bg-xkwanza-600 px-4 py-3 font-medium text-white hover:bg-xkwanza-700"
       >
         Finalizar compra

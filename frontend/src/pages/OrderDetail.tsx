@@ -8,6 +8,7 @@ import { markPaymentSent } from '../services/paymentsService';
 import { requestTransport } from '../services/transportService';
 import { Order, OrderStatus } from '../types/marketplace';
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../types/payments';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
@@ -43,6 +44,7 @@ export function OrderDetail() {
 
   const isSeller = order?.items.some((item) => item.product.ownerId === user?.id) ?? false;
   const isBuyer = order?.buyerId === user?.id;
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
 
   async function handleStatusChange(status: OrderStatus) {
     if (!id) return;
@@ -84,7 +86,7 @@ export function OrderDetail() {
     setError(null);
     try {
       const transportOrder = await requestTransport(id);
-      navigate(`/fretes/${transportOrder.id}`);
+      navigate(`/${prefix}/fretes/${transportOrder.id}`);
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
@@ -103,10 +105,7 @@ export function OrderDetail() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Link
-        to={isSeller && !isBuyer ? '/pedidos-recebidos' : '/meus-pedidos'}
-        className="text-sm text-xkwanza-600 hover:underline"
-      >
+      <Link to={`/${prefix}/pedidos`} className="text-sm text-xkwanza-600 hover:underline">
         ← Voltar
       </Link>
 
@@ -185,7 +184,7 @@ export function OrderDetail() {
       <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm">
         <p className="mb-1 font-semibold text-neutral-900">Transporte</p>
         {order.transportOrder ? (
-          <Link to={`/fretes/${order.transportOrder.id}`} className="text-xkwanza-600 hover:underline">
+          <Link to={`/${prefix}/fretes/${order.transportOrder.id}`} className="text-xkwanza-600 hover:underline">
             Acompanhar transporte →
           </Link>
         ) : order.status === 'READY_FOR_PICKUP' && (isBuyer || isSeller) ? (

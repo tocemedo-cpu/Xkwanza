@@ -86,3 +86,11 @@ export async function cancelTransportOrder(transportOrderId: string): Promise<Tr
   const { data } = await apiClient.post<TransportOrder>(`/transport-orders/${transportOrderId}/cancel`);
   return data;
 }
+
+// Uso administrativo — visão geral de todas as entregas/fretes da plataforma.
+export async function fetchTransportOrdersForAdmin(page = 1, pageSize = 30): Promise<PaginatedResult<TransportOrder>> {
+  const { data } = await apiClient.get<PaginatedResult<TransportOrder>>('/transport-orders/admin', {
+    params: { page, pageSize },
+  });
+  return data;
+}

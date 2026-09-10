@@ -8,6 +8,8 @@ import {
   unpublishProduct,
 } from '../services/productsService';
 import { Product, ProductStatus } from '../types/marketplace';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -19,6 +21,8 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
 };
 
 export function MyProducts() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,11 +63,11 @@ export function MyProducts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Meus produtos</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Stock</h1>
           <p className="text-neutral-500">Gira o seu catálogo no marketplace XKWANZA.</p>
         </div>
         <Link
-          to="/meus-produtos/novo"
+          to={`/${prefix}/stock/novo`}
           className="flex items-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700"
         >
           <Plus size={18} />
@@ -108,7 +112,7 @@ export function MyProducts() {
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-3">
-                      <Link to={`/meus-produtos/${product.id}/editar`} className="text-neutral-500 hover:text-xkwanza-600">
+                      <Link to={`/${prefix}/stock/${product.id}/editar`} className="text-neutral-500 hover:text-xkwanza-600">
                         <Pencil size={16} />
                       </Link>
                       <button onClick={() => handleDelete(product)} className="text-neutral-500 hover:text-red-600">

@@ -50,7 +50,7 @@ export function TransportJobs() {
           {jobs.map((job) => (
             <Link
               key={job.id}
-              to={`/fretes/${job.id}`}
+              to={`/transportador/fretes/${job.id}`}
               className="flex items-center justify-between p-4 hover:bg-neutral-50"
             >
               <div>

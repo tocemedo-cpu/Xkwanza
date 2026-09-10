@@ -3,9 +3,13 @@ import { Link } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { fetchReceivedOrders } from '../services/ordersService';
 import { Order } from '../types/marketplace';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 export function ReceivedOrders() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,7 +39,7 @@ export function ReceivedOrders() {
           {orders.map((order) => (
             <Link
               key={order.id}
-              to={`/pedidos/${order.id}`}
+              to={`/${prefix}/pedidos/${order.id}`}
               className="flex items-center justify-between p-4 hover:bg-neutral-50"
             >
               <div>

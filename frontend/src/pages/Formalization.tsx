@@ -16,6 +16,8 @@ import {
   FormalizationDocument,
   FormalizationDossier,
 } from '../types/formalization';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { ANGOLA_PROVINCES } from '../utils/angola';
 
 const inputClass =
@@ -24,6 +26,8 @@ const inputClass =
 const DOCUMENT_TYPES: DocumentType[] = ['IDENTITY', 'DELIVERY_PROOF', 'VEHICLE_DOCUMENT', 'RECEIPT', 'OTHER'];
 
 export function Formalization() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [dossier, setDossier] = useState<FormalizationDossier | null | undefined>(undefined);
   const [documents, setDocuments] = useState<FormalizationDocument[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -109,7 +113,7 @@ export function Formalization() {
         <h1 className="text-2xl font-bold text-neutral-900">Formalização</h1>
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           Ainda não iniciou o processo de formalização.{' '}
-          <Link to="/formalizacao/diagnostico" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to={`/${prefix}/documentos/diagnostico`} className="font-medium text-xkwanza-600 hover:underline">
             Começar diagnóstico
           </Link>
         </p>

@@ -11,6 +11,8 @@ import {
   uploadProductPhoto,
 } from '../services/productsService';
 import { Category, Product } from '../types/marketplace';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { ANGOLA_PROVINCES } from '../utils/angola';
 
 const inputClass =
@@ -20,6 +22,8 @@ export function ProductForm() {
   const { id } = useParams<{ id: string }>();
   const isEditing = Boolean(id);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [product, setProduct] = useState<Product | null>(null);
@@ -80,10 +84,10 @@ export function ProductForm() {
 
       if (isEditing && id) {
         await updateProduct(id, payload);
-        navigate('/meus-produtos');
+        navigate(`/${prefix}/stock`);
       } else {
         const created = await createProduct(payload);
-        navigate(`/meus-produtos/${created.id}/editar`);
+        navigate(`/${prefix}/stock/${created.id}/editar`);
       }
     } catch (err: unknown) {
       const message =

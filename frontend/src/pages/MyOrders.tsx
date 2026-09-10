@@ -27,7 +27,7 @@ export function MyOrders() {
       {!isLoading && orders.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           Ainda não fez nenhum pedido.{' '}
-          <Link to="/marketplace" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to="/comprador/marketplace" className="font-medium text-xkwanza-600 hover:underline">
             Explorar produtos
           </Link>
         </p>
@@ -38,7 +38,7 @@ export function MyOrders() {
           {orders.map((order) => (
             <Link
               key={order.id}
-              to={`/pedidos/${order.id}`}
+              to={`/comprador/pedidos/${order.id}`}
               className="flex items-center justify-between p-4 hover:bg-neutral-50"
             >
               <div>

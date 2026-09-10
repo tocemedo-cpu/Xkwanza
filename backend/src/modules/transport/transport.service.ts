@@ -39,6 +39,20 @@ function isOrderSeller(order: { items: { product: { ownerId: string } }[] }, use
   return order.items.some((item) => item.product.ownerId === userId);
 }
 
+// Uso administrativo — vê todas as entregas/transportes da plataforma.
+export async function listTransportOrdersForAdmin(page: number, pageSize: number) {
+  const [items, total] = await Promise.all([
+    prisma.transportOrder.findMany({
+      include: transportOrderInclude,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.transportOrder.count(),
+  ]);
+  return { items, total, page, pageSize };
+}
+
 async function getTransportOrderOrThrow(id: string) {
   const transportOrder = await prisma.transportOrder.findUnique({ where: { id }, include: transportOrderInclude });
   if (!transportOrder) throw ApiError.notFound('Pedido de transporte não encontrado');

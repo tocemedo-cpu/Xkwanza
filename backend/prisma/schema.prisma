@@ -181,6 +181,8 @@ enum NotificationType {
   FORMALIZATION
   INSS
   STATUS_CHANGE
+  SUPPORT
+  QUOTE
 }
 
 enum ReviewTargetType {

@@ -1,8 +1,9 @@
 import { Request } from 'express';
-import { SupportTicketStatus, UserRole } from '@prisma/client';
+import { NotificationType, SupportTicketStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
+import { recordNotification } from '../notifications/notifications.service';
 import { AddMessageInput, CreateTicketInput, ListTicketsQuery, UpdateTicketStatusInput } from './support.schema';
 
 const STAFF_ROLES: UserRole[] = [UserRole.ADMIN, UserRole.SUPPORT];
@@ -111,6 +112,19 @@ export async function addMessage(id: string, userId: string, role: UserRole, inp
     result: 'SUCCESS',
     req,
   });
+
+  // Notifica sempre "o outro lado" — quem não escreveu esta mensagem. Se ainda não há agente
+  // atribuído, não há a quem notificar do lado do suporte (fica só a auditoria).
+  const notifyUserId = staffReplying ? ticket.requesterId : ticket.agentId;
+  if (notifyUserId) {
+    await recordNotification({
+      userId: notifyUserId,
+      type: NotificationType.SUPPORT,
+      title: 'Nova resposta no teu ticket de suporte',
+      body: ticket.subject,
+      metadata: { ticketId: id },
+    });
+  }
 
   return getTicketOrThrow(id);
 }

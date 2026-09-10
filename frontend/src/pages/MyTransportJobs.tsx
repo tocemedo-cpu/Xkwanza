@@ -27,7 +27,7 @@ export function MyTransportJobs() {
       {!isLoading && jobs.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           Ainda não tem fretes atribuídos.{' '}
-          <Link to="/fretes" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to="/transportador/fretes" className="font-medium text-xkwanza-600 hover:underline">
             Ver fretes disponíveis
           </Link>
         </p>
@@ -38,7 +38,7 @@ export function MyTransportJobs() {
           {jobs.map((job) => (
             <Link
               key={job.id}
-              to={`/fretes/${job.id}`}
+              to={`/transportador/fretes/${job.id}`}
               className="flex items-center justify-between p-4 hover:bg-neutral-50"
             >
               <div>

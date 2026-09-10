@@ -63,7 +63,7 @@ export function Checkout() {
         items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
       });
       clear();
-      navigate(`/pedidos/${order.id}`);
+      navigate(`/comprador/pedidos/${order.id}`);
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 import { ANGOLA_PHONE_PREFIX } from '../utils/angola';
 import { IdentifierMethod, IdentifierMethodToggle } from '../components/IdentifierMethodToggle';
 
@@ -26,8 +27,8 @@ export function Login() {
     setIsSubmitting(true);
     try {
       const identifier = method === 'phone' ? phone : email;
-      await login(identifier, password);
-      navigate('/painel');
+      const loggedInUser = await login(identifier, password);
+      navigate(`/${getRolePrefix(loggedInUser.role)}/dashboard`);
     } catch {
       setError('Telefone/email ou palavra-passe incorrectos.');
     } finally {

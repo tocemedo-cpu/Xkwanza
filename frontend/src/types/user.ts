@@ -85,3 +85,17 @@ export const ROLE_DESCRIPTIONS: Record<'BUYER' | 'PRODUCER' | 'MERCHANT' | 'TRAN
 export function getContact(user: { phone: string | null; email: string | null }): string {
   return user.phone ?? user.email ?? '—';
 }
+
+// Prefixo de rota por perfil — todas as rotas autenticadas vivem sob /{prefixo}/...
+export const ROLE_PREFIXES: Record<UserRole, string> = {
+  PRODUCER: 'produtor',
+  MERCHANT: 'comerciante',
+  BUYER: 'comprador',
+  TRANSPORTER: 'transportador',
+  ADMIN: 'admin',
+  SUPPORT: 'admin',
+};
+
+export function getRolePrefix(role: UserRole): string {
+  return ROLE_PREFIXES[role];
+}

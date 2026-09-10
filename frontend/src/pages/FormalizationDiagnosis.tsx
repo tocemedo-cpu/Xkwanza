@@ -2,6 +2,8 @@ import { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { submitDiagnosis } from '../services/formalizationService';
 import { FormalizationDiagnosisInput } from '../types/formalization';
+import { useAuth } from '../hooks/useAuth';
+import { getRolePrefix } from '../types/user';
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
@@ -21,6 +23,8 @@ const BOOLEAN_QUESTIONS: { key: keyof FormalizationDiagnosisInput; label: string
 
 export function FormalizationDiagnosis() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [activityDescription, setActivityDescription] = useState('');
   const [workLocation, setWorkLocation] = useState('');
   const [answers, setAnswers] = useState<Record<string, boolean>>({});
@@ -47,7 +51,7 @@ export function FormalizationDiagnosis() {
         usesOwnVehicle: Boolean(answers.usesOwnVehicle),
       };
       await submitDiagnosis(input);
-      navigate('/formalizacao');
+      navigate(`/${prefix}/documentos`);
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??

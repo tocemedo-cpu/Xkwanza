@@ -11,6 +11,7 @@ export interface Review {
   comment: string | null;
   createdAt: string;
   author?: { id: string; name: string };
+  product?: { id: string; name: string } | null;
 }
 
 export interface CreateReviewPayload {

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { addTicketMessage, fetchTicket, updateTicketStatus } from '../services/supportService';
 import { SUPPORT_TICKET_STATUS_LABELS, SupportTicket, SupportTicketStatus } from '../types/support';
+import { getRolePrefix } from '../types/user';
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
@@ -60,10 +61,11 @@ export function SupportTicketDetail() {
   if (!ticket) return <p className="text-neutral-500">Ticket não encontrado.</p>;
 
   const isClosed = ticket.status === 'CLOSED';
+  const backTo = isStaff ? '/admin/reclamacoes' : user ? `/${getRolePrefix(user.role)}/suporte` : '/entrar';
 
   return (
     <div className="max-w-2xl space-y-6">
-      <Link to="/suporte" className="flex items-center gap-1 text-sm text-neutral-500 hover:text-xkwanza-600">
+      <Link to={backTo} className="flex items-center gap-1 text-sm text-neutral-500 hover:text-xkwanza-600">
         <ArrowLeft size={14} />
         Voltar aos tickets
       </Link>

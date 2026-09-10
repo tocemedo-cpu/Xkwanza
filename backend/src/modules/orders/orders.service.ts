@@ -1,9 +1,10 @@
 import { randomInt } from 'crypto';
 import { Request } from 'express';
-import { OrderStatus, PaymentMethod, PaymentStatus, Prisma, UserRole } from '@prisma/client';
+import { NotificationType, OrderStatus, PaymentMethod, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
+import { recordNotification } from '../notifications/notifications.service';
 import { AdminListOrdersQuery, CreateOrderInput } from './orders.schema';
 
 const orderInclude = {
@@ -326,6 +327,21 @@ export async function updateOrderStatus(
     metadata: { from: order.status, to: newStatus },
     req,
   });
+
+  // Notifica sempre "o outro lado" — quem não fez a alteração.
+  const sellerIds = [...new Set(order.items.map((item) => item.product.ownerId))];
+  const notifyTargets = isBuyer ? sellerIds : [order.buyerId];
+  await Promise.all(
+    notifyTargets.map((targetId) =>
+      recordNotification({
+        userId: targetId,
+        type: NotificationType.STATUS_CHANGE,
+        title: 'Estado do pedido actualizado',
+        body: `O pedido #${orderId.slice(0, 8)} passou para "${newStatus}".`,
+        metadata: { orderId, status: newStatus },
+      }),
+    ),
+  );
 
   return updated;
 }

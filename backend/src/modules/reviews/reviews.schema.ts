@@ -24,5 +24,9 @@ export const productIdParamSchema = z.object({
   }),
 });
 
+export const reviewIdParamSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+});
+
 export type CreateReviewInput = z.infer<typeof createReviewSchema>['body'];
 export type ProductReviewsQuery = z.infer<typeof productIdParamSchema>['query'];

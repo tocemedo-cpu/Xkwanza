@@ -19,3 +19,26 @@ export const listProductReviewsHandler = asyncHandler(async (req: Request, res: 
   const result = await reviewsService.listProductReviews(req.params.productId, req.query as never);
   res.status(200).json(result);
 });
+
+export const listMyReviewsHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const reviews = await reviewsService.listMyReviews(req.user.id);
+  res.status(200).json(reviews);
+});
+
+export const listReceivedReviewsHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const reviews = await reviewsService.listReceivedReviews(req.user.id);
+  res.status(200).json(reviews);
+});
+
+export const listAllReviewsForAdminHandler = asyncHandler(async (_req: Request, res: Response) => {
+  const reviews = await reviewsService.listAllReviewsForAdmin();
+  res.status(200).json(reviews);
+});
+
+export const deleteReviewHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  await reviewsService.deleteReview(req.user.id, req.params.id, req);
+  res.status(204).send();
+});

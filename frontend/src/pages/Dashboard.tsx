@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ShieldCheck, TrendingUp, FileCheck2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { ROLE_LABELS, TrustLevel } from '../types/user';
+import { getRolePrefix, ROLE_LABELS, TrustLevel } from '../types/user';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
 const TRANSPORTER_ROLE = 'TRANSPORTER';
@@ -17,6 +17,7 @@ const TRUST_LEVEL_LABELS: Record<TrustLevel, string> = {
 export function Dashboard() {
   const { user } = useAuth();
   if (!user) return null;
+  const p = getRolePrefix(user.role);
 
   return (
     <div className="space-y-6">
@@ -43,30 +44,32 @@ export function Dashboard() {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium text-xkwanza-600">
             {user.role === TRANSPORTER_ROLE ? (
               <>
-                <Link to="/fretes" className="hover:underline">
+                <Link to={`/${p}/fretes`} className="hover:underline">
                   Fretes disponíveis
                 </Link>
-                <Link to="/meus-fretes" className="hover:underline">
+                <Link to={`/${p}/meus-fretes`} className="hover:underline">
                   Meus fretes
                 </Link>
-                <Link to="/meu-perfil-transportador" className="hover:underline">
+                <Link to={`/${p}/veiculo`} className="hover:underline">
                   Meu veículo
                 </Link>
               </>
             ) : (
               <>
-                <Link to="/marketplace" className="hover:underline">
+                <Link to={`/${p}/marketplace`} className="hover:underline">
                   Marketplace
                 </Link>
-                <Link to="/meus-pedidos" className="hover:underline">
-                  Meus pedidos
-                </Link>
+                {user.role === 'BUYER' && (
+                  <Link to={`/${p}/pedidos`} className="hover:underline">
+                    Meus pedidos
+                  </Link>
+                )}
                 {SELLER_ROLES.includes(user.role) && (
                   <>
-                    <Link to="/meus-produtos" className="hover:underline">
-                      Meus produtos
+                    <Link to={`/${p}/stock`} className="hover:underline">
+                      Stock
                     </Link>
-                    <Link to="/pedidos-recebidos" className="hover:underline">
+                    <Link to={`/${p}/pedidos`} className="hover:underline">
                       Pedidos recebidos
                     </Link>
                   </>

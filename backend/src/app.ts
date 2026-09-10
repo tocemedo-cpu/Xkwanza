@@ -27,6 +27,8 @@ import { formalizationRouter } from './modules/formalization/formalization.route
 import { inssRouter } from './modules/inss/inss.routes';
 import { supportRouter } from './modules/support/support.routes';
 import { auditRouter } from './modules/audit/audit.routes';
+import { quotesRouter } from './modules/quotes/quotes.routes';
+import { notificationsRouter } from './modules/notifications/notifications.routes';
 import { dbTasksRouter } from './admin/dbTasks.routes';
 
 export function createApp() {
@@ -74,6 +76,8 @@ export function createApp() {
   app.use('/api/inss', inssRouter);
   app.use('/api/support', supportRouter);
   app.use('/api/audit-logs', auditRouter);
+  app.use('/api/quotes', quotesRouter);
+  app.use('/api/notifications', notificationsRouter);
   app.use('/internal/tasks', dbTasksRouter);
 
   app.use(notFoundHandler);

@@ -8,6 +8,7 @@ import { fetchProduct } from '../services/productsService';
 import { fetchProductReviews } from '../services/reviewsService';
 import { Product } from '../types/marketplace';
 import { Review } from '../types/reviews';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 export function ProductDetail() {
@@ -41,6 +42,8 @@ export function ProductDetail() {
   }
 
   const isOwnProduct = user?.id === product.ownerId;
+  const isBuyer = user?.role === 'BUYER';
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
 
   function handleAddToCart() {
     if (!product) return;
@@ -50,7 +53,7 @@ export function ProductDetail() {
 
   return (
     <div className="space-y-6">
-      <Link to="/marketplace" className="text-sm text-xkwanza-600 hover:underline">
+      <Link to={`/${prefix}/marketplace`} className="text-sm text-xkwanza-600 hover:underline">
         ← Voltar ao marketplace
       </Link>
 
@@ -107,7 +110,7 @@ export function ProductDetail() {
 
           {isOwnProduct ? (
             <p className="rounded-md bg-neutral-100 p-3 text-sm text-neutral-600">Este é o seu produto.</p>
-          ) : (
+          ) : isBuyer ? (
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-neutral-700">Quantidade</label>
@@ -129,11 +132,18 @@ export function ProductDetail() {
                 Adicionar ao carrinho
               </button>
               {added && (
-                <button onClick={() => navigate('/carrinho')} className="w-full text-center text-sm text-xkwanza-600 hover:underline">
+                <button onClick={() => navigate('/comprador/carrinho')} className="w-full text-center text-sm text-xkwanza-600 hover:underline">
                   Adicionado. Ir para o carrinho →
                 </button>
               )}
             </div>
+          ) : (
+            <Link
+              to={`/${prefix}/negociacoes`}
+              className="block w-full rounded-md border border-xkwanza-300 px-4 py-2 text-center font-medium text-xkwanza-700 hover:bg-xkwanza-50"
+            >
+              Pedir cotação para este produto
+            </Link>
           )}
         </div>
       </div>
