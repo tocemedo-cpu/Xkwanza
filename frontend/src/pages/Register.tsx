@@ -12,7 +12,11 @@ import {
   SELF_REGISTRABLE_ROLES,
   UserRole,
 } from '../types/user';
+import { TRANSPORTER_CATEGORY_LABELS, TransporterCategory } from '../types/logistics';
 import { IdentifierMethod, IdentifierMethodToggle } from '../components/IdentifierMethodToggle';
+
+// Roles cujo cadastro mostra o campo de NIF — sempre opcional, nunca bloqueia informais.
+const NIF_ROLES: UserRole[] = ['PRODUCER', 'MERCHANT', 'TRANSPORTER'];
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
@@ -41,6 +45,13 @@ export function Register() {
   const [municipality, setMunicipality] = useState('');
   const [activityType, setActivityType] = useState<ActivityType | ''>('');
   const [nif, setNif] = useState('');
+  const [transporterCategory, setTransporterCategory] = useState<TransporterCategory | ''>('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [vehiclePlate, setVehiclePlate] = useState('');
+  const [cargoCapacity, setCargoCapacity] = useState('');
+  const [cargoType, setCargoType] = useState('');
+  const [serviceAreasText, setServiceAreasText] = useState('');
+  const [servicePrice, setServicePrice] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,6 +81,20 @@ export function Register() {
         role: role as UserRole,
         activityType: activityType || undefined,
         nif: nif.trim() || undefined,
+        ...(role === 'TRANSPORTER' && {
+          transporterCategory: transporterCategory || undefined,
+          vehicleType: vehicleType.trim() || undefined,
+          vehiclePlate: vehiclePlate.trim() || undefined,
+          cargoCapacity: cargoCapacity.trim() || undefined,
+          cargoType: cargoType.trim() || undefined,
+          serviceAreas: serviceAreasText.trim()
+            ? serviceAreasText
+                .split(',')
+                .map((area) => area.trim())
+                .filter(Boolean)
+            : undefined,
+          servicePrice: servicePrice.trim() || undefined,
+        }),
       });
       navigate('/painel');
     } catch (err: unknown) {
@@ -183,7 +208,7 @@ export function Register() {
           </div>
         )}
 
-        {(role === 'PRODUCER' || role === 'MERCHANT') && (
+        {NIF_ROLES.includes(role) && (
           <div>
             <label className="mb-1 block text-sm font-medium text-neutral-700">
               NIF <span className="font-normal text-neutral-400">(opcional)</span>
@@ -195,8 +220,95 @@ export function Register() {
               placeholder="Deixa em branco se ainda não tiveres NIF"
             />
             <p className="mt-1 text-xs text-neutral-500">
-              Não é obrigatório — podes começar a vender sem NIF e regularizar mais tarde em "Formalização".
+              Não é obrigatório — podes começar a{' '}
+              {role === 'TRANSPORTER' ? 'transportar' : 'vender'} sem NIF e regularizar mais tarde em "Formalização".
             </p>
+          </div>
+        )}
+
+        {role === 'TRANSPORTER' && (
+          <div className="space-y-4 rounded-lg border border-neutral-200 p-4">
+            <div>
+              <p className="font-medium text-neutral-900">Dados do transporte</p>
+              <p className="text-xs text-neutral-500">
+                Todos opcionais — podes começar a receber fretes e completar isto mais tarde em "Meu perfil de
+                transportador".
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Tipo de transportador</label>
+              <select
+                value={transporterCategory}
+                onChange={(e) => setTransporterCategory(e.target.value as TransporterCategory | '')}
+                className={inputClass}
+              >
+                <option value="">Prefiro não indicar</option>
+                {(Object.keys(TRANSPORTER_CATEGORY_LABELS) as TransporterCategory[]).map((c) => (
+                  <option key={c} value={c}>
+                    {TRANSPORTER_CATEGORY_LABELS[c]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Tipo de veículo</label>
+                <input
+                  value={vehicleType}
+                  onChange={(e) => setVehicleType(e.target.value)}
+                  placeholder="Ex: Moto, carrinha, camião"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Matrícula</label>
+                <input value={vehiclePlate} onChange={(e) => setVehiclePlate(e.target.value)} className={inputClass} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Capacidade de carga</label>
+                <input
+                  value={cargoCapacity}
+                  onChange={(e) => setCargoCapacity(e.target.value)}
+                  placeholder="Ex: 500 kg"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Tipo de mercadoria</label>
+                <input
+                  value={cargoType}
+                  onChange={(e) => setCargoType(e.target.value)}
+                  placeholder="Ex: Produtos agrícolas"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Municípios/províncias atendidos</label>
+              <input
+                value={serviceAreasText}
+                onChange={(e) => setServiceAreasText(e.target.value)}
+                placeholder="Ex: Luanda, Belas, Viana"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-neutral-500">Separa por vírgulas.</p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Preço do serviço</label>
+              <input
+                value={servicePrice}
+                onChange={(e) => setServicePrice(e.target.value)}
+                placeholder="Ex: 5000 Kz por viagem"
+                className={inputClass}
+              />
+            </div>
           </div>
         )}
 

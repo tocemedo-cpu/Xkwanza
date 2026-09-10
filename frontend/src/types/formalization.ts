@@ -17,12 +17,19 @@ export const FORMALIZATION_STATUS_LABELS: Record<FormalizationStatus, string> = 
   COMPLETED: 'Formalização concluída',
 };
 
-export type DocumentType = 'IDENTITY' | 'DELIVERY_PROOF' | 'VEHICLE_DOCUMENT' | 'RECEIPT' | 'OTHER';
+export type DocumentType =
+  | 'IDENTITY'
+  | 'DELIVERY_PROOF'
+  | 'VEHICLE_DOCUMENT'
+  | 'SERVICE_REQUIREMENT'
+  | 'RECEIPT'
+  | 'OTHER';
 
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   IDENTITY: 'Documento de identidade',
   DELIVERY_PROOF: 'Comprovativo de entrega',
   VEHICLE_DOCUMENT: 'Documento do veículo',
+  SERVICE_REQUIREMENT: 'Documentação exigida para o serviço',
   RECEIPT: 'Recibo',
   OTHER: 'Outro',
 };

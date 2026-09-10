@@ -89,6 +89,35 @@ describe('registerSchema', () => {
     const result = registerSchema.safeParse({ body: { ...validRegisterBody, activityType: 'EMPRESARIO' } });
     expect(result.success).toBe(false);
   });
+
+  it('aceita registo de transportador só com os dados pessoais (dados do transporte são opcionais)', () => {
+    const result = registerSchema.safeParse({ body: { ...validRegisterBody, role: 'TRANSPORTER' } });
+    expect(result.success).toBe(true);
+  });
+
+  it('aceita registo de transportador com dados do transporte completos', () => {
+    const result = registerSchema.safeParse({
+      body: {
+        ...validRegisterBody,
+        role: 'TRANSPORTER',
+        transporterCategory: 'INDIVIDUAL',
+        vehicleType: 'Carrinha',
+        vehiclePlate: 'LD-12-34-AB',
+        cargoCapacity: '500 kg',
+        cargoType: 'Produtos agrícolas',
+        serviceAreas: ['Luanda', 'Belas'],
+        servicePrice: '5000 Kz por viagem',
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('rejeita tipo de transportador fora do enum', () => {
+    const result = registerSchema.safeParse({
+      body: { ...validRegisterBody, role: 'TRANSPORTER', transporterCategory: 'FROTA' },
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe('loginSchema', () => {

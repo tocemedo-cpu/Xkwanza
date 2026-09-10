@@ -70,11 +70,16 @@ Campos adicionais — **sempre opcionais**, para nunca bloquear quem trabalha in
 | Comprador | — | — |
 | Produtor | Tipo de actividade (Agricultor, Pescador, Fabricante, Artesão, Criador, Produtor alimentar, Outro), NIF | Formalização (NIF/documentos), histórico económico |
 | Comerciante | Tipo de actividade (Comerciante de mercado, Comerciante de rua, Revendedor, Prestador de serviços, Outro), NIF | Catálogo de produtos, formalização |
-| Transportador | — | Veículo e disponibilidade ("Meu veículo") |
+| Transportador | NIF; dados do transporte (tipo de transportador — individual/empresa —, tipo de veículo, matrícula, capacidade de carga, tipo de mercadoria, municípios/províncias atendidos, preço do serviço) | Documentação (documentos do veículo, documentação exigida para o serviço) e disponibilidade — "Meu perfil de transportador" |
 
 NIF é validado apenas quanto à forma (alfanumérico, 5-20 caracteres) — nunca verificado contra a AGT — e é
 único por conta, tal como o telefone e o email: `POST /api/auth/register` responde `409` se o telefone, email
 ou NIF já pertencerem a outra conta.
+
+Todos os campos do Transportador acima são opcionais no registo — a conta é criada de imediato com um perfil
+de transportador vazio (ou parcialmente preenchido) e tudo pode ser completado/editado depois em "Meu perfil
+de transportador", incluindo a documentação (`POST /api/formalization/documents`, tipos `VEHICLE_DOCUMENT` e
+`SERVICE_REQUIREMENT`).
 
 ## Regras absolutas do projecto
 

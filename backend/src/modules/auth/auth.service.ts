@@ -94,6 +94,22 @@ export async function register(input: RegisterInput, req: Request) {
       province: input.province,
       municipality: input.municipality,
       activityType: input.activityType,
+      // Perfil de transportador é criado logo no registo (com os campos que o utilizador
+      // já indicar) — pode sempre ser completado/editado depois em "Meu perfil de transportador".
+      transporterProfile:
+        input.role === UserRole.TRANSPORTER
+          ? {
+              create: {
+                transporterCategory: input.transporterCategory,
+                vehicleType: input.vehicleType,
+                vehiclePlate: input.vehiclePlate,
+                cargoCapacity: input.cargoCapacity,
+                cargoType: input.cargoType,
+                serviceAreas: input.serviceAreas ?? [],
+                servicePrice: input.servicePrice,
+              },
+            }
+          : undefined,
     },
   });
 

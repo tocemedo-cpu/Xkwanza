@@ -118,6 +118,57 @@ describe('POST /api/auth/register', () => {
       });
     expect(second.status).toBe(409);
   });
+
+  it('regista um transportador com dados do transporte e cria logo o perfil de transportador', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Transportador Teste',
+        phone: randomPhone(),
+        password: 'Password123',
+        province: 'Luanda',
+        municipality: 'Luanda',
+        role: 'TRANSPORTER',
+        transporterCategory: 'INDIVIDUAL',
+        vehicleType: 'Carrinha',
+        vehiclePlate: 'LD-12-34-AB',
+        cargoCapacity: '500 kg',
+        cargoType: 'Produtos agrícolas',
+        serviceAreas: ['Luanda', 'Belas'],
+        servicePrice: '5000 Kz por viagem',
+      });
+    expect(res.status).toBe(201);
+
+    const profile = await request(app)
+      .get('/api/transporters/me')
+      .set('Authorization', `Bearer ${res.body.accessToken}`);
+    expect(profile.status).toBe(200);
+    expect(profile.body.transporterCategory).toBe('INDIVIDUAL');
+    expect(profile.body.vehicleType).toBe('Carrinha');
+    expect(profile.body.cargoCapacity).toBe('500 kg');
+    expect(profile.body.serviceAreas).toEqual(['Luanda', 'Belas']);
+  });
+
+  it('regista um transportador informal, sem nenhum dado do transporte', async () => {
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Transportador Informal',
+        phone: randomPhone(),
+        password: 'Password123',
+        province: 'Huíla',
+        municipality: 'Lubango',
+        role: 'TRANSPORTER',
+      });
+    expect(res.status).toBe(201);
+
+    const profile = await request(app)
+      .get('/api/transporters/me')
+      .set('Authorization', `Bearer ${res.body.accessToken}`);
+    expect(profile.status).toBe(200);
+    expect(profile.body.vehicleType).toBeNull();
+    expect(profile.body.serviceAreas).toEqual([]);
+  });
 });
 
 describe('POST /api/auth/login', () => {

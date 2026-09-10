@@ -1,5 +1,6 @@
 import { apiClient } from '../api/client';
 import { ActivityType, User, UserRole } from '../types/user';
+import { TransporterCategory } from '../types/logistics';
 import { clearTokens, getRefreshToken, setTokens } from './tokenStorage';
 
 interface AuthResponse {
@@ -18,6 +19,13 @@ export interface RegisterPayload {
   role: UserRole;
   activityType?: ActivityType;
   nif?: string;
+  transporterCategory?: TransporterCategory;
+  vehicleType?: string;
+  vehiclePlate?: string;
+  cargoCapacity?: string;
+  cargoType?: string;
+  serviceAreas?: string[];
+  servicePrice?: string;
 }
 
 export async function registerRequest(payload: RegisterPayload): Promise<User> {

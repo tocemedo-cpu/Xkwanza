@@ -21,6 +21,13 @@ export const TRANSPORT_STATUS_LABELS: Record<TransportStatus, string> = {
   CANCELLED: 'Cancelado',
 };
 
+export type TransporterCategory = 'INDIVIDUAL' | 'EMPRESA';
+
+export const TRANSPORTER_CATEGORY_LABELS: Record<TransporterCategory, string> = {
+  INDIVIDUAL: 'Transportador independente',
+  EMPRESA: 'Empresa de transporte',
+};
+
 export interface TransporterUserSummary {
   id: string;
   name: string;
@@ -30,8 +37,13 @@ export interface TransporterUserSummary {
 export interface Transporter {
   id: string;
   userId: string;
+  transporterCategory: TransporterCategory | null;
   vehicleType: string | null;
   vehiclePlate: string | null;
+  cargoCapacity: string | null;
+  cargoType: string | null;
+  serviceAreas: string[];
+  servicePrice: string | null;
   isAvailable: boolean;
   averageRating: string;
   createdAt: string;
@@ -83,6 +95,11 @@ export interface CreateProposalPayload {
 }
 
 export interface UpsertTransporterPayload {
+  transporterCategory?: TransporterCategory;
   vehicleType?: string;
   vehiclePlate?: string;
+  cargoCapacity?: string;
+  cargoType?: string;
+  serviceAreas?: string[];
+  servicePrice?: string;
 }

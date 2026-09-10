@@ -137,8 +137,14 @@ enum DocumentType {
   IDENTITY
   DELIVERY_PROOF
   VEHICLE_DOCUMENT
+  SERVICE_REQUIREMENT
   RECEIPT
   OTHER
+}
+
+enum TransporterCategory {
+  INDIVIDUAL // Transportador independente
+  EMPRESA // Empresa de transporte
 }
 
 enum DocumentStatus {
@@ -454,14 +460,19 @@ model BankAccount {
 // ─────────────────────────────────────────────────────────────────────────
 
 model Transporter {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  vehicleType    String?
-  vehiclePlate   String?
-  isAvailable    Boolean  @default(true)
-  averageRating  Decimal  @default(0) @db.Decimal(3, 2)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                  String               @id @default(uuid())
+  userId              String               @unique
+  transporterCategory TransporterCategory? // individual ou empresa — opcional, nunca bloqueia
+  vehicleType         String?
+  vehiclePlate        String?
+  cargoCapacity       String? // texto livre (ex: "500 kg", "2 toneladas") — capacidade varia muito entre transportadores informais
+  cargoType           String? // tipo de mercadoria transportada
+  serviceAreas        String[]             @default([]) // municípios/províncias atendidos
+  servicePrice        String? // texto livre (ex: "5000 Kz/viagem") — preço não é padronizado
+  isAvailable         Boolean              @default(true)
+  averageRating       Decimal              @default(0) @db.Decimal(3, 2)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   transportOrders TransportOrder[]

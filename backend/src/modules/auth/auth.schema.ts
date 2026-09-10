@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ActivityType, UserRole } from '@prisma/client';
+import { ActivityType, TransporterCategory, UserRole } from '@prisma/client';
 import { ANGOLA_PHONE_REGEX, ANGOLA_PROVINCES } from '../../utils/angola';
 
 // NIF angolano: alfanumérico, sem formato oficial validável aqui (auto-declarado, nunca
@@ -30,6 +30,15 @@ export const registerSchema = z.object({
       role: z.nativeEnum(UserRole),
       activityType: z.nativeEnum(ActivityType).optional(),
       nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
+      // Dados do transporte — só relevantes quando role = TRANSPORTER, mas sempre opcionais
+      // aqui também: permitem que um transportador informal crie conta sem indicar nada disto.
+      transporterCategory: z.nativeEnum(TransporterCategory).optional(),
+      vehicleType: z.string().trim().min(2).max(60).optional(),
+      vehiclePlate: z.string().trim().min(4).max(20).optional(),
+      cargoCapacity: z.string().trim().min(1).max(60).optional(),
+      cargoType: z.string().trim().min(1).max(160).optional(),
+      serviceAreas: z.array(z.string().trim().min(2).max(60)).max(30).optional(),
+      servicePrice: z.string().trim().min(1).max(80).optional(),
     })
     .refine((data) => Boolean(data.phone) || Boolean(data.email), {
       message: 'Indica um telefone ou um email para criar a conta',
