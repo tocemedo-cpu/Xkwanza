@@ -32,6 +32,13 @@ import { AdminFormalization } from './pages/AdminFormalization';
 import { AdminUsers } from './pages/AdminUsers';
 import { INSS } from './pages/INSS';
 import { AdminINSS } from './pages/AdminINSS';
+import { Support } from './pages/Support';
+import { SupportTicketDetail } from './pages/SupportTicketDetail';
+import { AdminSupport } from './pages/AdminSupport';
+import { AdminProducts } from './pages/AdminProducts';
+import { AdminOrders } from './pages/AdminOrders';
+import { AdminTransporters } from './pages/AdminTransporters';
+import { AdminAuditLog } from './pages/AdminAuditLog';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -70,6 +77,8 @@ export default function App() {
           <Route path="/formalizacao" element={<Formalization />} />
           <Route path="/formalizacao/diagnostico" element={<FormalizationDiagnosis />} />
           <Route path="/inss" element={<INSS />} />
+          <Route path="/suporte" element={<Support />} />
+          <Route path="/suporte/:id" element={<SupportTicketDetail />} />
 
           <Route element={<RoleGuard allowedRoles={[...SELLER_ROLES]} />}>
             <Route path="/meus-produtos" element={<MyProducts />} />
@@ -97,6 +106,11 @@ export default function App() {
             <Route path="/admin/pagamentos" element={<AdminPayments />} />
             <Route path="/admin/formalizacao" element={<AdminFormalization />} />
             <Route path="/admin/inss" element={<AdminINSS />} />
+            <Route path="/admin/suporte" element={<AdminSupport />} />
+            <Route path="/admin/produtos" element={<AdminProducts />} />
+            <Route path="/admin/pedidos" element={<AdminOrders />} />
+            <Route path="/admin/transportadores" element={<AdminTransporters />} />
+            <Route path="/admin/auditoria" element={<AdminAuditLog />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={[...EARNER_ROLES]} />}>

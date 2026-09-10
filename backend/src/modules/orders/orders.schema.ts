@@ -37,5 +37,15 @@ export const updateOrderStatusSchema = z.object({
   }),
 });
 
+// Uso administrativo — vê todos os pedidos, não só os próprios.
+export const adminListOrdersQuerySchema = z.object({
+  query: z.object({
+    status: z.nativeEnum(OrderStatus).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  }),
+});
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>['body'];
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>['body'];
+export type AdminListOrdersQuery = z.infer<typeof adminListOrdersQuerySchema>['query'];

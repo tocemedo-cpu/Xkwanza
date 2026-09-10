@@ -1,4 +1,5 @@
 import { apiClient } from '../api/client';
+import { PaginatedResult } from '../types/marketplace';
 import { Transporter, UpsertTransporterPayload } from '../types/logistics';
 
 export async function fetchMyTransporterProfile(): Promise<Transporter | null> {
@@ -18,5 +19,11 @@ export async function upsertMyTransporterProfile(payload: UpsertTransporterPaylo
 
 export async function setMyAvailability(isAvailable: boolean): Promise<Transporter> {
   const { data } = await apiClient.patch<Transporter>('/transporters/me/availability', { isAvailable });
+  return data;
+}
+
+// Uso administrativo — vê todos os transportadores registados.
+export async function fetchTransportersForAdmin(page = 1, pageSize = 30): Promise<PaginatedResult<Transporter>> {
+  const { data } = await apiClient.get<PaginatedResult<Transporter>>('/transporters/admin', { params: { page, pageSize } });
   return data;
 }

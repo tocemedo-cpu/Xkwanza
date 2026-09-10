@@ -3,7 +3,13 @@ import { Prisma, ProductStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
-import { CreateProductInput, ListProductsQuery, UpdateProductInput } from './products.schema';
+import {
+  AdminListProductsQuery,
+  CreateProductInput,
+  ListProductsQuery,
+  ModerateProductInput,
+  UpdateProductInput,
+} from './products.schema';
 
 const PRODUCT_OWNER_ROLES: UserRole[] = [UserRole.PRODUCER, UserRole.MERCHANT];
 
@@ -32,6 +38,7 @@ export async function listProducts(query: ListProductsQuery) {
     ownerId: query.ownerId,
     categoryId: query.categoryId,
     province: query.province,
+    municipality: query.municipality ? { contains: query.municipality, mode: 'insensitive' } : undefined,
     ...(query.search
       ? { OR: [{ name: { contains: query.search, mode: 'insensitive' } }, { description: { contains: query.search, mode: 'insensitive' } }] }
       : {}),
@@ -128,4 +135,53 @@ export async function removeProductPhoto(ownerId: string, id: string, photoId: s
   const photo = await prisma.productPhoto.findUnique({ where: { id: photoId } });
   if (!photo || photo.productId !== id) throw ApiError.notFound('Fotografia não encontrada');
   await prisma.productPhoto.delete({ where: { id: photoId } });
+}
+
+// Moderação — administração vê anúncios de qualquer dono, em qualquer estado (incluindo
+// rascunhos), ao contrário da listagem pública que só mostra PUBLISHED.
+export async function listProductsForAdmin(query: AdminListProductsQuery) {
+  const where: Prisma.ProductWhereInput = {
+    status: query.status,
+    ...(query.search
+      ? { OR: [{ name: { contains: query.search, mode: 'insensitive' } }, { description: { contains: query.search, mode: 'insensitive' } }] }
+      : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      include: publicInclude,
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.product.count({ where }),
+  ]);
+
+  return { items, total, page: query.page, pageSize: query.pageSize };
+}
+
+// Moderação — a administração pode despublicar ou remover qualquer anúncio, independentemente
+// do dono (ex: conteúdo impróprio, denúncia). REMOVED nunca é apagado da base de dados —
+// fica visível no histórico e na auditoria.
+export async function moderateProduct(adminId: string, id: string, input: ModerateProductInput, req: Request) {
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw ApiError.notFound('Produto não encontrado');
+
+  const updated = await prisma.product.update({
+    where: { id },
+    data: { status: input.status },
+    include: publicInclude,
+  });
+
+  await recordAudit({
+    userId: adminId,
+    action: input.status === ProductStatus.REMOVED ? 'PRODUCT_REMOVED_BY_ADMIN' : 'PRODUCT_UNPUBLISHED_BY_ADMIN',
+    entity: 'Product',
+    entityId: id,
+    result: 'SUCCESS',
+    req,
+  });
+
+  return updated;
 }

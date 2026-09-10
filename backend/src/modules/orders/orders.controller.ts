@@ -29,6 +29,11 @@ export const listReceivedOrdersHandler = asyncHandler(async (req: Request, res: 
   res.status(200).json(result);
 });
 
+export const listOrdersForAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  const result = await ordersService.listOrdersForAdmin(req.query as never);
+  res.status(200).json(result);
+});
+
 export const getOrderHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw ApiError.unauthorized();
   const order = await ordersService.getOrderForUser(req.params.id, req.user.id, req.user.role);

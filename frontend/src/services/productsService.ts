@@ -64,3 +64,19 @@ export async function uploadProductPhoto(id: string, file: File): Promise<Produc
 export async function removeProductPhoto(id: string, photoId: string): Promise<void> {
   await apiClient.delete(`/products/${id}/photos/${photoId}`);
 }
+
+// Uso administrativo — moderação de anúncios de qualquer dono.
+export async function fetchProductsForAdmin(filters: {
+  search?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedResult<Product>> {
+  const { data } = await apiClient.get<PaginatedResult<Product>>('/products/admin', { params: filters });
+  return data;
+}
+
+export async function moderateProduct(id: string, status: 'UNPUBLISHED' | 'REMOVED'): Promise<Product> {
+  const { data } = await apiClient.patch<Product>(`/products/${id}/moderate`, { status });
+  return data;
+}

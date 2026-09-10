@@ -3,12 +3,13 @@ import { UserRole } from '@prisma/client';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireRole } from '../../security/rbac';
 import { validate } from '../../middleware/validate.middleware';
-import { adminResetPasswordSchema, updateProfileSchema } from './users.schema';
+import { adminResetPasswordSchema, updateProfileSchema, updateUserStatusSchema } from './users.schema';
 import {
   adminResetPasswordHandler,
   getMyProfileHandler,
   listUsersHandler,
   updateMyProfileHandler,
+  updateUserStatusHandler,
 } from './users.controller';
 
 export const usersRouter = Router();
@@ -25,4 +26,10 @@ usersRouter.post(
   requireRole(UserRole.ADMIN, UserRole.SUPPORT),
   validate(adminResetPasswordSchema),
   adminResetPasswordHandler,
+);
+usersRouter.patch(
+  '/:id/status',
+  requireRole(UserRole.ADMIN, UserRole.SUPPORT),
+  validate(updateUserStatusSchema),
+  updateUserStatusHandler,
 );

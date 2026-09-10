@@ -5,6 +5,7 @@ import { ApiError } from '../../utils/apiError';
 import { toPublicUser } from '../auth/auth.service';
 import { recordAudit } from '../audit/audit.service';
 import { hashPassword } from '../../security/password';
+import { UpdateUserStatusInput } from './users.schema';
 
 export async function getProfile(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -123,4 +124,51 @@ export async function adminResetPassword(targetUserId: string, adminId: string, 
   });
 
   return { tempPassword };
+}
+
+// Bloquear/desbloquear conta (isActive) e validar perfil (isVerifiedBadge) — administração.
+// Um administrador nunca se pode desactivar a si próprio (evita ficar sem acesso por engano).
+export async function updateUserStatus(
+  targetUserId: string,
+  adminId: string,
+  input: UpdateUserStatusInput,
+  req: Request,
+) {
+  if (input.isActive === false && targetUserId === adminId) {
+    throw ApiError.badRequest('Não pode desactivar a sua própria conta');
+  }
+
+  const existing = await prisma.user.findUnique({ where: { id: targetUserId } });
+  if (!existing) throw ApiError.notFound('Utilizador não encontrado');
+
+  const updated = await prisma.user.update({
+    where: { id: targetUserId },
+    data: {
+      isActive: input.isActive,
+      isVerifiedBadge: input.isVerifiedBadge,
+    },
+  });
+
+  if (input.isActive !== undefined) {
+    await recordAudit({
+      userId: adminId,
+      action: input.isActive ? 'USER_ACTIVATED' : 'USER_SUSPENDED',
+      entity: 'User',
+      entityId: targetUserId,
+      result: 'SUCCESS',
+      req,
+    });
+  }
+  if (input.isVerifiedBadge !== undefined) {
+    await recordAudit({
+      userId: adminId,
+      action: input.isVerifiedBadge ? 'USER_VERIFIED' : 'USER_UNVERIFIED',
+      entity: 'User',
+      entityId: targetUserId,
+      result: 'SUCCESS',
+      req,
+    });
+  }
+
+  return toPublicUser(updated);
 }

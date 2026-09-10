@@ -32,6 +32,11 @@ export interface TransporterUserSummary {
   id: string;
   name: string;
   phone: string | null;
+  email?: string | null;
+  province?: string;
+  municipality?: string;
+  isActive?: boolean;
+  isVerifiedBadge?: boolean;
 }
 
 export interface Transporter {

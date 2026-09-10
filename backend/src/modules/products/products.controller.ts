@@ -63,6 +63,17 @@ export const removeProductPhotoHandler = asyncHandler(async (req: Request, res: 
   res.status(204).send();
 });
 
+export const listProductsForAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  const result = await productsService.listProductsForAdmin(req.query as never);
+  res.status(200).json(result);
+});
+
+export const moderateProductHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const product = await productsService.moderateProduct(req.user.id, req.params.id, req.body, req);
+  res.status(200).json(product);
+});
+
 export const uploadProductPhotoHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw ApiError.unauthorized();
   if (!req.file) throw ApiError.badRequest('Ficheiro de imagem em falta (campo "file")');

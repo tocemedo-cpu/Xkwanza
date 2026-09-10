@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { KeyRound } from 'lucide-react';
-import { adminResetPassword, fetchUsers } from '../services/usersService';
+import { KeyRound, ShieldCheck, ShieldOff } from 'lucide-react';
+import { adminResetPassword, fetchUsers, updateUserStatus } from '../services/usersService';
 import { getContact, ROLE_LABELS, User } from '../types/user';
 
 export function AdminUsers() {
@@ -23,6 +23,36 @@ export function AdminUsers() {
   function handleSearch(event: FormEvent) {
     event.preventDefault();
     reload(search);
+  }
+
+  async function handleToggleActive(user: User) {
+    setError(null);
+    const nextActive = !user.isActive;
+    if (nextActive === false && !confirm(`Bloquear a conta de ${user.name}? Deixa de conseguir entrar.`)) {
+      return;
+    }
+    try {
+      const updated = await updateUserStatus(user.id, { isActive: nextActive });
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível alterar o estado da conta.';
+      setError(message);
+    }
+  }
+
+  async function handleToggleVerified(user: User) {
+    setError(null);
+    try {
+      const updated = await updateUserStatus(user.id, { isVerifiedBadge: !user.isVerifiedBadge });
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+        'Não foi possível alterar a validação da conta.';
+      setError(message);
+    }
   }
 
   async function handleReset(user: User) {
@@ -100,23 +130,49 @@ export function AdminUsers() {
       {!isLoading && users.length > 0 && (
         <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
           {users.map((user) => (
-            <div key={user.id} className="flex items-center justify-between gap-3 p-4 text-sm">
+            <div key={user.id} className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
               <div>
                 <p className="font-medium text-neutral-900">
                   {user.name} <span className="text-neutral-400">· {ROLE_LABELS[user.role]}</span>
+                  {user.isVerifiedBadge && <ShieldCheck size={14} className="ml-1 inline text-xkwanza-600" />}
+                  {!user.isActive && (
+                    <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                      Bloqueada
+                    </span>
+                  )}
                 </p>
                 <p className="text-neutral-500">
                   {getContact(user)} · {user.municipality}, {user.province}
                 </p>
               </div>
-              <button
-                onClick={() => handleReset(user)}
-                disabled={resettingId === user.id}
-                className="flex items-center gap-1 whitespace-nowrap rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-60"
-              >
-                <KeyRound size={14} />
-                {resettingId === user.id ? 'A repor...' : 'Repor password'}
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => handleToggleVerified(user)}
+                  className="flex items-center gap-1 whitespace-nowrap rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100"
+                >
+                  <ShieldCheck size={14} />
+                  {user.isVerifiedBadge ? 'Remover validação' : 'Validar conta'}
+                </button>
+                <button
+                  onClick={() => handleToggleActive(user)}
+                  className={`flex items-center gap-1 whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium ${
+                    user.isActive
+                      ? 'border-red-300 text-red-600 hover:bg-red-50'
+                      : 'border-green-300 text-green-700 hover:bg-green-50'
+                  }`}
+                >
+                  <ShieldOff size={14} />
+                  {user.isActive ? 'Bloquear' : 'Desbloquear'}
+                </button>
+                <button
+                  onClick={() => handleReset(user)}
+                  disabled={resettingId === user.id}
+                  className="flex items-center gap-1 whitespace-nowrap rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:opacity-60"
+                >
+                  <KeyRound size={14} />
+                  {resettingId === user.id ? 'A repor...' : 'Repor password'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

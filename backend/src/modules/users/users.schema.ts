@@ -24,3 +24,20 @@ export const adminResetPasswordSchema = z.object({
     id: z.string().uuid('Identificador de utilizador inválido'),
   }),
 });
+
+// Bloquear/desbloquear conta (isActive) e validar perfil (isVerifiedBadge) — administração.
+export const updateUserStatusSchema = z.object({
+  params: z.object({
+    id: z.string().uuid('Identificador de utilizador inválido'),
+  }),
+  body: z
+    .object({
+      isActive: z.boolean().optional(),
+      isVerifiedBadge: z.boolean().optional(),
+    })
+    .refine((data) => data.isActive !== undefined || data.isVerifiedBadge !== undefined, {
+      message: 'Indica pelo menos um campo a alterar (isActive ou isVerifiedBadge)',
+    }),
+});
+
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>['body'];

@@ -52,6 +52,11 @@ export function DashboardLayout() {
             <NavLink to="/inss" className={navLinkClass}>
               INSS
             </NavLink>
+            {!isStaff && (
+              <NavLink to="/suporte" className={navLinkClass}>
+                Suporte
+              </NavLink>
+            )}
             {isSeller && (
               <>
                 <NavLink to="/meus-produtos" className={navLinkClass}>
@@ -109,6 +114,21 @@ export function DashboardLayout() {
                 <NavLink to="/admin/inss" className={navLinkClass}>
                   INSS (admin)
                 </NavLink>
+                <NavLink to="/admin/suporte" className={navLinkClass}>
+                  Suporte (admin)
+                </NavLink>
+                <NavLink to="/admin/produtos" className={navLinkClass}>
+                  Produtos (admin)
+                </NavLink>
+                <NavLink to="/admin/pedidos" className={navLinkClass}>
+                  Pedidos (admin)
+                </NavLink>
+                <NavLink to="/admin/transportadores" className={navLinkClass}>
+                  Transportadores (admin)
+                </NavLink>
+                <NavLink to="/admin/auditoria" className={navLinkClass}>
+                  Auditoria
+                </NavLink>
               </>
             )}
           </nav>
@@ -151,6 +171,11 @@ export function DashboardLayout() {
           <NavLink to="/inss" className={navLinkClass}>
             INSS
           </NavLink>
+          {!isStaff && (
+            <NavLink to="/suporte" className={navLinkClass}>
+              Suporte
+            </NavLink>
+          )}
           {isSeller && (
             <>
               <NavLink to="/meus-produtos" className={navLinkClass}>
@@ -207,6 +232,21 @@ export function DashboardLayout() {
               </NavLink>
               <NavLink to="/admin/inss" className={navLinkClass}>
                 INSS (admin)
+              </NavLink>
+              <NavLink to="/admin/suporte" className={navLinkClass}>
+                Suporte (admin)
+              </NavLink>
+              <NavLink to="/admin/produtos" className={navLinkClass}>
+                Produtos (admin)
+              </NavLink>
+              <NavLink to="/admin/pedidos" className={navLinkClass}>
+                Pedidos (admin)
+              </NavLink>
+              <NavLink to="/admin/transportadores" className={navLinkClass}>
+                Transportadores (admin)
+              </NavLink>
+              <NavLink to="/admin/auditoria" className={navLinkClass}>
+                Auditoria
               </NavLink>
             </>
           )}

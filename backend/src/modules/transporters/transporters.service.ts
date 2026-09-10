@@ -33,3 +33,31 @@ export async function setAvailability(userId: string, role: UserRole, isAvailabl
 
   return prisma.transporter.update({ where: { userId }, data: { isAvailable } });
 }
+
+// Uso administrativo — vê todos os transportadores registados, com os dados de contacto e
+// estado da conta (bloqueio/verificação geridos em /api/users/:id/status).
+export async function listTransportersForAdmin(page: number, pageSize: number) {
+  const [items, total] = await Promise.all([
+    prisma.transporter.findMany({
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            province: true,
+            municipality: true,
+            isActive: true,
+            isVerifiedBadge: true,
+          },
+        },
+      },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.transporter.count(),
+  ]);
+  return { items, total, page, pageSize };
+}

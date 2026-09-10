@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ProductStatus } from '@prisma/client';
 import { ANGOLA_PROVINCES } from '../../utils/angola';
 
 export const createProductSchema = z.object({
@@ -41,6 +42,7 @@ export const listProductsQuerySchema = z.object({
     search: z.string().trim().max(160).optional(),
     categoryId: z.string().uuid().optional(),
     province: z.enum(ANGOLA_PROVINCES).optional(),
+    municipality: z.string().trim().min(2).max(120).optional(),
     minPrice: z.coerce.number().nonnegative().optional(),
     maxPrice: z.coerce.number().positive().optional(),
     ownerId: z.string().uuid().optional(),
@@ -60,6 +62,25 @@ export const productPhotoParamSchema = z.object({
   params: z.object({ id: z.string().uuid(), photoId: z.string().uuid() }),
 });
 
+// Moderação — administração vê/gere anúncios de qualquer dono, independentemente do estado.
+export const adminListProductsQuerySchema = z.object({
+  query: z.object({
+    search: z.string().trim().max(160).optional(),
+    status: z.nativeEnum(ProductStatus).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  }),
+});
+
+export const moderateProductSchema = z.object({
+  params: z.object({ id: z.string().uuid() }),
+  body: z.object({
+    status: z.enum([ProductStatus.UNPUBLISHED, ProductStatus.REMOVED] as const),
+  }),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>['body'];
 export type UpdateProductInput = z.infer<typeof updateProductSchema>['body'];
 export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>['query'];
+export type AdminListProductsQuery = z.infer<typeof adminListProductsQuerySchema>['query'];
+export type ModerateProductInput = z.infer<typeof moderateProductSchema>['body'];

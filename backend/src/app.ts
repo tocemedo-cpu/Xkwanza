@@ -25,6 +25,8 @@ import { reviewsRouter } from './modules/reviews/reviews.routes';
 import { economicsRouter } from './modules/economics/economics.routes';
 import { formalizationRouter } from './modules/formalization/formalization.routes';
 import { inssRouter } from './modules/inss/inss.routes';
+import { supportRouter } from './modules/support/support.routes';
+import { auditRouter } from './modules/audit/audit.routes';
 import { dbTasksRouter } from './admin/dbTasks.routes';
 
 export function createApp() {
@@ -70,6 +72,8 @@ export function createApp() {
   app.use('/api/economics', economicsRouter);
   app.use('/api/formalization', formalizationRouter);
   app.use('/api/inss', inssRouter);
+  app.use('/api/support', supportRouter);
+  app.use('/api/audit-logs', auditRouter);
   app.use('/internal/tasks', dbTasksRouter);
 
   app.use(notFoundHandler);

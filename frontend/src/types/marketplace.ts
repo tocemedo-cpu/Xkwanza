@@ -55,6 +55,7 @@ export interface ProductFilters {
   search?: string;
   categoryId?: string;
   province?: string;
+  municipality?: string;
   minPrice?: number;
   maxPrice?: number;
   page?: number;
@@ -141,6 +142,7 @@ export interface OrderStatusEvent {
 export interface Order {
   id: string;
   buyerId: string;
+  buyer?: { id: string; name: string; phone: string | null; email: string | null };
   shippingAddressId: string;
   status: OrderStatus;
   subtotal: string;

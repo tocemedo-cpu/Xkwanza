@@ -20,3 +20,10 @@ export const setAvailabilityHandler = asyncHandler(async (req: Request, res: Res
   const profile = await transportersService.setAvailability(req.user.id, req.user.role, req.body.isAvailable);
   res.status(200).json(profile);
 });
+
+export const listTransportersForAdminHandler = asyncHandler(async (req: Request, res: Response) => {
+  const page = Number(req.query.page ?? 1);
+  const pageSize = Math.min(Number(req.query.pageSize ?? 20), 100);
+  const result = await transportersService.listTransportersForAdmin(page, pageSize);
+  res.status(200).json(result);
+});

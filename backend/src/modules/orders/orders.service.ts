@@ -4,7 +4,7 @@ import { OrderStatus, PaymentMethod, PaymentStatus, Prisma, UserRole } from '@pr
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
-import { CreateOrderInput } from './orders.schema';
+import { AdminListOrdersQuery, CreateOrderInput } from './orders.schema';
 
 const orderInclude = {
   items: { include: { product: { include: { photos: true, owner: { select: { id: true, name: true } } } } } },
@@ -188,6 +188,25 @@ export async function listReceivedOrders(sellerId: string, page: number, pageSiz
     prisma.order.count({ where }),
   ]);
   return { items, total, page, pageSize };
+}
+
+// Uso administrativo — vê todos os pedidos da plataforma, não só os do próprio comprador/vendedor.
+export async function listOrdersForAdmin(query: AdminListOrdersQuery) {
+  const where: Prisma.OrderWhereInput = { status: query.status };
+  const [items, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      include: {
+        ...orderInclude,
+        buyer: { select: { id: true, name: true, phone: true, email: true } },
+      },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+      orderBy: { createdAt: 'desc' },
+    }),
+    prisma.order.count({ where }),
+  ]);
+  return { items, total, page: query.page, pageSize: query.pageSize };
 }
 
 export async function getOrderForUser(orderId: string, userId: string, role: UserRole) {

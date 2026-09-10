@@ -26,7 +26,8 @@ Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modula
 - [x] **Fase 5 — Histórico económico**: avaliações (produto/vendedor/transportador/comprador) após pedidos concluídos, indicadores de rendimento/vendas/reputação para vendedores e transportadores
 - [x] **Fase 6 — Formalização**: diagnóstico, dossiê com 6 etapas (1-5 auto-reportadas, a etapa final só confirmada pelo suporte após verificação real dos documentos), índice de progresso, gestão de documentos
 - [x] **Fase 7 — INSS**: consentimento explícito e revogável, INSSAdapter em modo SANDBOX apenas (nunca avança sozinho para estados oficiais), NISS sempre auto-declarado pelo utilizador, documentos, simulador de contribuição (taxa sempre indicada por quem simula, nunca fixada pela XKWANZA) claramente marcado "SIMULAÇÃO — NÃO É GUIA DE PAGAMENTO"
-- [ ] Fase 8 — Integração institucional oficial (bloqueada até existir acordo formal com o INSS/AGT — ver nota abaixo)
+- [x] **Fase 8 (parcial) — Administração e suporte**: moderação de produtos, visão geral de pedidos e transportadores, bloqueio/desbloqueio e validação de contas, auditoria (só leitura), tickets de suporte/reclamações com conversa — ver secção "Administração e suporte" abaixo. (A parte de integração institucional oficial da Fase 8 continua bloqueada — ver nota.)
+- [ ] Fase 8 (restante) — Integração institucional oficial (bloqueada até existir acordo formal com o INSS/AGT — ver nota abaixo)
 - [ ] Fase 9 — Ecossistema — AGT, bancos, fintechs, seguros (bloqueada pela mesma razão)
 
 ### Nota sobre as Fases 8 e 9
@@ -90,6 +91,25 @@ depois (`GET`/`PUT /api/transporters/me`, `/api/producers/me`, `/api/merchants/m
 perfil reaproveita o endpoint genérico de documentos (`POST /api/formalization/documents`, tipos
 `VEHICLE_DOCUMENT`/`SERVICE_REQUIREMENT` para o Transportador, `IDENTITY`/`ACTIVITY_PROOF` para
 Produtor/Comerciante).
+
+## Administração e suporte
+
+ADMIN e SUPPORT nunca aparecem no registo público (ver secção acima) — a sua autoridade vem
+inteiramente do `role`, imposto por RBAC (`requireRole`) em cada rota abaixo. Ambos os papéis têm
+o mesmo acesso a estas ferramentas (não há distinção de permissões entre ADMIN e SUPPORT).
+
+| Área | Onde | O que faz |
+|---|---|---|
+| Utilizadores | `/admin/utilizadores` | Listar/pesquisar, repor password, **bloquear/desbloquear conta** (`isActive`), **validar perfil** (`isVerifiedBadge`) — `PATCH /api/users/:id/status`. Um admin nunca se pode bloquear a si próprio. Uma conta bloqueada (`isActive: false`) não consegue entrar (login responde 403), mesmo com a password certa. |
+| Produtos | `/admin/produtos` | Vê anúncios de qualquer vendedor em qualquer estado (`GET /api/products/admin`) e modera (`PATCH /api/products/:id/moderate`): despublicar ou **remover** (estado `REMOVED`, nunca apagado da base de dados). |
+| Pedidos | `/admin/pedidos` | Visão geral de todos os pedidos e transacções da plataforma (`GET /api/orders/admin`), com o mesmo detalhe (`/pedidos/:id`) que compradores/vendedores já têm. |
+| Transportadores | `/admin/transportadores` | Lista todos os transportadores registados com contacto e estado da conta (`GET /api/transporters/admin`); bloqueio/desbloqueio usa o mesmo endpoint de utilizadores. |
+| Auditoria | `/admin/auditoria` | Consulta só de leitura ao `AuditLog` (`GET /api/audit-logs`, filtros por entidade/acção/utilizador/resultado) — a tabela nunca é actualizada nem apagada pela aplicação. |
+| Suporte/reclamações | `/admin/suporte` (staff) e `/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). Reclamações usam o mesmo sistema — não há um modelo de dados separado. |
+
+Ainda não implementado: um passo formal de "validação de perfil" além do selo `isVerifiedBadge`
+acima, e "acompanhar rotas" do transportador em tempo real (precisa de um fornecedor de mapas —
+Google Maps/Mapbox — e da respectiva chave de API, que ainda não foi configurada).
 
 ## Regras absolutas do projecto
 
@@ -185,7 +205,22 @@ Base de dados em Supabase (PostgreSQL), backend e frontend alojados no Render co
 3. Depois do backend ficar online, copia o seu URL (ex: `https://xkwanza-backend.onrender.com`) e define no `xkwanza-frontend`: `VITE_API_URL=https://xkwanza-backend.onrender.com/api`. Isto obriga a um novo build do frontend (o Vite embebe esta variável em tempo de build).
 4. Depois do frontend ficar online, copia o seu URL (ex: `https://xkwanza-frontend.onrender.com`) e define no `xkwanza-backend`: `CORS_ORIGIN=https://xkwanza-frontend.onrender.com`. Isto reinicia o backend com o CORS correcto.
 
-Cada deploy do backend corre automaticamente `prisma migrate deploy` antes de arrancar o servidor — qualquer migração nova criada localmente (`npx prisma migrate dev`) é aplicada sozinha no próximo deploy. Se `prisma migrate deploy` falhar (ex: baseline por fazer), o servidor arranca mesmo assim — para não ficar preso num ciclo em que nunca fica acessível para corrigir o problema (ex: via `/internal/tasks/db-baseline`, secção 1 acima). Um `migrate deploy` a falhar aparece nos logs do Render; corrige a causa e o próximo deploy resolve-se sozinho.
+Cada deploy do backend corre automaticamente `prisma migrate deploy` antes de arrancar o servidor —
+qualquer migração nova criada localmente (`npx prisma migrate dev`) é aplicada sozinha no próximo
+deploy. **Se `prisma migrate deploy` falhar, o deploy falha também** (o servidor não arranca) — isto
+é deliberado: um incidente em 2026-09 mostrou que deixar o servidor arrancar mesmo com a migração
+falhada faz a app correr contra um schema desactualizado, com qualquer operação que use as colunas/
+tabelas em falta a responder `500` sem aviso nenhum no deploy (que aparecia "verde"). Se isto
+acontecer:
+
+1. Confirma no dashboard do Supabase (SQL Editor) se a tabela `_prisma_migrations` existe e que
+   migrações já lá estão registadas — `select migration_name, finished_at from _prisma_migrations
+   order by started_at desc;`.
+2. Se a base de dados foi criada de outra forma (ex: `prisma db push`, ou SQL colado manualmente) e
+   por isso não tem histórico de migrações, usa `/internal/tasks/db-baseline` (secção acima) para
+   marcar como aplicadas as migrações que já correspondem ao schema real, sem as voltar a correr.
+3. Corrige a causa e volta a fazer deploy — só quando `prisma migrate deploy` terminar com sucesso é
+   que o servidor arranca.
 
 ### 3. Criar o primeiro administrador
 

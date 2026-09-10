@@ -25,3 +25,9 @@ export async function updateOrderStatus(id: string, status: OrderStatus, note?: 
   const { data } = await apiClient.patch<Order>(`/orders/${id}/status`, { status, note });
   return data;
 }
+
+// Uso administrativo — vê todos os pedidos da plataforma.
+export async function fetchOrdersForAdmin(status?: OrderStatus, page = 1, pageSize = 20): Promise<PaginatedResult<Order>> {
+  const { data } = await apiClient.get<PaginatedResult<Order>>('/orders/admin', { params: { status, page, pageSize } });
+  return data;
+}

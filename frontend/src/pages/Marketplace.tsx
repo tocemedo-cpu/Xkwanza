@@ -14,6 +14,7 @@ export function Marketplace() {
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [province, setProvince] = useState('');
+  const [municipality, setMunicipality] = useState('');
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -26,13 +27,14 @@ export function Marketplace() {
       search: search || undefined,
       categoryId: categoryId || undefined,
       province: province || undefined,
+      municipality: municipality || undefined,
       page,
       pageSize: 12,
     })
       .then(setResult)
       .catch(() => setResult(null))
       .finally(() => setIsLoading(false));
-  }, [search, categoryId, province, page]);
+  }, [search, categoryId, province, municipality, page]);
 
   const totalPages = result ? Math.max(1, Math.ceil(result.total / result.pageSize)) : 1;
 
@@ -86,6 +88,15 @@ export function Marketplace() {
             </option>
           ))}
         </select>
+        <input
+          value={municipality}
+          onChange={(e) => {
+            setPage(1);
+            setMunicipality(e.target.value);
+          }}
+          placeholder="Município..."
+          className="rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+        />
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar produtos...</p>}

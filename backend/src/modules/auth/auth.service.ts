@@ -28,6 +28,7 @@ function publicUser(user: {
   municipality: string;
   trustLevel: string;
   isVerifiedBadge: boolean;
+  isActive: boolean;
   createdAt: Date;
 }) {
   return {
@@ -44,6 +45,7 @@ function publicUser(user: {
     municipality: user.municipality,
     trustLevel: user.trustLevel,
     isVerifiedBadge: user.isVerifiedBadge,
+    isActive: user.isActive,
     createdAt: user.createdAt,
   };
 }

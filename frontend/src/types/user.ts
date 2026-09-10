@@ -35,6 +35,7 @@ export interface User {
   municipality: string;
   trustLevel: TrustLevel;
   isVerifiedBadge: boolean;
+  isActive: boolean;
   createdAt: string;
 }
 

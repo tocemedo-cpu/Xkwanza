@@ -5,7 +5,11 @@ services:
     plan: free
     region: frankfurt
     buildCommand: npm install --include=dev && npm run build --workspace=backend
-    startCommand: (npm run prisma:deploy --workspace=backend || echo "prisma migrate deploy falhou — a arrancar mesmo assim") && npm start --workspace=backend
+    # Se a migração falhar, o arranque falha também (em vez de servir a app com o schema
+    # desactualizado) — um incidente em 2026-09 mostrou que falhar em silêncio aqui deixa a
+    # app a correr contra uma base de dados sem as colunas/tabelas mais recentes, resultando
+    # em 500 em qualquer operação que as use, sem aviso nenhum no deploy.
+    startCommand: npm run prisma:deploy --workspace=backend && npm start --workspace=backend
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV

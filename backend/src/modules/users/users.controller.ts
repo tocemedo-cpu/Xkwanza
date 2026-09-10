@@ -29,3 +29,9 @@ export const adminResetPasswordHandler = asyncHandler(async (req: Request, res: 
   const result = await usersService.adminResetPassword(req.params.id, req.user.id, req);
   res.status(200).json(result);
 });
+
+export const updateUserStatusHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const user = await usersService.updateUserStatus(req.params.id, req.user.id, req.body, req);
+  res.status(200).json(user);
+});

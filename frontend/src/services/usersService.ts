@@ -43,3 +43,11 @@ export async function updateMyProfile(payload: UpdateProfilePayload): Promise<Us
   const { data } = await apiClient.patch<User>('/users/me', payload);
   return data;
 }
+
+export async function updateUserStatus(
+  userId: string,
+  payload: { isActive?: boolean; isVerifiedBadge?: boolean },
+): Promise<User> {
+  const { data } = await apiClient.patch<User>(`/users/${userId}/status`, payload);
+  return data;
+}
