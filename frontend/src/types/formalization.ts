@@ -22,6 +22,7 @@ export type DocumentType =
   | 'DELIVERY_PROOF'
   | 'VEHICLE_DOCUMENT'
   | 'SERVICE_REQUIREMENT'
+  | 'ACTIVITY_PROOF'
   | 'RECEIPT'
   | 'OTHER';
 
@@ -30,6 +31,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   DELIVERY_PROOF: 'Comprovativo de entrega',
   VEHICLE_DOCUMENT: 'Documento do veículo',
   SERVICE_REQUIREMENT: 'Documentação exigida para o serviço',
+  ACTIVITY_PROOF: 'Comprovativo da actividade',
   RECEIPT: 'Recibo',
   OTHER: 'Outro',
 };

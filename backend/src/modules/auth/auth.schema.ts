@@ -4,7 +4,7 @@ import { ANGOLA_PHONE_REGEX, ANGOLA_PROVINCES } from '../../utils/angola';
 
 // NIF angolano: alfanumérico, sem formato oficial validável aqui (auto-declarado, nunca
 // verificado contra a AGT) — apenas um comprimento plausível para apanhar erros óbvios de
-// digitação. Nunca obrigatório: a plataforma tem de aceitar utilizadores informais sem NIF.
+// digitação.
 const NIF_REGEX = /^[A-Za-z0-9]{5,20}$/;
 
 const passwordSchema = z
@@ -15,23 +15,27 @@ const passwordSchema = z
   .regex(/[A-Z]/, 'A palavra-passe deve conter uma letra maiúscula')
   .regex(/[0-9]/, 'A palavra-passe deve conter um número');
 
-// O registo aceita telefone OU email como identificador de conta (o utilizador escolhe
-// um dos dois no formulário) — por isso ambos são opcionais ao nível do schema, mas pelo
-// menos um tem de estar presente (ver .refine abaixo).
+// Requisitos de cadastro (todos os 4 perfis públicos): nome, telefone, email, palavra-passe,
+// NIF, província e município são todos obrigatórios — telefone/email deixaram de ser
+// alternativos e o NIF deixou de ser opcional. "Localização da produção" é obrigatória só
+// para Produtor; "Endereço/localidade" só para Comprador (ver .superRefine abaixo). Os
+// restantes campos por perfil (dados da actividade/negócio/transporte) continuam opcionais,
+// para não bloquear quem trabalha informalmente — completam-se depois no perfil.
 export const registerSchema = z.object({
   body: z
     .object({
       name: z.string().trim().min(2, 'Nome demasiado curto').max(120),
-      phone: z.string().regex(ANGOLA_PHONE_REGEX, 'Telefone deve estar no formato +244XXXXXXXXX').optional(),
-      email: z.string().trim().toLowerCase().email('Email inválido').optional(),
+      phone: z.string().regex(ANGOLA_PHONE_REGEX, 'Telefone deve estar no formato +244XXXXXXXXX'),
+      email: z.string().trim().toLowerCase().email('Email inválido'),
       password: passwordSchema,
       province: z.enum(ANGOLA_PROVINCES, { errorMap: () => ({ message: 'Província inválida' }) }),
       municipality: z.string().trim().min(2).max(120),
+      locality: z.string().trim().min(2).max(160).optional(), // "Endereço/localidade" — obrigatório para Comprador
       role: z.nativeEnum(UserRole),
       activityType: z.nativeEnum(ActivityType).optional(),
-      nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
-      // Dados do transporte — só relevantes quando role = TRANSPORTER, mas sempre opcionais
-      // aqui também: permitem que um transportador informal crie conta sem indicar nada disto.
+      nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido'),
+
+      // Dados do transporte (Transportador) — opcionais, completam-se depois.
       transporterCategory: z.nativeEnum(TransporterCategory).optional(),
       vehicleType: z.string().trim().min(2).max(60).optional(),
       vehiclePlate: z.string().trim().min(4).max(20).optional(),
@@ -39,10 +43,37 @@ export const registerSchema = z.object({
       cargoType: z.string().trim().min(1).max(160).optional(),
       serviceAreas: z.array(z.string().trim().min(2).max(60)).max(30).optional(),
       servicePrice: z.string().trim().min(1).max(80).optional(),
+
+      // Dados da actividade (Produtor) — productionLocation é obrigatório para este perfil
+      // (ver .superRefine); os restantes são opcionais.
+      productionLocation: z.string().trim().min(2).max(160).optional(),
+      businessName: z.string().trim().min(2).max(160).optional(), // partilhado por Produtor e Comerciante
+      productCategories: z.array(z.string().trim().min(2).max(60)).max(30).optional(), // Produtor e Comerciante
+      productsProduced: z.string().trim().min(2).max(60).array().max(30).optional(),
+      productionCapacity: z.string().trim().min(1).max(60).optional(),
+      productionUnit: z.string().trim().min(1).max(40).optional(),
+      referencePrice: z.string().trim().min(1).max(80).optional(),
+      availability: z.string().trim().min(1).max(160).optional(),
+
+      // Dados do negócio (Comerciante) — todos opcionais.
+      businessLocation: z.string().trim().min(2).max(160).optional(),
+      productsSold: z.array(z.string().trim().min(2).max(60)).max(30).optional(),
     })
-    .refine((data) => Boolean(data.phone) || Boolean(data.email), {
-      message: 'Indica um telefone ou um email para criar a conta',
-      path: ['phone'],
+    .superRefine((data, ctx) => {
+      if (data.role === UserRole.BUYER && !data.locality?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['locality'],
+          message: 'Indica o teu endereço/localidade',
+        });
+      }
+      if (data.role === UserRole.PRODUCER && !data.productionLocation?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['productionLocation'],
+          message: 'Indica a localização da produção',
+        });
+      }
     }),
 });
 

@@ -39,47 +39,57 @@ Estas fases dependem, por definição, de integrações reais com instituições
 
 `Criar conta` (`/registar`) → **escolher perfil** (Comprador / Produtor / Comerciante / Transportador, em
 cartões) → **formulário específico** do perfil escolhido (`/registar/:role`) → conta criada e sessão iniciada
-→ **completar perfil depois**, já dentro da app (ex: o transportador indica o veículo em "Meu veículo", o
-vendedor cria o catálogo em "Meus produtos", NIF/formalização podem ser preenchidos mais tarde em
-"Formalização" se ainda não tiverem sido dados no registo).
+→ **completar perfil depois**, já dentro da app (ex: o transportador indica os dados do transporte em "Meu
+perfil de transportador", o produtor os dados da actividade em "Meu perfil de produtor", o comerciante os
+dados do negócio em "Meu perfil de comerciante", o vendedor cria o catálogo em "Meus produtos").
 
 Só **BUYER, PRODUCER, MERCHANT e TRANSPORTER** aparecem no registo público. **ADMIN e SUPPORT nunca
-aparecem** — são criados internamente (ver secção "Criar o primeiro administrador" no deploy).
+aparecem** — são criados internamente (ver secção "Criar o primeiro administrador" no deploy). Não têm
+registo público; a sua autorização vem inteiramente do papel (`role`) atribuído internamente — a lista de
+permissões de cada um (gestão de utilizadores/produtos/categorias/pedidos/transportadores/reclamações/
+configurações, auditoria e suspensão de contas para o Admin; tickets de suporte para o Suporte) reflecte o
+que já está imposto por RBAC (`requireRole`) nos módulos existentes (utilizadores, produtos, categorias,
+pagamentos, formalização, INSS) — a gestão de configurações do sistema, a validação formal de perfis e um
+painel de reclamações dedicado (distinto dos tickets de suporte) ainda não têm interface própria.
 
-O registo e o login aceitam **telefone ou email** como identificador da conta — a pessoa escolhe um dos dois
-no formulário (`Registar com telefone` / `Registar com email`); a conta guarda o que for escolhido e usa isso
-para entrar depois. Uma conta pode ter só telefone, só email, ou os dois (se adicionar o outro mais tarde),
-mas nunca nenhum dos dois.
+**Telefone, email e NIF passaram a obrigatórios em todos os perfis públicos** (antes bastava telefone OU
+email, e o NIF era sempre opcional). O registo e o login continuam a aceitar **telefone ou email** como
+identificador para entrar — a conta tem sempre os dois, e a pessoa usa o que preferir no login.
 
 ### Campos por perfil
 
-Campos comuns aos 4 perfis:
+Campos comuns aos 4 perfis — todos obrigatórios no registo:
 
 | Campo | Regra |
 |---|---|
 | Nome completo | mín. 2 caracteres |
-| Telefone **ou** Email | pelo menos um dos dois — telefone no formato `+244XXXXXXXXX`, email num formato válido |
+| Telefone | formato `+244XXXXXXXXX` |
+| Email | formato de email válido |
 | Palavra-passe | mín. 8 caracteres, com maiúscula + minúscula + número |
+| NIF | alfanumérico, 5-20 caracteres — validado apenas quanto à forma, nunca contra a AGT |
 | Província | uma das 18 províncias angolanas |
 | Município | mín. 2 caracteres |
 
-Campos adicionais — **sempre opcionais**, para nunca bloquear quem trabalha informalmente:
+Campos extra por perfil — obrigatórios só onde indicado, o resto é sempre opcional para nunca bloquear quem
+trabalha informalmente:
 
-| Perfil | Campos extra no registo | Completa-se depois |
-|---|---|---|
-| Comprador | — | — |
-| Produtor | Tipo de actividade (Agricultor, Pescador, Fabricante, Artesão, Criador, Produtor alimentar, Outro), NIF | Formalização (NIF/documentos), histórico económico |
-| Comerciante | Tipo de actividade (Comerciante de mercado, Comerciante de rua, Revendedor, Prestador de serviços, Outro), NIF | Catálogo de produtos, formalização |
-| Transportador | NIF; dados do transporte (tipo de transportador — individual/empresa —, tipo de veículo, matrícula, capacidade de carga, tipo de mercadoria, municípios/províncias atendidos, preço do serviço) | Documentação (documentos do veículo, documentação exigida para o serviço) e disponibilidade — "Meu perfil de transportador" |
+| Perfil | Campo extra obrigatório no registo | Campos extra opcionais no registo | Completa-se depois |
+|---|---|---|---|
+| Comprador | Endereço/localidade | — | Foto de perfil, preferências de compra ("Meu perfil"); endereços de entrega, métodos de pagamento e histórico de compras já existem (Moradas/Checkout/Meus pedidos) |
+| Produtor | Localização da produção | Tipo de actividade ("tipo de produtor"), nome do negócio/produção, categoria de produtos, produtos produzidos, capacidade de produção, unidade de medida, preço, disponibilidade | Descrição da actividade, documentação (identificação/formalização, comprovativos da actividade) — "Meu perfil de produtor"; fotos dos produtos em "Meus produtos" |
+| Comerciante | — | Tipo de actividade ("tipo de comércio"), nome comercial, localização, categorias de produtos, produtos vendidos | Estado de formalização (Informal / Em formalização / Formalizado) e documentação disponível — "Meu perfil de comerciante"; stock, preços e fotos ficam nos anúncios em "Meus produtos" |
+| Transportador | — | Tipo de transportador (individual/empresa), tipo de veículo, matrícula, capacidade de carga, tipo de mercadoria, municípios/províncias atendidos, preço do serviço | Documentação (documentos do veículo, documentação exigida para o serviço) e disponibilidade — "Meu perfil de transportador" |
 
-NIF é validado apenas quanto à forma (alfanumérico, 5-20 caracteres) — nunca verificado contra a AGT — e é
-único por conta, tal como o telefone e o email: `POST /api/auth/register` responde `409` se o telefone, email
-ou NIF já pertencerem a outra conta.
+NIF é único por conta, tal como o telefone e o email: `POST /api/auth/register` responde `409` se o
+telefone, email ou NIF já pertencerem a outra conta, e `400` se faltar algum campo obrigatório (incluindo
+"Endereço/localidade" para o Comprador e "Localização da produção" para o Produtor).
 
-Todos os campos do Transportador acima são opcionais no registo — a conta é criada de imediato com um perfil
-de transportador vazio (ou parcialmente preenchido) e tudo pode ser completado/editado depois em "Meu perfil
-de transportador", incluindo a documentação (`POST /api/formalization/documents`, tipos `VEHICLE_DOCUMENT` e
-`SERVICE_REQUIREMENT`).
+Os perfis específicos de cada papel (`Transporter`, `ProducerProfile`, `MerchantProfile`) são criados logo no
+registo — vazios ou parcialmente preenchidos consoante o que a pessoa já indicar — e ficam sempre editáveis
+depois (`GET`/`PUT /api/transporters/me`, `/api/producers/me`, `/api/merchants/me`). A documentação de cada
+perfil reaproveita o endpoint genérico de documentos (`POST /api/formalization/documents`, tipos
+`VEHICLE_DOCUMENT`/`SERVICE_REQUIREMENT` para o Transportador, `IDENTITY`/`ACTIVITY_PROOF` para
+Produtor/Comerciante).
 
 ## Regras absolutas do projecto
 

@@ -10,6 +10,8 @@ export const updateProfileSchema = z.object({
     email: z.string().trim().toLowerCase().email().optional(),
     province: z.enum(ANGOLA_PROVINCES).optional(),
     municipality: z.string().trim().min(2).max(120).optional(),
+    locality: z.string().trim().min(2).max(160).optional(),
+    avatarUrl: z.string().trim().url().max(2048).optional(),
     activityType: z.nativeEnum(ActivityType).optional(),
     nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
   }),

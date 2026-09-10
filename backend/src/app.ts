@@ -15,6 +15,8 @@ import { addressesRouter } from './modules/addresses/addresses.routes';
 import { productsRouter } from './modules/products/products.routes';
 import { ordersRouter } from './modules/orders/orders.routes';
 import { transportersRouter } from './modules/transporters/transporters.routes';
+import { producersRouter } from './modules/producers/producers.routes';
+import { merchantsRouter } from './modules/merchants/merchants.routes';
 import { transportRouter } from './modules/transport/transport.routes';
 import { paymentsRouter } from './modules/payments/payments.routes';
 import { walletRouter } from './modules/wallet/wallet.routes';
@@ -58,6 +60,8 @@ export function createApp() {
   app.use('/api/products', productsRouter);
   app.use('/api/orders', ordersRouter);
   app.use('/api/transporters', transportersRouter);
+  app.use('/api/producers', producersRouter);
+  app.use('/api/merchants', merchantsRouter);
   app.use('/api/transport-orders', transportRouter);
   app.use('/api/payments', paymentsRouter);
   app.use('/api/wallet', walletRouter);

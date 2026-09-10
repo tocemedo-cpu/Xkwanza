@@ -11,14 +11,16 @@ interface AuthResponse {
 
 export interface RegisterPayload {
   name: string;
-  phone?: string;
-  email?: string;
+  phone: string;
+  email: string;
   password: string;
   province: string;
   municipality: string;
+  locality?: string; // "Endereço/localidade" — obrigatório para Comprador
   role: UserRole;
   activityType?: ActivityType;
-  nif?: string;
+  nif: string;
+  // Dados do transporte (Transportador) — opcionais.
   transporterCategory?: TransporterCategory;
   vehicleType?: string;
   vehiclePlate?: string;
@@ -26,6 +28,18 @@ export interface RegisterPayload {
   cargoType?: string;
   serviceAreas?: string[];
   servicePrice?: string;
+  // Dados da actividade (Produtor) — productionLocation é obrigatório para este perfil.
+  productionLocation?: string;
+  businessName?: string; // Produtor e Comerciante
+  productCategories?: string[]; // Produtor e Comerciante
+  productsProduced?: string[];
+  productionCapacity?: string;
+  productionUnit?: string;
+  referencePrice?: string;
+  availability?: string;
+  // Dados do negócio (Comerciante) — opcionais.
+  businessLocation?: string;
+  productsSold?: string[];
 }
 
 export async function registerRequest(payload: RegisterPayload): Promise<User> {

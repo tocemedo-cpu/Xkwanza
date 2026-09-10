@@ -16,6 +16,9 @@ import { MyOrders } from './pages/MyOrders';
 import { ReceivedOrders } from './pages/ReceivedOrders';
 import { OrderDetail } from './pages/OrderDetail';
 import { TransporterProfile } from './pages/TransporterProfile';
+import { ProducerProfile } from './pages/ProducerProfile';
+import { MerchantProfile } from './pages/MerchantProfile';
+import { MyProfile } from './pages/MyProfile';
 import { TransportJobs } from './pages/TransportJobs';
 import { MyTransportJobs } from './pages/MyTransportJobs';
 import { TransportOrderDetail } from './pages/TransportOrderDetail';
@@ -52,6 +55,7 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<DashboardLayout />}>
           <Route path="/painel" element={<Dashboard />} />
+          <Route path="/meu-perfil" element={<MyProfile />} />
 
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/produtos/:id" element={<ProductDetail />} />
@@ -72,6 +76,14 @@ export default function App() {
             <Route path="/meus-produtos/novo" element={<ProductForm />} />
             <Route path="/meus-produtos/:id/editar" element={<ProductForm />} />
             <Route path="/pedidos-recebidos" element={<ReceivedOrders />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={['PRODUCER']} />}>
+            <Route path="/meu-perfil-produtor" element={<ProducerProfile />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={['MERCHANT']} />}>
+            <Route path="/meu-perfil-comerciante" element={<MerchantProfile />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={[...TRANSPORTER_ROLES]} />}>

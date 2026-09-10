@@ -22,3 +22,24 @@ export async function adminResetPassword(userId: string): Promise<{ tempPassword
   const { data } = await apiClient.post<{ tempPassword: string }>(`/users/${userId}/reset-password`);
   return data;
 }
+
+export interface UpdateProfilePayload {
+  name?: string;
+  email?: string;
+  province?: string;
+  municipality?: string;
+  locality?: string;
+  avatarUrl?: string;
+  activityType?: string;
+  nif?: string;
+}
+
+export async function fetchMyProfile(): Promise<User> {
+  const { data } = await apiClient.get<User>('/users/me');
+  return data;
+}
+
+export async function updateMyProfile(payload: UpdateProfilePayload): Promise<User> {
+  const { data } = await apiClient.patch<User>('/users/me', payload);
+  return data;
+}

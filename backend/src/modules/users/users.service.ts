@@ -19,6 +19,8 @@ export async function updateProfile(
     email?: string;
     province?: string;
     municipality?: string;
+    locality?: string;
+    avatarUrl?: string;
     activityType?: string;
     nif?: string;
   },

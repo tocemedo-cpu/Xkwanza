@@ -13,13 +13,17 @@ import {
   UserRole,
 } from '../types/user';
 import { TRANSPORTER_CATEGORY_LABELS, TransporterCategory } from '../types/logistics';
-import { IdentifierMethod, IdentifierMethodToggle } from '../components/IdentifierMethodToggle';
-
-// Roles cujo cadastro mostra o campo de NIF — sempre opcional, nunca bloqueia informais.
-const NIF_ROLES: UserRole[] = ['PRODUCER', 'MERCHANT', 'TRANSPORTER'];
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
+
+function parseCsv(text: string): string[] | undefined {
+  const items = text
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length > 0 ? items : undefined;
+}
 
 // A rota usa o perfil em minúsculas (/registar/produtor não existe — usamos os valores do
 // enum em minúsculas, ex: /registar/producer) para manter a correspondência directa com
@@ -37,14 +41,16 @@ export function Register() {
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
-  const [method, setMethod] = useState<IdentifierMethod>('phone');
   const [phone, setPhone] = useState(ANGOLA_PHONE_PREFIX);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [province, setProvince] = useState<string>(ANGOLA_PROVINCES[0]);
   const [municipality, setMunicipality] = useState('');
+  const [locality, setLocality] = useState('');
   const [activityType, setActivityType] = useState<ActivityType | ''>('');
   const [nif, setNif] = useState('');
+
+  // Dados do transporte (Transportador) — opcionais.
   const [transporterCategory, setTransporterCategory] = useState<TransporterCategory | ''>('');
   const [vehicleType, setVehicleType] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
@@ -52,6 +58,23 @@ export function Register() {
   const [cargoType, setCargoType] = useState('');
   const [serviceAreasText, setServiceAreasText] = useState('');
   const [servicePrice, setServicePrice] = useState('');
+
+  // Dados da actividade (Produtor) — productionLocation é obrigatório para este perfil.
+  const [productionLocation, setProductionLocation] = useState('');
+  const [producerBusinessName, setProducerBusinessName] = useState('');
+  const [producerCategoriesText, setProducerCategoriesText] = useState('');
+  const [productsProducedText, setProductsProducedText] = useState('');
+  const [productionCapacity, setProductionCapacity] = useState('');
+  const [productionUnit, setProductionUnit] = useState('');
+  const [referencePrice, setReferencePrice] = useState('');
+  const [availability, setAvailability] = useState('');
+
+  // Dados do negócio (Comerciante) — opcionais.
+  const [merchantBusinessName, setMerchantBusinessName] = useState('');
+  const [businessLocation, setBusinessLocation] = useState('');
+  const [merchantCategoriesText, setMerchantCategoriesText] = useState('');
+  const [productsSoldText, setProductsSoldText] = useState('');
+
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -61,11 +84,6 @@ export function Register() {
 
   const activityOptions = ACTIVITY_TYPES_BY_ROLE[role];
 
-  function handleMethodChange(next: IdentifierMethod) {
-    setMethod(next);
-    setError(null);
-  }
-
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
@@ -73,27 +91,39 @@ export function Register() {
     try {
       await register({
         name,
-        phone: method === 'phone' ? phone : undefined,
-        email: method === 'email' ? email : undefined,
+        phone,
+        email,
         password,
         province,
         municipality,
+        locality: role === 'BUYER' ? locality.trim() : undefined,
         role: role as UserRole,
         activityType: activityType || undefined,
-        nif: nif.trim() || undefined,
+        nif: nif.trim(),
         ...(role === 'TRANSPORTER' && {
           transporterCategory: transporterCategory || undefined,
           vehicleType: vehicleType.trim() || undefined,
           vehiclePlate: vehiclePlate.trim() || undefined,
           cargoCapacity: cargoCapacity.trim() || undefined,
           cargoType: cargoType.trim() || undefined,
-          serviceAreas: serviceAreasText.trim()
-            ? serviceAreasText
-                .split(',')
-                .map((area) => area.trim())
-                .filter(Boolean)
-            : undefined,
+          serviceAreas: parseCsv(serviceAreasText),
           servicePrice: servicePrice.trim() || undefined,
+        }),
+        ...(role === 'PRODUCER' && {
+          productionLocation: productionLocation.trim(),
+          businessName: producerBusinessName.trim() || undefined,
+          productCategories: parseCsv(producerCategoriesText),
+          productsProduced: parseCsv(productsProducedText),
+          productionCapacity: productionCapacity.trim() || undefined,
+          productionUnit: productionUnit.trim() || undefined,
+          referencePrice: referencePrice.trim() || undefined,
+          availability: availability.trim() || undefined,
+        }),
+        ...(role === 'MERCHANT' && {
+          businessName: merchantBusinessName.trim() || undefined,
+          businessLocation: businessLocation.trim() || undefined,
+          productCategories: parseCsv(merchantCategoriesText),
+          productsSold: parseCsv(productsSoldText),
         }),
       });
       navigate('/painel');
@@ -124,35 +154,28 @@ export function Register() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">Como queres entrar na conta?</label>
-          <IdentifierMethodToggle value={method} onChange={handleMethodChange} />
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
+          <input
+            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={inputClass}
+            placeholder="+244900000000"
+          />
         </div>
 
-        {method === 'phone' ? (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
-            <input
-              type="tel"
-              required
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className={inputClass}
-              placeholder="+244900000000"
-            />
-          </div>
-        ) : (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={inputClass}
-              placeholder="tu@exemplo.com"
-            />
-          </div>
-        )}
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+            placeholder="tu@exemplo.com"
+          />
+        </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Palavra-passe</label>
@@ -164,6 +187,11 @@ export function Register() {
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">NIF</label>
+          <input required value={nif} onChange={(e) => setNif(e.target.value)} className={inputClass} />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -188,6 +216,13 @@ export function Register() {
           </div>
         </div>
 
+        {role === 'BUYER' && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-neutral-700">Endereço/localidade</label>
+            <input required value={locality} onChange={(e) => setLocality(e.target.value)} className={inputClass} />
+          </div>
+        )}
+
         {activityOptions && (
           <div>
             <label className="mb-1 block text-sm font-medium text-neutral-700">
@@ -208,21 +243,142 @@ export function Register() {
           </div>
         )}
 
-        {NIF_ROLES.includes(role) && (
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
-              NIF <span className="font-normal text-neutral-400">(opcional)</span>
-            </label>
-            <input
-              value={nif}
-              onChange={(e) => setNif(e.target.value)}
-              className={inputClass}
-              placeholder="Deixa em branco se ainda não tiveres NIF"
-            />
-            <p className="mt-1 text-xs text-neutral-500">
-              Não é obrigatório — podes começar a{' '}
-              {role === 'TRANSPORTER' ? 'transportar' : 'vender'} sem NIF e regularizar mais tarde em "Formalização".
+        {role === 'PRODUCER' && (
+          <div className="space-y-4 rounded-lg border border-neutral-200 p-4">
+            <p className="font-medium text-neutral-900">Dados da actividade</p>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Localização da produção</label>
+              <input
+                required
+                value={productionLocation}
+                onChange={(e) => setProductionLocation(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+
+            <p className="text-xs text-neutral-500">
+              Os campos abaixo são opcionais — podes começar a vender e completar isto mais tarde em "Meu perfil de
+              produtor".
             </p>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Nome do negócio/produção</label>
+              <input
+                value={producerBusinessName}
+                onChange={(e) => setProducerBusinessName(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Categoria de produtos</label>
+              <input
+                value={producerCategoriesText}
+                onChange={(e) => setProducerCategoriesText(e.target.value)}
+                placeholder="Ex: Hortícolas, Fruta"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-neutral-500">Separa por vírgulas.</p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Produtos produzidos</label>
+              <input
+                value={productsProducedText}
+                onChange={(e) => setProductsProducedText(e.target.value)}
+                placeholder="Ex: Tomate, Cebola"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-neutral-500">Separa por vírgulas.</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Capacidade de produção</label>
+                <input
+                  value={productionCapacity}
+                  onChange={(e) => setProductionCapacity(e.target.value)}
+                  placeholder="Ex: 200 kg/semana"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Unidade de medida</label>
+                <input
+                  value={productionUnit}
+                  onChange={(e) => setProductionUnit(e.target.value)}
+                  placeholder="Ex: kg, saca, litro"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Preço</label>
+                <input
+                  value={referencePrice}
+                  onChange={(e) => setReferencePrice(e.target.value)}
+                  placeholder="Ex: 500 Kz/kg"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-neutral-700">Disponibilidade</label>
+                <input
+                  value={availability}
+                  onChange={(e) => setAvailability(e.target.value)}
+                  placeholder="Ex: Todo o ano"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {role === 'MERCHANT' && (
+          <div className="space-y-4 rounded-lg border border-neutral-200 p-4">
+            <div>
+              <p className="font-medium text-neutral-900">Dados do negócio</p>
+              <p className="text-xs text-neutral-500">
+                Todos opcionais — podes começar a vender e completar isto mais tarde em "Meu perfil de comerciante".
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Nome comercial</label>
+              <input
+                value={merchantBusinessName}
+                onChange={(e) => setMerchantBusinessName(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Localização</label>
+              <input
+                value={businessLocation}
+                onChange={(e) => setBusinessLocation(e.target.value)}
+                placeholder="Ex: Mercado do Kinaxixi"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Categorias de produtos</label>
+              <input
+                value={merchantCategoriesText}
+                onChange={(e) => setMerchantCategoriesText(e.target.value)}
+                placeholder="Ex: Vestuário, Calçado"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-neutral-500">Separa por vírgulas.</p>
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-neutral-700">Produtos vendidos</label>
+              <input
+                value={productsSoldText}
+                onChange={(e) => setProductsSoldText(e.target.value)}
+                placeholder="Ex: Camisas, Calças"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-neutral-500">Separa por vírgulas.</p>
+            </div>
           </div>
         )}
 

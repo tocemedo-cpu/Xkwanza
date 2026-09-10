@@ -138,6 +138,7 @@ enum DocumentType {
   DELIVERY_PROOF
   VEHICLE_DOCUMENT
   SERVICE_REQUIREMENT
+  ACTIVITY_PROOF
   RECEIPT
   OTHER
 }
@@ -145,6 +146,14 @@ enum DocumentType {
 enum TransporterCategory {
   INDIVIDUAL // Transportador independente
   EMPRESA // Empresa de transporte
+}
+
+// Estado de formalização auto-declarado pelo comerciante — independente do FormalizationStatus
+// do dossiê (que acompanha as 6 etapas oficiais de NIF/INSS/documentos).
+enum SelfDeclaredFormalizationState {
+  INFORMAL
+  EM_FORMALIZACAO
+  FORMALIZADO
 }
 
 enum DocumentStatus {
@@ -202,8 +211,10 @@ model User {
   role              UserRole
   province          String
   municipality       String
+  locality           String?    // "Endereço/localidade" — obrigatório apenas para Comprador no registo
+  avatarUrl          String?    // foto de perfil (Comprador) / logo (Produtor, Comerciante) — URL, preenchido depois do registo
   activityType       ActivityType?
-  nif                String?    @unique // opcional — nunca bloqueia utilizadores informais sem NIF
+  nif                String?    @unique // obrigatório ao nível do formulário de registo público; a coluna fica opcional para não bloquear contas internas (ADMIN/SUPPORT) e dados antigos
   trustLevel        TrustLevel @default(LEVEL_1_CONTACT_VALIDATED)
   isVerifiedBadge   Boolean    @default(false) // Selo XKWANZA Verificado — só true quando critérios reais forem cumpridos
   isActive          Boolean    @default(true)
@@ -219,6 +230,8 @@ model User {
   products              Product[]              @relation("ProductOwner")
   buyerOrders           Order[]                @relation("OrderBuyer")
   transporterProfile    Transporter?
+  producerProfile        ProducerProfile?
+  merchantProfile        MerchantProfile?
   quoteRequests         QuoteRequest[]         @relation("QuoteRequester")
   quoteProposals        QuoteProposal[]        @relation("QuoteProposer")
   formalizationDossier   FormalizationDossier?
@@ -479,6 +492,46 @@ model Transporter {
   proposals       TransportProposal[]
 
   @@map("transporters")
+}
+
+// "Dados da actividade" do Produtor — tudo opcional, à imagem do perfil de transportador:
+// permite ao produtor informal criar conta e completar/editar isto quando quiser.
+model ProducerProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  productionLocation String? // localização da produção
+  businessName       String? // nome do negócio/produção
+  productCategories  String[] @default([])
+  productsProduced   String[] @default([])
+  productionCapacity String?
+  productionUnit     String?
+  referencePrice     String?
+  availability       String?
+  description        String? // descrição da actividade
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("producer_profiles")
+}
+
+// "Dados do negócio" do Comerciante — idem, tudo opcional. Stock/preços/fotos por produto
+// continuam só nos anúncios (Product), nunca duplicados aqui.
+model MerchantProfile {
+  id                 String                         @id @default(uuid())
+  userId             String                         @unique
+  businessName       String?
+  businessLocation   String?
+  productCategories  String[]                       @default([])
+  productsSold       String[]                       @default([])
+  formalizationState SelfDeclaredFormalizationState @default(INFORMAL)
+  createdAt          DateTime                       @default(now())
+  updatedAt          DateTime                       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("merchant_profiles")
 }
 
 model TransportOrder {

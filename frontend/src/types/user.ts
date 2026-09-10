@@ -27,6 +27,8 @@ export interface User {
   phone: string | null;
   email: string | null;
   nif: string | null;
+  locality: string | null;
+  avatarUrl: string | null;
   activityType: ActivityType | null;
   role: UserRole;
   province: string;
@@ -77,8 +79,8 @@ export const ROLE_DESCRIPTIONS: Record<'BUYER' | 'PRODUCER' | 'MERCHANT' | 'TRAN
   TRANSPORTER: 'Encontre oportunidades de transporte e apresente o seu preço.',
 };
 
-// Uma conta tem sempre telefone OU email (nunca nenhum) — usa isto em vez de assumir
-// que .phone existe, já que a conta pode ter sido criada só com email.
+// Contas novas têm sempre telefone e email — mas contas internas (ADMIN/SUPPORT) ou dados
+// antigos podem só ter um dos dois, por isso usa isto em vez de assumir que .phone existe.
 export function getContact(user: { phone: string | null; email: string | null }): string {
   return user.phone ?? user.email ?? '—';
 }

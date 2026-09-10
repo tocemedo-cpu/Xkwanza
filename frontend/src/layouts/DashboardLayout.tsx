@@ -20,6 +20,8 @@ export function DashboardLayout() {
   if (!user) return null;
 
   const isSeller = SELLER_ROLES.includes(user.role);
+  const isProducer = user.role === 'PRODUCER';
+  const isMerchant = user.role === 'MERCHANT';
   const isTransporter = user.role === TRANSPORTER_ROLE;
   const isStaff = STAFF_ROLES.includes(user.role);
   const hasWallet = isSeller || isTransporter;
@@ -59,6 +61,16 @@ export function DashboardLayout() {
                   Pedidos recebidos
                 </NavLink>
               </>
+            )}
+            {isProducer && (
+              <NavLink to="/meu-perfil-produtor" className={navLinkClass}>
+                Meu perfil de produtor
+              </NavLink>
+            )}
+            {isMerchant && (
+              <NavLink to="/meu-perfil-comerciante" className={navLinkClass}>
+                Meu perfil de comerciante
+              </NavLink>
             )}
             {isTransporter && (
               <>
@@ -110,10 +122,10 @@ export function DashboardLayout() {
               )}
             </NavLink>
             <span className="hidden text-white/60 sm:inline">{ROLE_LABELS[user.role]}</span>
-            <span className="flex items-center gap-1 font-medium text-white">
+            <NavLink to="/meu-perfil" className="flex items-center gap-1 font-medium text-white hover:text-amber-300">
               {user.isVerifiedBadge && <ShieldCheck size={16} className="text-amber-400" />}
               {user.name}
-            </span>
+            </NavLink>
             <button
               onClick={() => logout()}
               className="flex items-center gap-1 rounded-md px-2 py-1 text-white/75 hover:bg-white/10 hover:text-white"
@@ -148,6 +160,16 @@ export function DashboardLayout() {
                 Recebidos
               </NavLink>
             </>
+          )}
+          {isProducer && (
+            <NavLink to="/meu-perfil-produtor" className={navLinkClass}>
+              Perfil produtor
+            </NavLink>
+          )}
+          {isMerchant && (
+            <NavLink to="/meu-perfil-comerciante" className={navLinkClass}>
+              Perfil comerciante
+            </NavLink>
           )}
           {isTransporter && (
             <>

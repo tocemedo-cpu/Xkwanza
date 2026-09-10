@@ -20,6 +20,8 @@ function publicUser(user: {
   phone: string | null;
   email: string | null;
   nif: string | null;
+  locality: string | null;
+  avatarUrl: string | null;
   activityType: ActivityType | null;
   role: UserRole;
   province: string;
@@ -34,6 +36,8 @@ function publicUser(user: {
     phone: user.phone,
     email: user.email,
     nif: user.nif,
+    locality: user.locality,
+    avatarUrl: user.avatarUrl,
     activityType: user.activityType,
     role: user.role,
     province: user.province,
@@ -70,11 +74,7 @@ export async function register(input: RegisterInput, req: Request) {
 
   const existing = await prisma.user.findFirst({
     where: {
-      OR: [
-        ...(input.phone ? [{ phone: input.phone }] : []),
-        ...(input.email ? [{ email: input.email }] : []),
-        ...(input.nif ? [{ nif: input.nif }] : []),
-      ],
+      OR: [{ phone: input.phone }, { email: input.email }, { nif: input.nif }],
     },
   });
   if (existing) {
@@ -89,13 +89,14 @@ export async function register(input: RegisterInput, req: Request) {
       phone: input.phone,
       email: input.email,
       nif: input.nif,
+      locality: input.locality,
       passwordHash,
       role: input.role,
       province: input.province,
       municipality: input.municipality,
       activityType: input.activityType,
-      // Perfil de transportador é criado logo no registo (com os campos que o utilizador
-      // já indicar) — pode sempre ser completado/editado depois em "Meu perfil de transportador".
+      // O perfil específico do papel é criado logo no registo (com os campos que o
+      // utilizador já indicar) — tudo opcional aqui, sempre completável/editável depois.
       transporterProfile:
         input.role === UserRole.TRANSPORTER
           ? {
@@ -107,6 +108,32 @@ export async function register(input: RegisterInput, req: Request) {
                 cargoType: input.cargoType,
                 serviceAreas: input.serviceAreas ?? [],
                 servicePrice: input.servicePrice,
+              },
+            }
+          : undefined,
+      producerProfile:
+        input.role === UserRole.PRODUCER
+          ? {
+              create: {
+                productionLocation: input.productionLocation,
+                businessName: input.businessName,
+                productCategories: input.productCategories ?? [],
+                productsProduced: input.productsProduced ?? [],
+                productionCapacity: input.productionCapacity,
+                productionUnit: input.productionUnit,
+                referencePrice: input.referencePrice,
+                availability: input.availability,
+              },
+            }
+          : undefined,
+      merchantProfile:
+        input.role === UserRole.MERCHANT
+          ? {
+              create: {
+                businessName: input.businessName,
+                businessLocation: input.businessLocation,
+                productCategories: input.productCategories ?? [],
+                productsSold: input.productsSold ?? [],
               },
             }
           : undefined,
