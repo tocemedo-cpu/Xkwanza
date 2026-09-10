@@ -9,8 +9,8 @@ const TRANSPORTER_ROLE = 'TRANSPORTER';
 const STAFF_ROLES = ['ADMIN', 'SUPPORT'];
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium ${
-    isActive ? 'bg-xkwanza-50 text-xkwanza-700' : 'text-neutral-600 hover:bg-neutral-100'
+  `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
+    isActive ? 'bg-amber-400 text-green-950' : 'text-white/75 hover:bg-white/10 hover:text-white'
   }`;
 
 export function DashboardLayout() {
@@ -25,11 +25,14 @@ export function DashboardLayout() {
   const hasWallet = isSeller || isTransporter;
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <NavLink to="/painel" className="text-lg font-bold text-xkwanza-600">
-            XKWANZA
+    <div className="min-h-screen bg-xkwanza-50/40">
+      <header className="bg-green-950">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <NavLink to="/painel" className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-300 to-amber-500 text-sm font-black text-green-950">
+              X
+            </span>
+            <span className="hidden text-lg font-bold tracking-tight text-white sm:inline">XKWANZA</span>
           </NavLink>
           <nav className="hidden items-center gap-1 md:flex">
             <NavLink to="/painel" className={navLinkClass} end>
@@ -95,29 +98,29 @@ export function DashboardLayout() {
             )}
           </nav>
           <div className="flex items-center gap-4 text-sm">
-            <NavLink to="/carrinho" className="relative text-neutral-600 hover:text-xkwanza-600">
+            <NavLink to="/carrinho" className="relative text-white/75 hover:text-white">
               <ShoppingCart size={20} />
               {totalItems > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-xkwanza-600 text-[10px] font-medium text-white">
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[10px] font-bold text-green-950">
                   {totalItems}
                 </span>
               )}
             </NavLink>
-            <span className="hidden text-neutral-500 sm:inline">{ROLE_LABELS[user.role]}</span>
-            <span className="flex items-center gap-1 font-medium text-neutral-800">
-              {user.isVerifiedBadge && <ShieldCheck size={16} className="text-xkwanza-600" />}
+            <span className="hidden text-white/60 sm:inline">{ROLE_LABELS[user.role]}</span>
+            <span className="flex items-center gap-1 font-medium text-white">
+              {user.isVerifiedBadge && <ShieldCheck size={16} className="text-amber-400" />}
               {user.name}
             </span>
             <button
               onClick={() => logout()}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-neutral-500 hover:bg-neutral-100"
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-white/75 hover:bg-white/10 hover:text-white"
             >
               <LogOut size={16} />
               <span className="hidden sm:inline">Sair</span>
             </button>
           </div>
         </div>
-        <nav className="flex items-center gap-1 overflow-x-auto px-4 pb-2 md:hidden">
+        <nav className="flex items-center gap-1 overflow-x-auto bg-green-900 px-4 py-2 md:hidden">
           <NavLink to="/painel" className={navLinkClass} end>
             Painel
           </NavLink>
@@ -181,7 +184,7 @@ export function DashboardLayout() {
           )}
         </nav>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-6">
         <Outlet />
       </main>
     </div>
