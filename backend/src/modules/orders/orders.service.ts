@@ -1,10 +1,11 @@
-import { randomInt } from 'crypto';
+import { randomInt, randomUUID } from 'crypto';
 import { Request } from 'express';
 import { NotificationType, OrderStatus, PaymentMethod, PaymentStatus, Prisma, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
 import { recordNotification } from '../notifications/notifications.service';
+import { paymentGatewayAdapter } from '../payments/payment.adapter';
 import { AdminListOrdersQuery, CreateOrderInput } from './orders.schema';
 
 const orderInclude = {
@@ -95,9 +96,20 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
 
   const subtotal = orderItemsData.reduce((sum, item) => sum.plus(item.lineTotal), new Prisma.Decimal(0));
 
+  // Cobrança via gateway (BANK_INTEGRATION/FINTECH_INTEGRATION) inicia-se fora da transacção —
+  // é uma chamada a um adapter externo (simulado em sandbox), nunca deve prender a transacção
+  // da base de dados à espera de rede. Se o adapter recusar (ex: produção sem credenciais), o
+  // checkout falha aqui, antes de tocar em stock/carteira.
+  const gatewayCharge =
+    input.paymentMethod === PaymentMethod.BANK_INTEGRATION || input.paymentMethod === PaymentMethod.FINTECH_INTEGRATION
+      ? await paymentGatewayAdapter.initiateCharge({ orderId: randomUUID(), amount: subtotal.toString(), currency: 'AOA' })
+      : null;
+
   // XKWANZA Protect: para WALLET o débito é imediato e os fundos ficam logo em custódia;
   // para BANK_TRANSFER/PAYMENT_REFERENCE não há gateway real — o pagamento fica PENDING até
   // o comprador assinalar que pagou e o suporte/administração confirmar manualmente o depósito.
+  // Para BANK_INTEGRATION/FINTECH_INTEGRATION a cobrança já foi iniciada acima — o pagamento
+  // fica PROCESSING até o webhook do provedor (ou, em sandbox, confirmação manual) o resolver.
   const order = await prisma.$transaction(async (tx) => {
     for (const item of input.items) {
       const result = await tx.product.updateMany({
@@ -122,6 +134,15 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
         amount: subtotal,
         custodyHeld: true,
         statusHistory: { create: { status: PaymentStatus.PAID, note: 'Pago com a carteira XKWANZA' } },
+      };
+    } else if (gatewayCharge) {
+      paymentData = {
+        method: input.paymentMethod,
+        status: PaymentStatus.PROCESSING,
+        amount: subtotal,
+        custodyHeld: false,
+        externalRef: gatewayCharge.externalRef,
+        statusHistory: { create: { status: PaymentStatus.PROCESSING, note: gatewayCharge.message } },
       };
     } else {
       paymentData = {

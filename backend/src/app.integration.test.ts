@@ -1003,3 +1003,221 @@ describe('Categorias — nome único só entre irmãos', () => {
     expect(duplicateSibling.status).toBe(409);
   });
 });
+
+describe('Recuperação de password self-service', () => {
+  it('permite pedir e repor a password com um token válido, e invalida sessões activas', async () => {
+    const buyer = await createUser('BUYER');
+
+    const requestRes = await request(app).post('/api/auth/request-password-reset').send({ identifier: buyer.phone });
+    expect(requestRes.status).toBe(200);
+    expect(typeof requestRes.body.devToken).toBe('string'); // sem SMTP configurado em testes, o token vem na resposta
+
+    const token = requestRes.body.devToken as string;
+
+    const resetRes = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token, password: 'NovaPassword123' });
+    expect(resetRes.status).toBe(204);
+
+    // Login com a password antiga deixa de funcionar.
+    const oldLogin = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: buyer.phone, password: 'Password123' });
+    expect(oldLogin.status).toBe(401);
+
+    // Login com a nova password funciona.
+    const newLogin = await request(app)
+      .post('/api/auth/login')
+      .send({ identifier: buyer.phone, password: 'NovaPassword123' });
+    expect(newLogin.status).toBe(200);
+
+    // O token já usado não pode ser reutilizado.
+    const reuseRes = await request(app)
+      .post('/api/auth/reset-password')
+      .send({ token, password: 'OutraPassword123' });
+    expect(reuseRes.status).toBe(400);
+  });
+
+  it('nunca revela se o identificador existe (resposta genérica igual em ambos os casos)', async () => {
+    const known = await createUser('BUYER');
+    const knownRes = await request(app).post('/api/auth/request-password-reset').send({ identifier: known.phone });
+    const unknownRes = await request(app)
+      .post('/api/auth/request-password-reset')
+      .send({ identifier: randomPhone() }); // aleatório — nunca corresponde a uma conta real
+
+    expect(knownRes.status).toBe(200);
+    expect(unknownRes.status).toBe(200);
+    expect(unknownRes.body.message).toBe(knownRes.body.message);
+    expect(unknownRes.body.devToken).toBeUndefined();
+  });
+});
+
+describe('Validação formal de perfil', () => {
+  it('utilizador pede verificação, administração aprova, e o selo fica activo', async () => {
+    const producer = await createUser('PRODUCER');
+    const admin = await createUser('ADMIN');
+
+    const requestRes = await request(app)
+      .post('/api/users/me/request-verification')
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+    expect(requestRes.status).toBe(200);
+    expect(requestRes.body.verificationStatus).toBe('PENDING');
+
+    // Um segundo pedido enquanto ainda está pendente é rejeitado.
+    const duplicateRes = await request(app)
+      .post('/api/users/me/request-verification')
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+    expect(duplicateRes.status).toBe(400);
+
+    const queueRes = await request(app)
+      .get('/api/users/verification-requests')
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(queueRes.status).toBe(200);
+    expect(queueRes.body.items.some((u: { id: string }) => u.id === producer.userId)).toBe(true);
+
+    const approveRes = await request(app)
+      .patch(`/api/users/${producer.userId}/verification`)
+      .set('Authorization', `Bearer ${admin.accessToken}`)
+      .send({ approve: true });
+    expect(approveRes.status).toBe(200);
+    expect(approveRes.body.verificationStatus).toBe('APPROVED');
+    expect(approveRes.body.isVerifiedBadge).toBe(true);
+  });
+
+  it('rejeição exige motivo e não activa o selo', async () => {
+    const merchant = await createUser('MERCHANT');
+    const support = await createUser('SUPPORT');
+
+    await request(app)
+      .post('/api/users/me/request-verification')
+      .set('Authorization', `Bearer ${merchant.accessToken}`);
+
+    const noReasonRes = await request(app)
+      .patch(`/api/users/${merchant.userId}/verification`)
+      .set('Authorization', `Bearer ${support.accessToken}`)
+      .send({ approve: false });
+    expect(noReasonRes.status).toBe(400);
+
+    const rejectRes = await request(app)
+      .patch(`/api/users/${merchant.userId}/verification`)
+      .set('Authorization', `Bearer ${support.accessToken}`)
+      .send({ approve: false, note: 'Documentos ilegíveis' });
+    expect(rejectRes.status).toBe(200);
+    expect(rejectRes.body.verificationStatus).toBe('REJECTED');
+    expect(rejectRes.body.isVerifiedBadge).toBe(false);
+  });
+});
+
+describe('Gateway de pagamento — checkout com BANK_INTEGRATION/FINTECH_INTEGRATION (sandbox)', () => {
+  it('inicia a cobrança em sandbox (PROCESSING) e a administração confirma manualmente para PAID', async () => {
+    const buyer = await createUser('BUYER');
+    const producer = await createUser('PRODUCER');
+    const admin = await createUser('ADMIN');
+
+    const category = await prisma.category.create({
+      data: { name: `Categoria Gateway ${Date.now()}`, slug: `categoria-gateway-${Date.now()}` },
+    });
+    const productRes = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({
+        categoryId: category.id,
+        listingType: 'PRODUCT',
+        name: 'Produto Gateway',
+        description: 'Produto de teste para o gateway de pagamento.',
+        price: 1000,
+        unit: 'kg',
+        stock: 10,
+        province: 'Luanda',
+        municipality: 'Luanda',
+        deliveryOption: 'BUYER_PICKUP',
+      });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/photos`)
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({ url: 'https://example.com/foto.jpg' });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/publish`)
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+
+    const address = await request(app)
+      .post('/api/addresses')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ province: 'Luanda', municipality: 'Luanda', isDefault: true });
+
+    const orderRes = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({
+        shippingAddressId: address.body.id,
+        paymentMethod: 'BANK_INTEGRATION',
+        items: [{ productId: productRes.body.id, quantity: 1 }],
+      });
+    expect(orderRes.status).toBe(201);
+    expect(orderRes.body.payment.status).toBe('PROCESSING');
+    expect(orderRes.body.payment.externalRef).toMatch(/^SANDBOX-/);
+
+    const confirmRes = await request(app)
+      .post(`/api/payments/${orderRes.body.id}/confirm`)
+      .set('Authorization', `Bearer ${admin.accessToken}`);
+    expect(confirmRes.status).toBe(200);
+    expect(confirmRes.body.status).toBe('PAID');
+    expect(confirmRes.body.custodyHeld).toBe(true);
+  });
+
+  it('o webhook do gateway resolve o pagamento pela externalRef (sandbox aceita sem assinatura)', async () => {
+    const buyer = await createUser('BUYER');
+    const producer = await createUser('PRODUCER');
+
+    const category = await prisma.category.create({
+      data: { name: `Categoria Webhook ${Date.now()}`, slug: `categoria-webhook-${Date.now()}` },
+    });
+    const productRes = await request(app)
+      .post('/api/products')
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({
+        categoryId: category.id,
+        listingType: 'PRODUCT',
+        name: 'Produto Webhook',
+        description: 'Produto de teste para o webhook do gateway.',
+        price: 500,
+        unit: 'kg',
+        stock: 10,
+        province: 'Luanda',
+        municipality: 'Luanda',
+        deliveryOption: 'BUYER_PICKUP',
+      });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/photos`)
+      .set('Authorization', `Bearer ${producer.accessToken}`)
+      .send({ url: 'https://example.com/foto.jpg' });
+    await request(app)
+      .post(`/api/products/${productRes.body.id}/publish`)
+      .set('Authorization', `Bearer ${producer.accessToken}`);
+
+    const address = await request(app)
+      .post('/api/addresses')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({ province: 'Luanda', municipality: 'Luanda', isDefault: true });
+
+    const orderRes = await request(app)
+      .post('/api/orders')
+      .set('Authorization', `Bearer ${buyer.accessToken}`)
+      .send({
+        shippingAddressId: address.body.id,
+        paymentMethod: 'FINTECH_INTEGRATION',
+        items: [{ productId: productRes.body.id, quantity: 1 }],
+      });
+    expect(orderRes.status).toBe(201);
+    const externalRef = orderRes.body.payment.externalRef as string;
+
+    const webhookRes = await request(app)
+      .post('/api/payments/gateway/webhook')
+      .send({ externalRef, status: 'PAID' });
+    expect(webhookRes.status).toBe(200);
+
+    const payment = await prisma.payment.findUnique({ where: { orderId: orderRes.body.id } });
+    expect(payment?.status).toBe('PAID');
+    expect(payment?.custodyHeld).toBe(true);
+  });
+});

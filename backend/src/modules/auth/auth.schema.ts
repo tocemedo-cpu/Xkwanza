@@ -92,5 +92,20 @@ export const refreshSchema = z.object({
   }),
 });
 
+export const requestPasswordResetSchema = z.object({
+  body: z.object({
+    identifier: z.string().trim().min(3, 'Indica o teu telefone ou email'),
+  }),
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().trim().min(10, 'Código de recuperação inválido').max(256),
+    password: passwordSchema,
+  }),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>['body'];
 export type LoginInput = z.infer<typeof loginSchema>['body'];
+export type RequestPasswordResetInput = z.infer<typeof requestPasswordResetSchema>['body'];
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>['body'];

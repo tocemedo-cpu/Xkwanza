@@ -14,8 +14,32 @@ export const updateProfileSchema = z.object({
     avatarUrl: z.string().trim().url().max(2048).optional(),
     activityType: z.nativeEnum(ActivityType).optional(),
     nif: z.string().trim().regex(NIF_REGEX, 'NIF inválido').optional(),
+    notifyByEmail: z.boolean().optional(),
+    notifyByPush: z.boolean().optional(),
   }),
 });
+
+export const listVerificationRequestsQuerySchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  }),
+});
+
+export const reviewVerificationSchema = z.object({
+  params: z.object({ id: z.string().uuid('Identificador de utilizador inválido') }),
+  body: z
+    .object({
+      approve: z.boolean(),
+      note: z.string().trim().min(1).max(500).optional(),
+    })
+    .refine((data) => data.approve || Boolean(data.note), {
+      message: 'Indica o motivo da rejeição',
+      path: ['note'],
+    }),
+});
+
+export type ReviewVerificationInput = z.infer<typeof reviewVerificationSchema>['body'];
 
 // Recuperação de conta continua assistida por suporte/administração enquanto não existir
 // canal de SMS/email para um fluxo de "esqueci-me da password" self-service.

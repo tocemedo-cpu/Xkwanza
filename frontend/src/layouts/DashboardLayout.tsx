@@ -47,6 +47,9 @@ export function DashboardLayout() {
       { to: `/${p}/formalizacao`, label: 'Formalização' },
       { to: `/${p}/inss`, label: 'INSS' },
       { to: `/${p}/reclamacoes`, label: 'Reclamações' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/verificacoes`, label: 'Verificações' },
+      { to: `/${p}/configuracoes`, label: 'Configurações' },
       { to: `/${p}/auditoria`, label: 'Auditoria' },
       { to: `/${p}/relatorios`, label: 'Relatórios' },
     );
@@ -73,7 +76,11 @@ export function DashboardLayout() {
       );
     }
 
-    links.push({ to: `/${p}/negociacoes`, label: 'Negociações' }, { to: `/${p}/entregas`, label: 'Entregas' });
+    links.push(
+      { to: `/${p}/negociacoes`, label: 'Negociações' },
+      { to: `/${p}/entregas`, label: 'Entregas' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+    );
 
     if (isSeller && user.role === 'PRODUCER') {
       links.push({ to: `/${p}/perfil`, label: 'Meu perfil de produtor', shortLabel: 'Perfil produtor' });

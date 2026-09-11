@@ -24,6 +24,16 @@ export const logoutHandler = asyncHandler(async (req: Request, res: Response) =>
   res.status(204).send();
 });
 
+export const requestPasswordResetHandler = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.requestPasswordReset(req.body.identifier, req);
+  res.status(200).json(result);
+});
+
+export const resetPasswordHandler = asyncHandler(async (req: Request, res: Response) => {
+  await authService.resetPassword(req.body.token, req.body.password, req);
+  res.status(204).send();
+});
+
 export const meHandler = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw ApiError.unauthorized();
   const user = await prisma.user.findUnique({ where: { id: req.user.id } });

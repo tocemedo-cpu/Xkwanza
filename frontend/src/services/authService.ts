@@ -71,3 +71,16 @@ export async function fetchCurrentUser(): Promise<User> {
   const { data } = await apiClient.get<User>('/auth/me');
   return data;
 }
+
+// Recuperação de password self-service. Sem SMTP configurado no ambiente, o backend devolve
+// devToken directamente (só fora de produção) para o fluxo continuar testável.
+export async function requestPasswordReset(identifier: string): Promise<{ message: string; devToken?: string }> {
+  const { data } = await apiClient.post<{ message: string; devToken?: string }>('/auth/request-password-reset', {
+    identifier,
+  });
+  return data;
+}
+
+export async function resetPassword(token: string, password: string): Promise<void> {
+  await apiClient.post('/auth/reset-password', { token, password });
+}

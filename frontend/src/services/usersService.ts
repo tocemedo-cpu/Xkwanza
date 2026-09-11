@@ -32,6 +32,8 @@ export interface UpdateProfilePayload {
   avatarUrl?: string;
   activityType?: string;
   nif?: string;
+  notifyByEmail?: boolean;
+  notifyByPush?: boolean;
 }
 
 export async function fetchMyProfile(): Promise<User> {
@@ -49,5 +51,25 @@ export async function updateUserStatus(
   payload: { isActive?: boolean; isVerifiedBadge?: boolean },
 ): Promise<User> {
   const { data } = await apiClient.patch<User>(`/users/${userId}/status`, payload);
+  return data;
+}
+
+// Validação formal de perfil (selo XKWANZA Verificado) — o próprio utilizador pede, a
+// administração decide.
+export async function requestVerification(): Promise<User> {
+  const { data } = await apiClient.post<User>('/users/me/request-verification');
+  return data;
+}
+
+export async function fetchVerificationRequests(params: { page?: number; pageSize?: number }): Promise<UsersPage> {
+  const { data } = await apiClient.get<UsersPage>('/users/verification-requests', { params });
+  return data;
+}
+
+export async function reviewVerification(
+  userId: string,
+  payload: { approve: boolean; note?: string },
+): Promise<User> {
+  const { data } = await apiClient.patch<User>(`/users/${userId}/verification`, payload);
   return data;
 }

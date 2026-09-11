@@ -30,6 +30,10 @@ jobs:
       JWT_ACCESS_SECRET: ci-test-access-secret
       JWT_REFRESH_SECRET: ci-test-refresh-secret
       CORS_ORIGIN: http://localhost:5173
+      # O limite de produção (10) é partilhado por todos os testes de integração de um mesmo
+      # processo vitest (um só rate limiter em memória para todo o ficheiro) — com dezenas de
+      # describe blocks a chamar registo/login, fica esgotado a meio da suite sem isto.
+      AUTH_RATE_LIMIT_MAX: '1000'
 
     steps:
       - uses: actions/checkout@v4

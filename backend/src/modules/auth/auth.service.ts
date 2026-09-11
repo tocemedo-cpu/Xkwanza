@@ -1,12 +1,14 @@
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { Request } from 'express';
-import { ActivityType, UserRole } from '@prisma/client';
+import { ActivityType, ProfileVerificationStatus, UserRole } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { hashPassword, verifyPassword } from '../../security/password';
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../../security/jwt';
 import { sha256 } from '../../security/hash';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
+import { isEmailConfigured, sendEmail } from '../notifications/email.adapter';
+import { env } from '../../config/env';
 import { LoginInput, RegisterInput } from './auth.schema';
 
 // Perfis que só podem ser criados internamente (nunca via registo público).
@@ -30,6 +32,12 @@ function publicUser(user: {
   isVerifiedBadge: boolean;
   isActive: boolean;
   createdAt: Date;
+  notifyByEmail?: boolean;
+  notifyByPush?: boolean;
+  verificationStatus?: ProfileVerificationStatus;
+  verificationRequestedAt?: Date | null;
+  verificationReviewedAt?: Date | null;
+  verificationNote?: string | null;
 }) {
   return {
     id: user.id,
@@ -47,6 +55,12 @@ function publicUser(user: {
     isVerifiedBadge: user.isVerifiedBadge,
     isActive: user.isActive,
     createdAt: user.createdAt,
+    notifyByEmail: user.notifyByEmail,
+    notifyByPush: user.notifyByPush,
+    verificationStatus: user.verificationStatus,
+    verificationRequestedAt: user.verificationRequestedAt,
+    verificationReviewedAt: user.verificationReviewedAt,
+    verificationNote: user.verificationNote,
   };
 }
 
@@ -235,4 +249,76 @@ export async function logout(refreshToken: string) {
 
 export function toPublicUser(user: Parameters<typeof publicUser>[0]) {
   return publicUser(user);
+}
+
+const PASSWORD_RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutos
+const GENERIC_RESET_MESSAGE = 'Se existir uma conta associada, vai receber instruções para repor a password.';
+
+// Pedido de recuperação de password self-service. Nunca revela se o identificador existe (evita
+// enumeração de contas) — a resposta é sempre a mesma mensagem genérica. O token só é enviado
+// por email; sem SMTP configurado, o fluxo continua funcional fora de produção devolvendo o
+// token na resposta (só assim é testável sem depender de um envio real).
+export async function requestPasswordReset(identifierRaw: string, req: Request) {
+  const identifier = identifierRaw.trim().toLowerCase();
+  const user = await prisma.user.findFirst({ where: { OR: [{ phone: identifier }, { email: identifier }] } });
+
+  if (user) {
+    const token = randomBytes(32).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetTokenHash: sha256(token),
+        passwordResetExpiresAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+      },
+    });
+
+    if (user.email && user.notifyByEmail) {
+      void sendEmail({
+        to: user.email,
+        subject: 'Recuperação de password — XKWANZA',
+        text: `Recebemos um pedido para repor a sua password. Use este código nos próximos 30 minutos: ${token}\n\nSe não foi você a pedir, pode ignorar este email — a sua password actual continua válida.`,
+      });
+    }
+
+    await recordAudit({
+      userId: user.id,
+      action: 'PASSWORD_RESET_REQUESTED',
+      entity: 'User',
+      entityId: user.id,
+      result: 'SUCCESS',
+      req,
+    });
+
+    if (!isEmailConfigured() && !env.isProduction) {
+      return { message: GENERIC_RESET_MESSAGE, devToken: token };
+    }
+  }
+
+  return { message: GENERIC_RESET_MESSAGE };
+}
+
+export async function resetPassword(token: string, newPassword: string, req: Request) {
+  const tokenHash = sha256(token);
+  const user = await prisma.user.findFirst({
+    where: { passwordResetTokenHash: tokenHash, passwordResetExpiresAt: { gt: new Date() } },
+  });
+  if (!user) throw ApiError.badRequest('Código de recuperação inválido ou expirado');
+
+  const passwordHash = await hashPassword(newPassword);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash, passwordResetTokenHash: null, passwordResetExpiresAt: null },
+    }),
+    prisma.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } }),
+  ]);
+
+  await recordAudit({
+    userId: user.id,
+    action: 'PASSWORD_RESET_COMPLETED',
+    entity: 'User',
+    entityId: user.id,
+    result: 'SUCCESS',
+    req,
+  });
 }

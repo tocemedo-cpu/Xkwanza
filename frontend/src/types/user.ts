@@ -21,6 +21,15 @@ export type ActivityType =
   | 'TRANSPORTADOR'
   | 'OUTRO';
 
+export type ProfileVerificationStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export const PROFILE_VERIFICATION_STATUS_LABELS: Record<ProfileVerificationStatus, string> = {
+  NONE: 'Não pedida',
+  PENDING: 'Em análise',
+  APPROVED: 'Aprovada',
+  REJECTED: 'Rejeitada',
+};
+
 export interface User {
   id: string;
   name: string;
@@ -37,6 +46,12 @@ export interface User {
   isVerifiedBadge: boolean;
   isActive: boolean;
   createdAt: string;
+  notifyByEmail?: boolean;
+  notifyByPush?: boolean;
+  verificationStatus?: ProfileVerificationStatus;
+  verificationRequestedAt?: string | null;
+  verificationReviewedAt?: string | null;
+  verificationNote?: string | null;
 }
 
 export const ROLE_LABELS: Record<UserRole, string> = {

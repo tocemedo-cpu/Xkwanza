@@ -1,10 +1,14 @@
 import { NotificationChannel, NotificationType, Prisma } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
+import { isEmailConfigured, sendEmail } from './email.adapter';
+import { isPushConfigured, sendPush } from './push.adapter';
 
 // Chamado por outros módulos (pedidos, suporte, negociações...) sempre que acontece algo
-// relevante para um utilizador. Só regista IN_APP por agora — não há envio real de
-// email/push configurado, por isso o canal fica sempre a reflectir o que é verdade.
+// relevante para um utilizador. A linha IN_APP é sempre gravada primeiro (é a fonte de verdade
+// consultada em /notifications) — email/push são melhor esforço a seguir: nunca bloqueiam nem
+// fazem esta função falhar, e só acontecem quando o utilizador os quer (notifyByEmail/
+// notifyByPush) e o respectivo adapter está configurado neste ambiente.
 export async function recordNotification(params: {
   userId: string;
   type: NotificationType;
@@ -22,6 +26,21 @@ export async function recordNotification(params: {
       metadata: params.metadata as Prisma.InputJsonValue | undefined,
     },
   });
+
+  if (!isEmailConfigured() && !isPushConfigured()) return;
+
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { email: true, notifyByEmail: true, notifyByPush: true },
+  });
+  if (!user) return;
+
+  if (user.notifyByEmail && user.email && isEmailConfigured()) {
+    void sendEmail({ to: user.email, subject: params.title, text: params.body });
+  }
+  if (user.notifyByPush && isPushConfigured()) {
+    void sendPush({ userId: params.userId, title: params.title, body: params.body });
+  }
 }
 
 export async function listMyNotifications(userId: string) {

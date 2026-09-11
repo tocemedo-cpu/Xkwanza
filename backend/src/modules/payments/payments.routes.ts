@@ -3,15 +3,20 @@ import { UserRole } from '@prisma/client';
 import { authenticate } from '../../middleware/auth.middleware';
 import { requireRole } from '../../security/rbac';
 import { validate } from '../../middleware/validate.middleware';
-import { listPendingPaymentsQuerySchema, orderIdParamSchema } from './payments.schema';
+import { gatewayWebhookSchema, listPendingPaymentsQuerySchema, orderIdParamSchema } from './payments.schema';
 import {
   confirmPaymentHandler,
+  gatewayWebhookHandler,
   listPendingPaymentsHandler,
   markPaymentSentHandler,
   rejectPaymentHandler,
 } from './payments.controller';
 
 export const paymentsRouter = Router();
+
+// Chamado pelo provedor externo do gateway — nunca autenticado por sessão (ver payment.adapter.ts
+// verifyWebhookSignature). Tem de ficar antes do `authenticate` abaixo.
+paymentsRouter.post('/gateway/webhook', validate(gatewayWebhookSchema), gatewayWebhookHandler);
 
 paymentsRouter.use(authenticate);
 

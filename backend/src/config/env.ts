@@ -43,4 +43,31 @@ export const env = {
     serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
     bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'product-photos',
   },
+
+  // Gateway de pagamento bancário/fintech real (BANK_INTEGRATION/FINTECH_INTEGRATION). Nunca
+  // "production" sem acordo institucional formal e credenciais reais de um provedor — enquanto
+  // isso não existir, todo o fluxo corre em sandbox (simulado, sem ligação externa nenhuma).
+  paymentGateway: {
+    adapterMode: (process.env.PAYMENT_ADAPTER_MODE ?? 'sandbox') as 'sandbox' | 'production',
+    provider: process.env.PAYMENT_GATEWAY_PROVIDER ?? '',
+    apiKey: process.env.PAYMENT_GATEWAY_API_KEY ?? '',
+    webhookSecret: process.env.PAYMENT_GATEWAY_WEBHOOK_SECRET ?? '',
+  },
+
+  // Envio real de email — sem estas variáveis, as notificações continuam a existir só IN_APP
+  // (nunca bloqueia a app; ver notifications/email.adapter.ts).
+  email: {
+    host: process.env.SMTP_HOST ?? '',
+    port: Number(process.env.SMTP_PORT ?? 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    user: process.env.SMTP_USER ?? '',
+    pass: process.env.SMTP_PASS ?? '',
+    from: process.env.SMTP_FROM ?? 'XKwanza <no-reply@xkwanza.co.ao>',
+  },
+
+  // Notificações push — sem provedor próprio integrado, esta é apenas uma ponte genérica por
+  // webhook para um relay externo (ex: OneSignal/FCM) que o operador configure mais tarde.
+  push: {
+    webhookUrl: process.env.PUSH_WEBHOOK_URL ?? '',
+  },
 };

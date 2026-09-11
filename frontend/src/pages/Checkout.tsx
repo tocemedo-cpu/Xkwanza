@@ -8,7 +8,13 @@ import { Address } from '../types/marketplace';
 import { PAYMENT_METHOD_LABELS, PaymentMethod, Wallet } from '../types/payments';
 import { ANGOLA_PROVINCES, formatKwanza } from '../utils/angola';
 
-const CHECKOUT_PAYMENT_METHODS: PaymentMethod[] = ['BANK_TRANSFER', 'PAYMENT_REFERENCE', 'WALLET'];
+const CHECKOUT_PAYMENT_METHODS: PaymentMethod[] = [
+  'BANK_TRANSFER',
+  'PAYMENT_REFERENCE',
+  'WALLET',
+  'BANK_INTEGRATION',
+  'FINTECH_INTEGRATION',
+];
 
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';

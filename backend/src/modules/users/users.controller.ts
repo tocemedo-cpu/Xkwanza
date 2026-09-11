@@ -35,3 +35,20 @@ export const updateUserStatusHandler = asyncHandler(async (req: Request, res: Re
   const user = await usersService.updateUserStatus(req.params.id, req.user.id, req.body, req);
   res.status(200).json(user);
 });
+
+export const requestVerificationHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const user = await usersService.requestVerification(req.user.id, req);
+  res.status(200).json(user);
+});
+
+export const listVerificationRequestsHandler = asyncHandler(async (req: Request, res: Response) => {
+  const result = await usersService.listVerificationRequests(req.query as never);
+  res.status(200).json(result);
+});
+
+export const reviewVerificationHandler = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.user) throw ApiError.unauthorized();
+  const user = await usersService.reviewVerification(req.params.id, req.user.id, req.body, req);
+  res.status(200).json(user);
+});

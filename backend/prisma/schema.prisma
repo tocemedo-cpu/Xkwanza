@@ -211,6 +211,43 @@ enum SupportTicketStatus {
   CLOSED
 }
 
+enum ComplaintStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum ComplaintTargetType {
+  ORDER
+  PRODUCT
+  USER
+  TRANSPORT_ORDER
+  OTHER
+}
+
+enum RouteStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum RouteStopStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+// Estado do pedido de validação formal de perfil (selo XKWANZA Verificado) — distinto do
+// TrustLevel (que evolui automaticamente) e do FormalizationStatus (dossiê fiscal/INSS).
+enum ProfileVerificationStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // UTILIZADOR E IDENTIDADE
 // ─────────────────────────────────────────────────────────────────────────
@@ -235,6 +272,18 @@ model User {
   mfaSecret         String?
   phoneVerifiedAt   DateTime?
   lastLoginAt       DateTime?
+  // Recuperação de password self-service — hash do token (nunca o token em si) + validade curta.
+  passwordResetTokenHash String?
+  passwordResetExpiresAt DateTime?
+  // Preferências de notificação — IN_APP é sempre gravado; estes controlam envio adicional
+  // por email/push, que só acontece de facto quando o respectivo adapter estiver configurado.
+  notifyByEmail     Boolean    @default(true)
+  notifyByPush      Boolean    @default(false)
+  // Pedido de validação formal de perfil (selo Verificado) — distinto do dossiê de formalização.
+  verificationStatus     ProfileVerificationStatus @default(NONE)
+  verificationRequestedAt DateTime?
+  verificationReviewedAt  DateTime?
+  verificationNote        String? // motivo da rejeição, quando aplicável
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 
@@ -258,6 +307,10 @@ model User {
   supportTicketsHandled  SupportTicket[]        @relation("SupportAgent")
   supportTicketMessages  SupportTicketMessage[] @relation("SupportTicketMessageAuthor")
   auditLogs              AuditLog[]
+  complaintsFiled        Complaint[]            @relation("ComplaintComplainant")
+  complaintsHandled      Complaint[]            @relation("ComplaintAgent")
+  complaintMessages      ComplaintMessage[]     @relation("ComplaintMessageAuthor")
+  platformSettingsUpdated PlatformSetting[]     @relation("PlatformSettingUpdatedBy")
 
   @@index([role])
   @@index([province, municipality])
@@ -516,6 +569,7 @@ model Transporter {
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   transportOrders TransportOrder[]
   proposals       TransportProposal[]
+  routes          Route[]
 
   @@map("transporters")
 }
@@ -578,6 +632,7 @@ model TransportOrder {
   transporter Transporter?       @relation(fields: [transporterId], references: [id])
   proposals   TransportProposal[]
   statusHistory TransportStatusEvent[]
+  routeStops    RouteStop[]
 
   @@index([status])
   @@index([transporterId])
@@ -939,4 +994,100 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// RECLAMAÇÕES — painel dedicado, distinto do Suporte geral (SupportTicket).
+// Uma reclamação pode referir-se a um pedido, produto, utilizador ou frete concreto.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Complaint {
+  id             String              @id @default(uuid())
+  complainantId  String
+  agentId        String?
+  targetType     ComplaintTargetType @default(OTHER)
+  targetId       String? // id do Order/Product/User/TransportOrder alvo, quando aplicável
+  subject        String
+  description    String
+  status         ComplaintStatus     @default(OPEN)
+  resolutionNote String?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  complainant User               @relation("ComplaintComplainant", fields: [complainantId], references: [id])
+  agent       User?              @relation("ComplaintAgent", fields: [agentId], references: [id])
+  messages    ComplaintMessage[]
+
+  @@index([complainantId])
+  @@index([status])
+  @@map("complaints")
+}
+
+// Conversa de uma reclamação — o relato inicial fica em Complaint.description; cada troca
+// posterior (do queixoso ou do agente) é uma mensagem aqui.
+model ComplaintMessage {
+  id          String   @id @default(uuid())
+  complaintId String
+  authorId    String
+  body        String
+  createdAt   DateTime @default(now())
+
+  complaint Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  author    User      @relation("ComplaintMessageAuthor", fields: [authorId], references: [id])
+
+  @@index([complaintId])
+  @@map("complaint_messages")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// ROTAS DO TRANSPORTADOR — agrupa fretes aceites numa sequência de paragens.
+// Sem provedor de mapas configurado: a ordenação é decidida manualmente pelo transportador,
+// não calculada/optimizada automaticamente.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Route {
+  id            String      @id @default(uuid())
+  transporterId String
+  name          String
+  plannedDate   DateTime?
+  status        RouteStatus @default(PLANNED)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  transporter Transporter @relation(fields: [transporterId], references: [id], onDelete: Cascade)
+  stops       RouteStop[]
+
+  @@index([transporterId])
+  @@map("routes")
+}
+
+model RouteStop {
+  id               String          @id @default(uuid())
+  routeId          String
+  transportOrderId String
+  sequence         Int
+  status           RouteStopStatus @default(PENDING)
+  createdAt        DateTime        @default(now())
+
+  route          Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  transportOrder TransportOrder @relation(fields: [transportOrderId], references: [id])
+
+  @@unique([routeId, transportOrderId])
+  @@index([routeId])
+  @@map("route_stops")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CONFIGURAÇÕES DA PLATAFORMA — pares chave/valor geridos pela administração.
+// ─────────────────────────────────────────────────────────────────────────
+
+model PlatformSetting {
+  key         String   @id
+  value       String
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation("PlatformSettingUpdatedBy", fields: [updatedById], references: [id])
+
+  @@map("platform_settings")
 }

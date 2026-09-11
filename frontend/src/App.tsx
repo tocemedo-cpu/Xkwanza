@@ -1,6 +1,8 @@
 import { Route, Routes } from 'react-router-dom';
 import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { RegisterRoleSelect } from './pages/RegisterRoleSelect';
 import { Register } from './pages/Register';
 import { Terms } from './pages/Terms';
@@ -45,6 +47,11 @@ import { Notificacoes } from './pages/Notificacoes';
 import { AvaliacoesRecebidas } from './pages/AvaliacoesRecebidas';
 import { MinhasAvaliacoes } from './pages/MinhasAvaliacoes';
 import { Rotas } from './pages/Rotas';
+import { Disputas } from './pages/Disputas';
+import { DisputaDetail } from './pages/DisputaDetail';
+import { AdminDisputas } from './pages/AdminDisputas';
+import { AdminVerifications } from './pages/AdminVerifications';
+import { AdminSettings } from './pages/AdminSettings';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminCategories } from './pages/AdminCategories';
 import { AdminDeliveries } from './pages/AdminDeliveries';
@@ -62,6 +69,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/entrar" element={<Login />} />
+      <Route path="/recuperar-password" element={<ForgotPassword />} />
+      <Route path="/repor-password" element={<ResetPassword />} />
       <Route path="/registar" element={<RegisterRoleSelect />} />
       <Route path="/registar/:role" element={<Register />} />
       <Route path="/termos" element={<Terms />} />
@@ -81,6 +90,8 @@ export default function App() {
             <Route path="/produtor/pedidos/:id" element={<OrderDetail />} />
             <Route path="/produtor/negociacoes" element={<Negociacoes />} />
             <Route path="/produtor/entregas" element={<Entregas />} />
+            <Route path="/produtor/disputas" element={<Disputas />} />
+            <Route path="/produtor/disputas/:id" element={<DisputaDetail />} />
             <Route path="/produtor/fretes/:id" element={<TransportOrderDetail />} />
             <Route path="/produtor/avaliacoes" element={<AvaliacoesRecebidas />} />
             <Route path="/produtor/documentos" element={<Formalization />} />
@@ -108,6 +119,8 @@ export default function App() {
             <Route path="/comerciante/pedidos/:id" element={<OrderDetail />} />
             <Route path="/comerciante/negociacoes" element={<Negociacoes />} />
             <Route path="/comerciante/entregas" element={<Entregas />} />
+            <Route path="/comerciante/disputas" element={<Disputas />} />
+            <Route path="/comerciante/disputas/:id" element={<DisputaDetail />} />
             <Route path="/comerciante/fretes/:id" element={<TransportOrderDetail />} />
             <Route path="/comerciante/avaliacoes" element={<AvaliacoesRecebidas />} />
             <Route path="/comerciante/documentos" element={<Formalization />} />
@@ -134,6 +147,8 @@ export default function App() {
             <Route path="/comprador/pedidos/:id" element={<OrderDetail />} />
             <Route path="/comprador/negociacoes" element={<Negociacoes />} />
             <Route path="/comprador/entregas" element={<Entregas />} />
+            <Route path="/comprador/disputas" element={<Disputas />} />
+            <Route path="/comprador/disputas/:id" element={<DisputaDetail />} />
             <Route path="/comprador/fretes/:id" element={<TransportOrderDetail />} />
             <Route path="/comprador/avaliacoes" element={<MinhasAvaliacoes />} />
             <Route path="/comprador/notificacoes" element={<Notificacoes />} />
@@ -152,6 +167,8 @@ export default function App() {
             <Route path="/transportador/fretes/:id" element={<TransportOrderDetail />} />
             <Route path="/transportador/veiculo" element={<TransporterProfile />} />
             <Route path="/transportador/rotas" element={<Rotas />} />
+            <Route path="/transportador/disputas" element={<Disputas />} />
+            <Route path="/transportador/disputas/:id" element={<DisputaDetail />} />
             <Route path="/transportador/rendimentos" element={<EconomicHistory />} />
             <Route path="/transportador/avaliacoes" element={<AvaliacoesRecebidas />} />
             <Route path="/transportador/documentos" element={<Formalization />} />
@@ -186,6 +203,10 @@ export default function App() {
             <Route path="/admin/inss" element={<AdminINSS />} />
             <Route path="/admin/reclamacoes" element={<AdminSupport />} />
             <Route path="/admin/reclamacoes/:id" element={<SupportTicketDetail />} />
+            <Route path="/admin/disputas" element={<AdminDisputas />} />
+            <Route path="/admin/disputas/:id" element={<DisputaDetail />} />
+            <Route path="/admin/verificacoes" element={<AdminVerifications />} />
+            <Route path="/admin/configuracoes" element={<AdminSettings />} />
             <Route path="/admin/auditoria" element={<AdminAuditLog />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
             <Route path="/admin/conta" element={<MyProfile />} />

@@ -26,7 +26,7 @@ Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modula
 - [x] **Fase 5 — Histórico económico**: avaliações (produto/vendedor/transportador/comprador) após pedidos concluídos, indicadores de rendimento/vendas/reputação para vendedores e transportadores
 - [x] **Fase 6 — Formalização**: diagnóstico, dossiê com 6 etapas (1-5 auto-reportadas, a etapa final só confirmada pelo suporte após verificação real dos documentos), índice de progresso, gestão de documentos
 - [x] **Fase 7 — INSS**: consentimento explícito e revogável, INSSAdapter em modo SANDBOX apenas (nunca avança sozinho para estados oficiais), NISS sempre auto-declarado pelo utilizador, documentos, simulador de contribuição (taxa sempre indicada por quem simula, nunca fixada pela XKWANZA) claramente marcado "SIMULAÇÃO — NÃO É GUIA DE PAGAMENTO"
-- [x] **Fase 8 (parcial) — Administração e suporte**: moderação de produtos, visão geral de pedidos e transportadores, bloqueio/desbloqueio e validação de contas, auditoria (só leitura), tickets de suporte/reclamações com conversa — ver secção "Administração e suporte" abaixo. (A parte de integração institucional oficial da Fase 8 continua bloqueada — ver nota.)
+- [x] **Fase 8 (parcial) — Administração e suporte**: moderação de produtos, visão geral de pedidos e transportadores, bloqueio/desbloqueio e validação de contas, auditoria (só leitura), tickets de suporte/reclamações com conversa, painel de disputas dedicado, validação formal de perfil (selo Verificado), configurações da plataforma, planeamento manual de rotas do transportador, recuperação de password self-service, notificações por email/push (adapters env-gated) e gateway de pagamento bancário/fintech em modo sandbox — ver secções abaixo. (A parte de integração institucional oficial da Fase 8 continua bloqueada — ver nota.)
 - [ ] Fase 8 (restante) — Integração institucional oficial (bloqueada até existir acordo formal com o INSS/AGT — ver nota abaixo)
 - [ ] Fase 9 — Ecossistema — AGT, bancos, fintechs, seguros (bloqueada pela mesma razão)
 
@@ -47,15 +47,25 @@ dados do negócio em "Meu perfil de comerciante", o vendedor cria o catálogo em
 Só **BUYER, PRODUCER, MERCHANT e TRANSPORTER** aparecem no registo público. **ADMIN e SUPPORT nunca
 aparecem** — são criados internamente (ver secção "Criar o primeiro administrador" no deploy). Não têm
 registo público; a sua autorização vem inteiramente do papel (`role`) atribuído internamente — a lista de
-permissões de cada um (gestão de utilizadores/produtos/categorias/pedidos/transportadores/reclamações/
-configurações, auditoria e suspensão de contas para o Admin; tickets de suporte para o Suporte) reflecte o
-que já está imposto por RBAC (`requireRole`) nos módulos existentes (utilizadores, produtos, categorias,
-pagamentos, formalização, INSS) — a gestão de configurações do sistema, a validação formal de perfis e um
-painel de reclamações dedicado (distinto dos tickets de suporte) ainda não têm interface própria.
+permissões de cada um (gestão de utilizadores/produtos/categorias/pedidos/transportadores/disputas/
+verificações/configurações, auditoria e suspensão de contas para o Admin; tickets de suporte para o
+Suporte) reflecte o que já está imposto por RBAC (`requireRole`) em cada módulo (utilizadores, produtos,
+categorias, pagamentos, formalização, INSS, complaints, settings).
 
 **Telefone, email e NIF passaram a obrigatórios em todos os perfis públicos** (antes bastava telefone OU
 email, e o NIF era sempre opcional). O registo e o login continuam a aceitar **telefone ou email** como
 identificador para entrar — a conta tem sempre os dois, e a pessoa usa o que preferir no login.
+
+### Recuperação de password self-service
+
+`/recuperar-password` → indicar telefone ou email → `POST /api/auth/request-password-reset` gera um
+token de curta duração (30 min, só o hash é guardado) e envia por email quando o adapter SMTP estiver
+configurado (ver "Notificações por email/push" abaixo); a resposta é sempre a mesma mensagem genérica,
+mesmo que o identificador não exista, para não permitir enumerar contas. Sem SMTP configurado fora de
+produção, a resposta inclui `devToken` directamente, e `/recuperar-password` mostra-o com um link
+pré-preenchido para `/repor-password?token=...` — só assim o fluxo continua testável sem servidor de
+email real. `POST /api/auth/reset-password` troca a password e revoga todas as sessões activas dessa
+conta.
 
 ### Campos por perfil
 
@@ -106,19 +116,24 @@ componente React.
 
 | Perfil | Prefixo | Páginas principais |
 |---|---|---|
-| Produtor | `/produtor` | `dashboard`, `marketplace`, `stock` (catálogo), `pedidos` (recebidos), `negociacoes`, `entregas`, `avaliacoes`, `documentos` (formalização), `inss`, `carteira`, `historico`, `notificacoes`, `suporte`, `perfil`, `conta` |
+| Produtor | `/produtor` | `dashboard`, `marketplace`, `stock` (catálogo), `pedidos` (recebidos), `negociacoes`, `entregas`, `disputas`, `avaliacoes`, `documentos` (formalização), `inss`, `carteira`, `historico`, `notificacoes`, `suporte`, `perfil`, `conta` |
 | Comerciante | `/comerciante` | Mesmo conjunto do Produtor (perfis MERCHANT e PRODUCER partilham as mesmas páginas de vendedor) |
-| Comprador | `/comprador` | `dashboard`, `marketplace`, `carrinho`, `checkout`, `pedidos`, `negociacoes`, `entregas`, `avaliacoes`, `notificacoes`, `suporte`, `conta` |
-| Transportador | `/transportador` | `dashboard`, `fretes`, `meus-fretes`, `veiculo`, `rotas` (placeholder — ver nota abaixo), `rendimentos`, `avaliacoes`, `documentos`, `inss`, `carteira`, `notificacoes`, `suporte`, `conta` |
-| Administrador | `/admin` | `dashboard`, `utilizadores`, `produtores`, `compradores`, `transportadores`, `categorias`, `produtos`, `pedidos`, `entregas`, `negociacoes`, `avaliacoes`, `pagamentos`, `notificacoes`, `formalizacao`, `inss`, `reclamacoes`, `auditoria`, `relatorios`, `conta` |
+| Comprador | `/comprador` | `dashboard`, `marketplace`, `carrinho`, `checkout`, `pedidos`, `negociacoes`, `entregas`, `disputas`, `avaliacoes`, `notificacoes`, `suporte`, `conta` |
+| Transportador | `/transportador` | `dashboard`, `fretes`, `meus-fretes`, `veiculo`, `rotas` (planeamento manual de paragens — ver nota abaixo), `disputas`, `rendimentos`, `avaliacoes`, `documentos`, `inss`, `carteira`, `notificacoes`, `suporte`, `conta` |
+| Administrador | `/admin` | `dashboard`, `utilizadores`, `produtores`, `compradores`, `transportadores`, `categorias`, `produtos`, `pedidos`, `entregas`, `negociacoes`, `avaliacoes`, `pagamentos`, `notificacoes`, `formalizacao`, `inss`, `reclamacoes`, `disputas`, `verificacoes`, `configuracoes`, `auditoria`, `relatorios`, `conta` |
 
 Carrinho/checkout (`/comprador/carrinho`, `/comprador/checkout`) são exclusivos do perfil
 Comprador — um Produtor/Comerciante/Transportador que quiser pedir um preço a outro vendedor usa
 Negociações (`/{prefixo}/negociacoes`), não o carrinho de compras.
 
-`/admin/configuracoes` foi deliberadamente deixado de fora: não existe ainda nenhum modelo de
-dados para configurações da plataforma, por isso a rota não é criada até haver algo real para
-mostrar aí — evita construir uma página vazia.
+`/{prefixo}/disputas` e `/admin/disputas` usam um modelo de dados dedicado (`Complaint` +
+`ComplaintMessage`, módulo `backend/src/modules/complaints/`) — deliberadamente distinto do
+`SupportTicket` já existente em `/{prefixo}/suporte` e `/admin/reclamacoes` (mantido por
+compatibilidade e sob o nome "Reclamações" na navegação de equipa, para não confundir com este
+painel novo, que usa sempre a palavra "Disputas" na interface). Qualquer utilizador pode abrir uma
+disputa associada opcionalmente a um pedido/produto/utilizador/frete; ADMIN/SUPPORT respondem,
+assumem a disputa (a primeira resposta da equipa atribui-a) e fecham com Resolvida/Rejeitada — um
+motivo é obrigatório para fechar.
 
 ## Administração e suporte
 
@@ -140,13 +155,15 @@ o mesmo acesso a estas ferramentas (não há distinção de permissões entre AD
 | Notificações | `/admin/notificacoes` | Consulta só de leitura a todas as notificações enviadas a utilizadores (`GET /api/notifications/admin`) — não compõe nem dispara notificações novas. |
 | Relatórios | `/admin/relatorios` | Mesmos indicadores do painel, em formato de relatório mais detalhado. |
 | Auditoria | `/admin/auditoria` | Consulta só de leitura ao `AuditLog` (`GET /api/audit-logs`, filtros por entidade/acção/utilizador/resultado) — a tabela nunca é actualizada nem apagada pela aplicação. |
-| Suporte/reclamações | `/admin/reclamacoes` (staff) e `/{prefixo}/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). Reclamações usam o mesmo sistema — não há um modelo de dados separado. |
+| Suporte | `/admin/reclamacoes` (staff) e `/{prefixo}/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). |
+| Disputas | `/admin/disputas` (staff) e `/{prefixo}/disputas` (qualquer utilizador) | Painel dedicado (`Complaint` + `ComplaintMessage`, distinto do Suporte acima), opcionalmente associado a um pedido/produto/utilizador/frete concreto. Mesmo fluxo de conversa e atribuição do Suporte, mas fecho (Resolvida/Rejeitada) exige sempre um motivo (`resolutionNote`). |
+| Verificações | `/admin/verificacoes` | Fila de pedidos de validação formal de perfil (selo XKWANZA Verificado) — qualquer utilizador pede em `Conta` (`POST /api/users/me/request-verification`); ADMIN/SUPPORT aprovam (activa `isVerifiedBadge`) ou rejeitam com motivo obrigatório (`PATCH /api/users/:id/verification`), notificando o utilizador. Distinto do dossiê de formalização fiscal/INSS. |
+| Configurações | `/admin/configuracoes` | Pares chave/valor geridos pela administração (`PlatformSetting`, `GET`/`PUT`/`DELETE /api/settings/:key`) — infra-estrutura para configuração futura de módulos, sem uso rico ainda além do CRUD em si. |
 
-Ainda não implementado: um passo formal de "validação de perfil" além do selo `isVerifiedBadge`
-acima, "configurações da plataforma" (`/admin/configuracoes` — deixado de fora até existir um
-modelo de dados real), e "acompanhar rotas" do transportador em tempo real (`/transportador/rotas`
-é hoje um placeholder — precisa de um fornecedor de mapas — Google Maps/Mapbox — e da respectiva
-chave de API, que ainda não foi configurada).
+Planeamento de rotas do transportador (`/transportador/rotas`) organiza manualmente os fretes já
+atribuídos numa sequência de paragens (`Route` + `RouteStop`) — sem fornecedor de mapas
+configurado (Google Maps/Mapbox), não há cálculo de trajecto/distância/ETA: o próprio
+transportador decide e reordena a sequência.
 
 ## Negociações, notificações e avaliações
 
@@ -336,3 +353,31 @@ upload real a partir do dispositivo:
      `render.yaml`)
 4. Sem estas variáveis, a app continua a funcionar normalmente — o botão de upload mostra um erro claro e o
    vendedor pode sempre usar o campo de URL.
+
+### 5. Gateway de pagamento bancário/fintech (sandbox)
+
+Os métodos `BANK_INTEGRATION`/`FINTECH_INTEGRATION` no checkout passam por um adapter
+(`backend/src/modules/payments/payment.adapter.ts`) com o mesmo padrão `Adapter + Mock/Sandbox` do
+INSS (`backend/src/modules/inss/inss.adapter.ts`): em modo sandbox (`PAYMENT_ADAPTER_MODE=sandbox`,
+valor por omissão), a cobrança é sempre simulada — nunca liga a um banco/fintech real — e o
+pagamento fica `PROCESSING` até o suporte/administração o confirmar manualmente
+(`POST /api/payments/:orderId/confirm`) ou, quando existir uma integração real, o webhook do
+provedor resolver (`POST /api/payments/gateway/webhook`, com verificação de assinatura HMAC via
+`PAYMENT_GATEWAY_WEBHOOK_SECRET`). Não implementar o modo `production` sem um acordo institucional
+real com um banco/fintech angolana — tentar usá-lo sem `PAYMENT_GATEWAY_PROVIDER`/
+`PAYMENT_GATEWAY_API_KEY` configurados falha de forma explícita.
+
+### 6. Notificações por email/push
+
+- **Email** — `backend/src/modules/notifications/email.adapter.ts` usa SMTP via `nodemailer`.
+  Define no Render (`xkwanza-backend`): `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+  (e `SMTP_SECURE=true` se o provedor exigir TLS implícito). Sem estas variáveis, o envio fica
+  desactivado — a notificação continua sempre a existir dentro da app (`IN_APP`), só o email extra
+  não sai.
+- **Push** — `backend/src/modules/notifications/push.adapter.ts` é uma ponte genérica por webhook:
+  define `PUSH_WEBHOOK_URL` para reencaminhar cada notificação para um relay externo (ex:
+  OneSignal/FCM) que configures separadamente — não há SDK de push nem registo de dispositivo
+  implementado nesta versão.
+- Cada utilizador controla em `Conta` se quer receber por email/push (`notifyByEmail`/
+  `notifyByPush`, `PATCH /api/users/me`) — a notificação `IN_APP` é sempre gravada, independentemente
+  destas preferências.

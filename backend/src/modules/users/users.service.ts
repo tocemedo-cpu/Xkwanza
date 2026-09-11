@@ -1,11 +1,13 @@
 import { randomInt } from 'node:crypto';
 import { Request } from 'express';
+import { NotificationType, ProfileVerificationStatus } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { toPublicUser } from '../auth/auth.service';
 import { recordAudit } from '../audit/audit.service';
+import { recordNotification } from '../notifications/notifications.service';
 import { hashPassword } from '../../security/password';
-import { UpdateUserStatusInput } from './users.schema';
+import { ReviewVerificationInput, UpdateUserStatusInput } from './users.schema';
 
 export async function getProfile(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -24,6 +26,8 @@ export async function updateProfile(
     avatarUrl?: string;
     activityType?: string;
     nif?: string;
+    notifyByEmail?: boolean;
+    notifyByPush?: boolean;
   },
   req: Request,
 ) {
@@ -169,6 +173,97 @@ export async function updateUserStatus(
       req,
     });
   }
+
+  return toPublicUser(updated);
+}
+
+// Pedido de validação formal de perfil (selo XKWANZA Verificado) — o próprio utilizador inicia,
+// a administração decide (ver reviewVerification). Distinto do dossiê de formalização fiscal/
+// INSS: este é só sobre a confiança/selo dentro da plataforma.
+export async function requestVerification(userId: string, req: Request) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw ApiError.notFound('Utilizador não encontrado');
+  if (user.verificationStatus === ProfileVerificationStatus.PENDING) {
+    throw ApiError.badRequest('Já tem um pedido de verificação em análise');
+  }
+  if (user.isVerifiedBadge) {
+    throw ApiError.badRequest('O seu perfil já está verificado');
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      verificationStatus: ProfileVerificationStatus.PENDING,
+      verificationRequestedAt: new Date(),
+      verificationReviewedAt: null,
+      verificationNote: null,
+    },
+  });
+
+  await recordAudit({
+    userId,
+    action: 'PROFILE_VERIFICATION_REQUESTED',
+    entity: 'User',
+    entityId: userId,
+    result: 'SUCCESS',
+    req,
+  });
+
+  return toPublicUser(updated);
+}
+
+// Uso administrativo — fila de pedidos pendentes de validação formal de perfil.
+export async function listVerificationRequests(params: { page: number; pageSize: number }) {
+  const where = { verificationStatus: ProfileVerificationStatus.PENDING };
+  const [items, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { verificationRequestedAt: 'asc' },
+      skip: (params.page - 1) * params.pageSize,
+      take: params.pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
+  return { items: items.map(toPublicUser), total, page: params.page, pageSize: params.pageSize };
+}
+
+export async function reviewVerification(
+  targetUserId: string,
+  adminId: string,
+  input: ReviewVerificationInput,
+  req: Request,
+) {
+  const user = await prisma.user.findUnique({ where: { id: targetUserId } });
+  if (!user) throw ApiError.notFound('Utilizador não encontrado');
+
+  const updated = await prisma.user.update({
+    where: { id: targetUserId },
+    data: {
+      verificationStatus: input.approve ? ProfileVerificationStatus.APPROVED : ProfileVerificationStatus.REJECTED,
+      verificationReviewedAt: new Date(),
+      verificationNote: input.note ?? null,
+      isVerifiedBadge: input.approve ? true : user.isVerifiedBadge,
+    },
+  });
+
+  await recordAudit({
+    userId: adminId,
+    action: input.approve ? 'PROFILE_VERIFICATION_APPROVED' : 'PROFILE_VERIFICATION_REJECTED',
+    entity: 'User',
+    entityId: targetUserId,
+    result: 'SUCCESS',
+    metadata: { note: input.note },
+    req,
+  });
+
+  await recordNotification({
+    userId: targetUserId,
+    type: NotificationType.STATUS_CHANGE,
+    title: input.approve ? 'Perfil verificado' : 'Pedido de verificação rejeitado',
+    body: input.approve
+      ? 'O seu perfil foi validado — já tem o selo XKWANZA Verificado.'
+      : `O seu pedido de verificação foi rejeitado. Motivo: ${input.note}`,
+  });
 
   return toPublicUser(updated);
 }

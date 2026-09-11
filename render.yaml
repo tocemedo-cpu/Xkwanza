@@ -50,6 +50,28 @@ services:
         sync: false
       - key: SUPABASE_STORAGE_BUCKET
         value: product-photos
+      - key: PAYMENT_ADAPTER_MODE
+        value: sandbox
+      - key: PAYMENT_GATEWAY_PROVIDER
+        sync: false
+      - key: PAYMENT_GATEWAY_API_KEY
+        sync: false
+      - key: PAYMENT_GATEWAY_WEBHOOK_SECRET
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: PUSH_WEBHOOK_URL
+        sync: false
 
   - type: web
     name: xkwanza-frontend

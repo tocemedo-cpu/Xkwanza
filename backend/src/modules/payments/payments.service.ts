@@ -3,6 +3,7 @@ import { PaymentMethod, PaymentStatus, Prisma } from '@prisma/client';
 import { prisma } from '../../database/prisma';
 import { ApiError } from '../../utils/apiError';
 import { recordAudit } from '../audit/audit.service';
+import { paymentGatewayAdapter } from './payment.adapter';
 import { ListPendingPaymentsQuery } from './payments.schema';
 
 const paymentInclude = { statusHistory: { orderBy: { createdAt: 'asc' } } } satisfies Prisma.PaymentInclude;
@@ -99,6 +100,49 @@ export async function rejectPayment(adminId: string, orderId: string, req: Reque
     entityId: updated.id,
     result: 'SUCCESS',
     req,
+  });
+
+  return updated;
+}
+
+// Webhook do provedor de gateway (BANK_INTEGRATION/FINTECH_INTEGRATION) — nunca autenticado por
+// sessão (é o provedor externo a chamar), por isso a assinatura HMAC é a única defesa. Em
+// sandbox o adapter aceita sempre; em produção, sem assinatura válida, o pedido é rejeitado
+// antes de tocar em qualquer pagamento.
+export async function handleGatewayWebhook(
+  payload: { externalRef: string; status: 'PAID' | 'FAILED' },
+  rawBody: string,
+  signatureHeader: string | undefined,
+) {
+  if (!paymentGatewayAdapter.verifyWebhookSignature(rawBody, signatureHeader)) {
+    throw ApiError.unauthorized('Assinatura do webhook inválida');
+  }
+
+  const payment = await prisma.payment.findFirst({ where: { externalRef: payload.externalRef } });
+  if (!payment) throw ApiError.notFound('Pagamento não encontrado para esta referência');
+  if (payment.status !== PaymentStatus.PROCESSING && payment.status !== PaymentStatus.PENDING) {
+    return payment; // já processado — webhook idempotente, ignora repetições
+  }
+
+  const nextStatus = payload.status === 'PAID' ? PaymentStatus.PAID : PaymentStatus.FAILED;
+  const updated = await prisma.payment.update({
+    where: { id: payment.id },
+    data: {
+      status: nextStatus,
+      custodyHeld: nextStatus === PaymentStatus.PAID,
+      statusHistory: {
+        create: { status: nextStatus, note: `Confirmação recebida do gateway de pagamento (${payload.status})` },
+      },
+    },
+    include: paymentInclude,
+  });
+
+  await recordAudit({
+    action: 'PAYMENT_GATEWAY_WEBHOOK_RECEIVED',
+    entity: 'Payment',
+    entityId: updated.id,
+    result: 'SUCCESS',
+    metadata: { status: payload.status, externalRef: payload.externalRef },
   });
 
   return updated;

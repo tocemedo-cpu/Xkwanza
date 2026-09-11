@@ -25,3 +25,12 @@ export const listPendingPaymentsHandler = asyncHandler(async (req: Request, res:
   const result = await paymentsService.listPendingPayments(req.query as never);
   res.status(200).json(result);
 });
+
+export const gatewayWebhookHandler = asyncHandler(async (req: Request, res: Response) => {
+  const payment = await paymentsService.handleGatewayWebhook(
+    req.body,
+    JSON.stringify(req.body),
+    req.header('x-gateway-signature'),
+  );
+  res.status(200).json({ received: true, paymentId: payment.id });
+});
