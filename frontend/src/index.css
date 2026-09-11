@@ -6,8 +6,23 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Rede de segurança — impede que qualquer elemento demasiado largo (ex: um valor não
+   truncado, uma tabela mal dimensionada) force scroll horizontal na página inteira. Um
+   contentor que precise mesmo de scroll lateral (tabela, carrossel) usa o seu próprio
+   overflow-x-auto, que continua a funcionar normalmente dentro disto. */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 body {
   @apply bg-neutral-50 font-sans text-neutral-900 antialiased;
+}
+
+img,
+svg {
+  max-width: 100%;
 }
 
 h1,
