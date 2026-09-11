@@ -71,6 +71,7 @@ function buildStaffGroups(p: string) {
       title: 'Sistema',
       links: [
         { to: `/${p}/notificacoes`, label: 'Notificações' },
+        { to: `/${p}/banners`, label: 'Banners' },
         { to: `/${p}/configuracoes`, label: 'Configurações' },
         { to: `/${p}/auditoria`, label: 'Auditoria' },
       ],
@@ -113,6 +114,7 @@ export function DashboardLayout() {
       { to: `/${p}/reclamacoes`, label: 'Reclamações' },
       { to: `/${p}/disputas`, label: 'Disputas' },
       { to: `/${p}/verificacoes`, label: 'Verificações' },
+      { to: `/${p}/banners`, label: 'Banners' },
       { to: `/${p}/configuracoes`, label: 'Configurações' },
       { to: `/${p}/auditoria`, label: 'Auditoria' },
       { to: `/${p}/relatorios`, label: 'Relatórios' },

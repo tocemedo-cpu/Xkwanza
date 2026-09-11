@@ -311,6 +311,7 @@ model User {
   complaintsHandled      Complaint[]            @relation("ComplaintAgent")
   complaintMessages      ComplaintMessage[]     @relation("ComplaintMessageAuthor")
   platformSettingsUpdated PlatformSetting[]     @relation("PlatformSettingUpdatedBy")
+  bannersCreated          Banner[]               @relation("BannerCreatedBy")
 
   @@index([role])
   @@index([province, municipality])
@@ -1090,4 +1091,29 @@ model PlatformSetting {
   updatedBy User? @relation("PlatformSettingUpdatedBy", fields: [updatedById], references: [id])
 
   @@map("platform_settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// BANNERS DA HOMEPAGE — imagens do carrossel de destaque, geridas pela
+// administração. Quando não existem banners activos, o frontend usa o
+// conteúdo ilustrativo por omissão (fallback), nunca uma página em branco.
+// ─────────────────────────────────────────────────────────────────────────
+
+model Banner {
+  id          String   @id @default(uuid())
+  imageUrl    String
+  title       String?
+  subtitle    String?
+  ctaLabel    String?
+  ctaTo       String?
+  position    Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy User? @relation("BannerCreatedBy", fields: [createdById], references: [id])
+
+  @@index([isActive, position])
+  @@map("banners")
 }

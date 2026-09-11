@@ -53,3 +53,29 @@ export async function uploadProductPhoto(params: { buffer: Buffer; mimeType: str
   const { data } = supabase.storage.from(env.supabaseStorage.bucket).getPublicUrl(path);
   return data.publicUrl;
 }
+
+// Mesmo bucket partilhado, pasta "banners/" — usado pelas imagens do carrossel da homepage
+// geridas pela administração (não têm um "dono" como as fotos de produto).
+export async function uploadBannerImage(params: { buffer: Buffer; mimeType: string }): Promise<string> {
+  const extension = ALLOWED_MIME_TYPES[params.mimeType];
+  if (!extension) {
+    throw ApiError.badRequest('Tipo de imagem não suportado — usa JPEG, PNG ou WEBP');
+  }
+  if (params.buffer.length > MAX_PHOTO_BYTES) {
+    throw ApiError.badRequest('Imagem demasiado grande — o limite é 5MB');
+  }
+
+  const supabase = getClient();
+  const path = `banners/${randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(env.supabaseStorage.bucket)
+    .upload(path, params.buffer, { contentType: params.mimeType, upsert: false });
+
+  if (uploadError) {
+    throw ApiError.internal(`Falha ao enviar imagem para o armazenamento: ${uploadError.message}`);
+  }
+
+  const { data } = supabase.storage.from(env.supabaseStorage.bucket).getPublicUrl(path);
+  return data.publicUrl;
+}

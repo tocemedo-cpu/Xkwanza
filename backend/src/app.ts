@@ -32,6 +32,7 @@ import { notificationsRouter } from './modules/notifications/notifications.route
 import { complaintsRouter } from './modules/complaints/complaints.routes';
 import { settingsRouter } from './modules/settings/settings.routes';
 import { transporterRoutesRouter } from './modules/transporterRoutes/transporterRoutes.routes';
+import { bannersRouter } from './modules/banners/banners.routes';
 import { dbTasksRouter } from './admin/dbTasks.routes';
 
 export function createApp() {
@@ -84,6 +85,7 @@ export function createApp() {
   app.use('/api/complaints', complaintsRouter);
   app.use('/api/settings', settingsRouter);
   app.use('/api/transporter-routes', transporterRoutesRouter);
+  app.use('/api/banners', bannersRouter);
   app.use('/internal/tasks', dbTasksRouter);
 
   app.use(notFoundHandler);

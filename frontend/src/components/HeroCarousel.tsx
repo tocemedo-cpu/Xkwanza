@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, LucideIcon, LineChart, ShoppingBag, Sprout, Truck } from 'lucide-react';
+import { fetchActiveBanners } from '../services/bannersService';
+import { Banner } from '../types/banners';
 
-// Conteúdo promocional ilustrativo (mock) — a plataforma ainda não tem um banco de fotografia
-// real dos vendedores/produtos em destaque, por isso o carrossel usa ilustração de marca em
-// vez de fotos reais. As secções abaixo (categorias, produtos, serviços) é que mostram dados
-// reais vindos da API.
+// Conteúdo promocional ilustrativo (mock) — usado como valor por omissão enquanto a
+// administração não configurar banners reais em /admin/banners. As secções abaixo
+// (categorias, produtos, serviços) é que mostram sempre dados reais vindos da API.
 interface Slide {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  imageUrl?: string;
   eyebrow: string;
   title: string;
   subtitle: string;
@@ -15,7 +17,7 @@ interface Slide {
   ctaTo: string;
 }
 
-const SLIDES: Slide[] = [
+const FALLBACK_SLIDES: Slide[] = [
   {
     icon: ShoppingBag,
     eyebrow: 'XKWANZA — Do comércio à formalização',
@@ -50,15 +52,38 @@ const SLIDES: Slide[] = [
   },
 ];
 
+function toSlide(banner: Banner): Slide {
+  return {
+    imageUrl: banner.imageUrl,
+    eyebrow: 'XKWANZA',
+    title: banner.title ?? '',
+    subtitle: banner.subtitle ?? '',
+    ctaLabel: banner.ctaLabel ?? 'Explorar',
+    ctaTo: banner.ctaTo ?? '/registar',
+  };
+}
+
 export function HeroCarousel() {
   const [active, setActive] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>(FALLBACK_SLIDES);
 
   useEffect(() => {
-    const t = setInterval(() => setActive((i) => (i + 1) % SLIDES.length), 6000);
-    return () => clearInterval(t);
+    fetchActiveBanners()
+      .then((banners) => {
+        if (banners.length > 0) setSlides(banners.map(toSlide));
+      })
+      .catch(() => {
+        // Mantém o conteúdo ilustrativo por omissão em caso de falha.
+      });
   }, []);
 
-  const slide = SLIDES[active];
+  useEffect(() => {
+    setActive(0);
+    const t = setInterval(() => setActive((i) => (i + 1) % slides.length), 6000);
+    return () => clearInterval(t);
+  }, [slides]);
+
+  const slide = slides[active];
   const Icon = slide.icon;
 
   return (
@@ -89,9 +114,9 @@ export function HeroCarousel() {
             </a>
           </div>
           <div className="mt-8 flex items-center gap-2">
-            {SLIDES.map((s, i) => (
+            {slides.map((s, i) => (
               <button
-                key={s.title}
+                key={`${s.title}-${i}`}
                 aria-label={`Destaque ${i + 1}`}
                 onClick={() => setActive(i)}
                 className={`h-1.5 rounded-full transition-all ${i === active ? 'w-8 bg-gold-400' : 'w-3 bg-white/30 hover:bg-white/50'}`}
@@ -100,8 +125,12 @@ export function HeroCarousel() {
           </div>
         </div>
 
-        <div className="relative hidden aspect-[4/3] items-center justify-center rounded-3xl bg-white/5 ring-1 ring-white/10 lg:flex">
-          <Icon size={96} className="text-gold-300" strokeWidth={1.25} />
+        <div className="relative hidden aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10 lg:flex">
+          {slide.imageUrl ? (
+            <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
+          ) : Icon ? (
+            <Icon size={96} className="text-gold-300" strokeWidth={1.25} />
+          ) : null}
         </div>
       </div>
     </section>

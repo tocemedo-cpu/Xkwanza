@@ -51,6 +51,7 @@ import { Disputas } from './pages/Disputas';
 import { DisputaDetail } from './pages/DisputaDetail';
 import { AdminDisputas } from './pages/AdminDisputas';
 import { AdminVerifications } from './pages/AdminVerifications';
+import { AdminBanners } from './pages/AdminBanners';
 import { AdminSettings } from './pages/AdminSettings';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminCategories } from './pages/AdminCategories';
@@ -206,6 +207,7 @@ export default function App() {
             <Route path="/admin/disputas" element={<AdminDisputas />} />
             <Route path="/admin/disputas/:id" element={<DisputaDetail />} />
             <Route path="/admin/verificacoes" element={<AdminVerifications />} />
+            <Route path="/admin/banners" element={<AdminBanners />} />
             <Route path="/admin/configuracoes" element={<AdminSettings />} />
             <Route path="/admin/auditoria" element={<AdminAuditLog />} />
             <Route path="/admin/relatorios" element={<AdminReports />} />
