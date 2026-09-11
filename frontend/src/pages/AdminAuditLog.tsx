@@ -53,7 +53,7 @@ export function AdminAuditLog() {
               </div>
               <span
                 className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-medium ${
-                  log.result === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  log.result === 'SUCCESS' ? 'bg-xkwanza-100 text-xkwanza-600' : 'bg-red-100 text-red-700'
                 }`}
               >
                 {log.result === 'SUCCESS' ? 'Sucesso' : 'Falha'}

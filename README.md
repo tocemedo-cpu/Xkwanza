@@ -17,6 +17,21 @@ Monorepo com dois workspaces:
 
 Ver `backend/src/modules/` e `frontend/src/modules/` para a organização modular (marketplace, produtos, pedidos, pagamentos, logística, cotações, formalização, INSS, administração, notificações).
 
+### Identidade visual
+
+"Do solo ao rio" — a paleta evolui da actividade informal (terra) até ao Kwanza, o rio e a moeda
+(confiança, formalidade). Cor de marca principal `xkwanza` (verde-petróleo profundo, tokens em
+`frontend/tailwind.config.js`) substitui o verde genérico anterior; acento `gold` (dourado quente,
+valor/conquista) substitui o âmbar por omissão do Tailwind; `terra` (terracota) fica reservado para
+avisos suaves, nunca para acções primárias. Tipografia única — **Manrope** (carregada via Google
+Fonts em `frontend/index.html`) — em vez da fonte de sistema. Cantos mais contidos (`rounded-lg`/
+`rounded-xl`) nas acções principais em vez de pills genéricos; pills mantidos só onde fazem sentido
+(nav activa, badges de estado, avatares). Monograma novo em `frontend/src/components/Logo.tsx`
+(duas barras a cruzar + acento dourado), substitui o antigo "X" preso num quadrado, antes duplicado
+em três layouts diferentes. O painel de administração (20+ secções) passou de uma barra horizontal
+a transbordar para um menu lateral agrupado por área (Pessoas, Catálogo & pedidos, Confiança,
+Finanças, Formalização, Sistema) — ver `frontend/src/layouts/DashboardLayout.tsx`.
+
 ## Estado do desenvolvimento (por fases)
 
 - [x] **Fase 1 — Fundação**: arquitectura, base de dados, autenticação, perfis, RBAC, segurança

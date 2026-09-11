@@ -103,7 +103,7 @@ export function AdminVerifications() {
                 <button
                   onClick={() => handleApprove(user)}
                   disabled={processingId === user.id}
-                  className="flex items-center gap-1 whitespace-nowrap rounded-md border border-green-300 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-50 disabled:opacity-60"
+                  className="flex items-center gap-1 whitespace-nowrap rounded-md border border-xkwanza-300 px-3 py-1.5 text-xs font-medium text-xkwanza-600 hover:bg-xkwanza-50 disabled:opacity-60"
                 >
                   <Check size={14} />
                   Aprovar

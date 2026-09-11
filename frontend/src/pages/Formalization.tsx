@@ -148,7 +148,7 @@ export function Formalization() {
             <li key={stage.id} className="flex items-center justify-between text-sm">
               <span className="flex items-center gap-2 text-neutral-700">
                 {stage.completed ? (
-                  <CheckCircle2 size={18} className="text-green-600" />
+                  <CheckCircle2 size={18} className="text-xkwanza-600" />
                 ) : (
                   <Circle size={18} className="text-neutral-300" />
                 )}

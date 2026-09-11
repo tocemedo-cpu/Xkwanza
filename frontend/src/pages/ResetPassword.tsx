@@ -37,7 +37,7 @@ export function ResetPassword() {
     <AuthLayout title="Repor password" subtitle="Defina uma nova password para a sua conta">
       {success ? (
         <div className="space-y-4">
-          <p className="text-sm text-green-700">Password reposta com sucesso.</p>
+          <p className="text-sm text-xkwanza-600">Password reposta com sucesso.</p>
           <Link
             to="/entrar"
             className="block w-full rounded-md bg-xkwanza-600 px-4 py-2 text-center font-medium text-white hover:bg-xkwanza-700"

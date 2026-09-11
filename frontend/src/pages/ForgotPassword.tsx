@@ -32,11 +32,11 @@ export function ForgotPassword() {
         <div className="space-y-4">
           <p className="text-sm text-neutral-700">{result.message}</p>
           {result.devToken && (
-            <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm">
-              <p className="font-medium text-amber-900">
+            <div className="rounded-md border border-gold-300 bg-gold-50 p-4 text-sm">
+              <p className="font-medium text-gold-900">
                 Ambiente de teste sem email configurado — usa este código:
               </p>
-              <p className="mt-1 select-all break-all font-mono text-sm font-bold text-amber-900">
+              <p className="mt-1 select-all break-all font-mono text-sm font-bold text-gold-900">
                 {result.devToken}
               </p>
               <Link

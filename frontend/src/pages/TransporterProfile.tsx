@@ -109,7 +109,7 @@ export function TransporterProfile() {
           <button
             onClick={handleToggleAvailability}
             className={`rounded-full px-4 py-1.5 text-sm font-medium ${
-              profile.isAvailable ? 'bg-green-100 text-green-700' : 'bg-neutral-100 text-neutral-600'
+              profile.isAvailable ? 'bg-xkwanza-100 text-xkwanza-600' : 'bg-neutral-100 text-neutral-600'
             }`}
           >
             {profile.isAvailable ? 'Disponível' : 'Indisponível'}

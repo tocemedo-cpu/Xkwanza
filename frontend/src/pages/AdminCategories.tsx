@@ -175,7 +175,7 @@ export function AdminCategories() {
       </form>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {seedMessage && <p className="text-sm text-green-700">{seedMessage}</p>}
+      {seedMessage && <p className="text-sm text-xkwanza-600">{seedMessage}</p>}
       {isLoading && <p className="text-neutral-500">A carregar...</p>}
 
       {!isLoading && categories.length === 0 && (

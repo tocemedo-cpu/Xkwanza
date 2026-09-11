@@ -81,7 +81,7 @@ export function AdminTransporters() {
                   className={`whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium ${
                     transporter.user.isActive
                       ? 'border-red-300 text-red-600 hover:bg-red-50'
-                      : 'border-green-300 text-green-700 hover:bg-green-50'
+                      : 'border-xkwanza-300 text-xkwanza-600 hover:bg-xkwanza-50'
                   }`}
                 >
                   {transporter.user.isActive ? 'Bloquear' : 'Desbloquear'}

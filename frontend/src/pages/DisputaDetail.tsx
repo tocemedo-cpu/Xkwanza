@@ -18,9 +18,9 @@ const STAFF_ROLES = ['ADMIN', 'SUPPORT'];
 const STATUS_OPTIONS: ComplaintStatus[] = ['OPEN', 'UNDER_REVIEW', 'RESOLVED', 'REJECTED'];
 
 const STATUS_BADGE_CLASSES: Record<ComplaintStatus, string> = {
-  OPEN: 'bg-amber-100 text-amber-700',
+  OPEN: 'bg-gold-100 text-gold-700',
   UNDER_REVIEW: 'bg-blue-100 text-blue-700',
-  RESOLVED: 'bg-green-100 text-green-700',
+  RESOLVED: 'bg-xkwanza-100 text-xkwanza-600',
   REJECTED: 'bg-red-100 text-red-700',
 };
 

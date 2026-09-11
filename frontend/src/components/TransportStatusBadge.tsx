@@ -4,10 +4,10 @@ const STATUS_STYLES: Record<TransportStatus, string> = {
   REQUESTED: 'bg-neutral-100 text-neutral-700',
   ASSIGNED: 'bg-blue-100 text-blue-700',
   ACCEPTED: 'bg-blue-100 text-blue-700',
-  PICKUP: 'bg-amber-100 text-amber-700',
-  PICKED_UP: 'bg-amber-100 text-amber-700',
-  IN_TRANSIT: 'bg-amber-100 text-amber-700',
-  DELIVERED: 'bg-green-100 text-green-700',
+  PICKUP: 'bg-gold-100 text-gold-700',
+  PICKED_UP: 'bg-gold-100 text-gold-700',
+  IN_TRANSIT: 'bg-gold-100 text-gold-700',
+  DELIVERED: 'bg-xkwanza-100 text-xkwanza-700',
   CANCELLED: 'bg-red-100 text-red-700',
 };
 

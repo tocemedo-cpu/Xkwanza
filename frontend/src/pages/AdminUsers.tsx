@@ -105,18 +105,18 @@ export function AdminUsers({ role }: { role?: UserRole } = {}) {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {resetResult && (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm">
-          <p className="font-semibold text-amber-900">
+        <div className="rounded-xl border border-gold-300 bg-gold-50 p-4 text-sm">
+          <p className="font-semibold text-gold-900">
             Palavra-passe temporária para {resetResult.user.name} ({getContact(resetResult.user)}):
           </p>
-          <p className="mt-1 select-all font-mono text-lg font-bold text-amber-900">{resetResult.tempPassword}</p>
-          <p className="mt-1 text-amber-800">
+          <p className="mt-1 select-all font-mono text-lg font-bold text-gold-900">{resetResult.tempPassword}</p>
+          <p className="mt-1 text-gold-800">
             Transmite-a agora ao utilizador por um canal seguro (chamada, presencial). Não fica guardada — se
             saíres desta página sem a copiar, terás de repor de novo.
           </p>
           <button
             onClick={() => setResetResult(null)}
-            className="mt-2 text-xs font-medium text-amber-900 underline hover:no-underline"
+            className="mt-2 text-xs font-medium text-gold-900 underline hover:no-underline"
           >
             Fechar
           </button>
@@ -162,7 +162,7 @@ export function AdminUsers({ role }: { role?: UserRole } = {}) {
                   className={`flex items-center gap-1 whitespace-nowrap rounded-md border px-3 py-1.5 text-xs font-medium ${
                     user.isActive
                       ? 'border-red-300 text-red-600 hover:bg-red-50'
-                      : 'border-green-300 text-green-700 hover:bg-green-50'
+                      : 'border-xkwanza-300 text-xkwanza-600 hover:bg-xkwanza-50'
                   }`}
                 >
                   <ShieldOff size={14} />

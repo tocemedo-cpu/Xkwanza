@@ -196,7 +196,7 @@ export function MyProfile() {
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-        {saved && <p className="text-sm text-green-700">Perfil actualizado.</p>}
+        {saved && <p className="text-sm text-xkwanza-600">Perfil actualizado.</p>}
 
         <button
           type="submit"

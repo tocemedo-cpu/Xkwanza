@@ -176,7 +176,7 @@ export function Negociacoes() {
                       <div>
                         <p className="font-medium text-neutral-900">
                           {formatKwanza(Number(proposal.price))}
-                          {proposal.accepted && <span className="ml-2 text-xs font-medium text-green-700">Aceite</span>}
+                          {proposal.accepted && <span className="ml-2 text-xs font-medium text-xkwanza-600">Aceite</span>}
                         </p>
                         {proposal.message && <p className="text-neutral-500">{proposal.message}</p>}
                         {isSeller && <p className="text-xs text-neutral-400">{proposal.proposer.name}</p>}

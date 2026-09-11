@@ -102,7 +102,7 @@ export function INSS() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded-xl border border-gold-200 bg-gold-50 p-4 text-sm text-gold-800">
         Modo <strong>SANDBOX</strong> — sem integração institucional real. Os estados e simulações aqui apresentados
         são apenas de preparação/teste.
       </div>

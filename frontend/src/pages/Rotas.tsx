@@ -26,14 +26,14 @@ function errorMessage(err: unknown, fallback: string): string {
 
 const STOP_STATUS_STYLES: Record<RouteStopStatus, string> = {
   PENDING: 'bg-neutral-100 text-neutral-700',
-  COMPLETED: 'bg-green-100 text-green-700',
-  SKIPPED: 'bg-amber-100 text-amber-700',
+  COMPLETED: 'bg-xkwanza-100 text-xkwanza-600',
+  SKIPPED: 'bg-gold-100 text-gold-700',
 };
 
 const ROUTE_STATUS_STYLES: Record<Route['status'], string> = {
   PLANNED: 'bg-neutral-100 text-neutral-700',
-  IN_PROGRESS: 'bg-amber-100 text-amber-700',
-  COMPLETED: 'bg-green-100 text-green-700',
+  IN_PROGRESS: 'bg-gold-100 text-gold-700',
+  COMPLETED: 'bg-xkwanza-100 text-xkwanza-600',
   CANCELLED: 'bg-red-100 text-red-700',
 };
 
