@@ -195,9 +195,12 @@ export function DashboardLayout() {
           </NavLink>
         )}
         <span className="hidden text-white/60 sm:inline">{ROLE_LABELS[user.role]}</span>
-        <NavLink to={`/${p}/conta`} className="flex items-center gap-1 font-medium text-white hover:text-gold-300">
-          {user.isVerifiedBadge && <ShieldCheck size={16} className="text-gold-400" />}
-          {user.name}
+        <NavLink
+          to={`/${p}/conta`}
+          className="flex min-w-0 items-center gap-1 font-medium text-white hover:text-gold-300"
+        >
+          {user.isVerifiedBadge && <ShieldCheck size={16} className="shrink-0 text-gold-400" />}
+          <span className="max-w-[84px] truncate sm:max-w-[160px]">{user.name}</span>
         </NavLink>
         <button
           onClick={() => logout()}
