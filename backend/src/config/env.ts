@@ -38,10 +38,14 @@ export const env = {
 
   // Upload de imagens de produto via Supabase Storage. Sem estas variáveis definidas, o
   // upload fica desactivado (mas a app continua a funcionar — fotos por URL continuam a dar).
+  // O nome do bucket é sempre aparado e despido de barras — um espaço ou barra invisível
+  // colado por engano no valor da variável de ambiente (ex: "product-photos " ou
+  // "/product-photos/") produz um caminho inválido no pedido HTTP ao Supabase Storage
+  // ("Invalid path specified in request URL"), já visto em produção.
   supabaseStorage: {
-    url: process.env.SUPABASE_URL ?? '',
-    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-    bucket: process.env.SUPABASE_STORAGE_BUCKET ?? 'product-photos',
+    url: (process.env.SUPABASE_URL ?? '').trim(),
+    serviceRoleKey: (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim(),
+    bucket: (process.env.SUPABASE_STORAGE_BUCKET ?? 'product-photos').trim().replace(/^\/+|\/+$/g, ''),
   },
 
   // Gateway de pagamento bancário/fintech real (BANK_INTEGRATION/FINTECH_INTEGRATION). Nunca
