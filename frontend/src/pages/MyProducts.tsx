@@ -64,7 +64,7 @@ export function MyProducts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Stock</h1>
-          <p className="text-neutral-500">Gira o seu catálogo no marketplace XKWANZA.</p>
+          <p className="text-neutral-500">Gira o seu catálogo no marketplace AO Market.</p>
         </div>
         <div className="flex gap-2">
           <Link

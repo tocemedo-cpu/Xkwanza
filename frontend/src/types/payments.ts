@@ -5,7 +5,7 @@ export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'CANC
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   BANK_TRANSFER: 'Transferência bancária',
   PAYMENT_REFERENCE: 'Referência de pagamento',
-  WALLET: 'Carteira XKWANZA',
+  WALLET: 'Carteira AO Market',
   BANK_INTEGRATION: 'Integração bancária',
   FINTECH_INTEGRATION: 'Integração fintech',
 };

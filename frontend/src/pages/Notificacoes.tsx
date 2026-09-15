@@ -33,7 +33,7 @@ export function Notificacoes() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Notificações</h1>
-          <p className="text-neutral-500">Actividade recente na sua conta XKWANZA.</p>
+          <p className="text-neutral-500">Actividade recente na sua conta AO Market.</p>
         </div>
         {unreadCount > 0 && (
           <button

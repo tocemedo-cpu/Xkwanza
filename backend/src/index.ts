@@ -6,7 +6,7 @@ import { prisma } from './database/prisma';
 const app = createApp();
 
 const server = app.listen(env.port, () => {
-  logger.info(`XKWANZA backend a correr na porta ${env.port}`, { env: env.nodeEnv });
+  logger.info(`AO Market backend a correr na porta ${env.port}`, { env: env.nodeEnv });
 });
 
 async function shutdown(signal: string) {

@@ -64,7 +64,7 @@ enum ListingType {
 enum DeliveryOption {
   SELLER_DELIVERS
   BUYER_PICKUP
-  XKWANZA_TRANSPORT
+  AO_MARKET_TRANSPORT
 }
 
 enum OrderStatus {

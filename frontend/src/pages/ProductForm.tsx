@@ -26,7 +26,7 @@ import { ANGOLA_PROVINCES } from '../utils/angola';
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
 
-const DELIVERY_OPTIONS: DeliveryOption[] = ['SELLER_DELIVERS', 'BUYER_PICKUP', 'XKWANZA_TRANSPORT'];
+const DELIVERY_OPTIONS: DeliveryOption[] = ['SELLER_DELIVERS', 'BUYER_PICKUP', 'AO_MARKET_TRANSPORT'];
 
 export function ProductForm() {
   const { id } = useParams<{ id: string }>();

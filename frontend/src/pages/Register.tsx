@@ -139,7 +139,7 @@ export function Register() {
   }
 
   return (
-    <AuthLayout title={`Criar conta — ${ROLE_LABELS[role]}`} subtitle="Comece a comprar ou vender no XKWANZA">
+    <AuthLayout title={`Criar conta — ${ROLE_LABELS[role]}`} subtitle="Comece a comprar ou vender na AO Market">
       <Link
         to="/registar"
         className="mb-4 flex items-center gap-1 text-sm text-neutral-500 hover:text-xkwanza-600"
@@ -479,7 +479,7 @@ export function Register() {
           <Link to="/privacidade" target="_blank" className="font-medium text-xkwanza-600 hover:underline">
             Política de Privacidade
           </Link>{' '}
-          da XKWANZA.
+          da AO Market.
         </p>
         <button
           type="submit"

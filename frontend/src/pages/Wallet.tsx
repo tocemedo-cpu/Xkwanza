@@ -20,7 +20,7 @@ export function Wallet() {
     <div className="max-w-md space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Minha carteira</h1>
-        <p className="text-neutral-500">Saldo das vendas concluídas na XKWANZA.</p>
+        <p className="text-neutral-500">Saldo das vendas concluídas na AO Market.</p>
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-white p-6">
@@ -30,7 +30,7 @@ export function Wallet() {
         </div>
         <p className="text-3xl font-bold text-neutral-900">{wallet ? formatKwanza(Number(wallet.balance)) : '—'}</p>
         <p className="mt-2 text-sm text-neutral-500">
-          O saldo é creditado quando o comprador confirma a recepção de uma encomenda (custódia XKWANZA Protect).
+          O saldo é creditado quando o comprador confirma a recepção de uma encomenda (custódia AO Market Protect).
           Para levantamentos, registe uma conta bancária e contacte o suporte — ainda não existe integração
           bancária automática.
         </p>

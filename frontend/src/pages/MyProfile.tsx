@@ -84,7 +84,7 @@ export function MyProfile() {
       </div>
 
       <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-6">
-        <p className="font-medium text-neutral-900">Selo XKWANZA Verificado</p>
+        <p className="font-medium text-neutral-900">Selo AO Market Verificado</p>
         {user.isVerifiedBadge ? (
           <p className="flex items-center gap-1 text-sm font-medium text-xkwanza-600">
             <ShieldCheck size={16} />

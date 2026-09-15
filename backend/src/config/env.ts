@@ -66,7 +66,7 @@ export const env = {
     secure: process.env.SMTP_SECURE === 'true',
     user: process.env.SMTP_USER ?? '',
     pass: process.env.SMTP_PASS ?? '',
-    from: process.env.SMTP_FROM ?? 'XKwanza <no-reply@xkwanza.co.ao>',
+    from: process.env.SMTP_FROM ?? 'AO Market <no-reply@aomarket.co.ao>',
   },
 
   // Notificações push — sem provedor próprio integrado, esta é apenas uma ponte genérica por

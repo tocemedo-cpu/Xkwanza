@@ -105,7 +105,7 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
       ? await paymentGatewayAdapter.initiateCharge({ orderId: randomUUID(), amount: subtotal.toString(), currency: 'AOA' })
       : null;
 
-  // XKWANZA Protect: para WALLET o débito é imediato e os fundos ficam logo em custódia;
+  // AO Market Protect: para WALLET o débito é imediato e os fundos ficam logo em custódia;
   // para BANK_TRANSFER/PAYMENT_REFERENCE não há gateway real — o pagamento fica PENDING até
   // o comprador assinalar que pagou e o suporte/administração confirmar manualmente o depósito.
   // Para BANK_INTEGRATION/FINTECH_INTEGRATION a cobrança já foi iniciada acima — o pagamento
@@ -125,7 +125,7 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
     if (input.paymentMethod === PaymentMethod.WALLET) {
       const wallet = await tx.wallet.findUnique({ where: { userId: buyerId } });
       if (!wallet || wallet.balance.lessThan(subtotal)) {
-        throw ApiError.badRequest('Saldo insuficiente na carteira XKWANZA');
+        throw ApiError.badRequest('Saldo insuficiente na carteira AO Market');
       }
       await tx.wallet.update({ where: { userId: buyerId }, data: { balance: { decrement: subtotal } } });
       paymentData = {
@@ -133,7 +133,7 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
         status: PaymentStatus.PAID,
         amount: subtotal,
         custodyHeld: true,
-        statusHistory: { create: { status: PaymentStatus.PAID, note: 'Pago com a carteira XKWANZA' } },
+        statusHistory: { create: { status: PaymentStatus.PAID, note: 'Pago com a carteira AO Market' } },
       };
     } else if (gatewayCharge) {
       paymentData = {
@@ -280,7 +280,7 @@ export async function updateOrderStatus(
     throw ApiError.badRequest(`Não é possível mudar de "${order.status}" para "${newStatus}"`);
   }
 
-  // XKWANZA Protect: só se confirma o pedido (o vendedor começa a preparar) depois de o
+  // AO Market Protect: só se confirma o pedido (o vendedor começa a preparar) depois de o
   // pagamento estar efectivamente pago e em custódia.
   if (newStatus === OrderStatus.CONFIRMED && order.payment?.status !== PaymentStatus.PAID) {
     throw ApiError.badRequest('O pagamento ainda não foi confirmado');
@@ -324,7 +324,7 @@ export async function updateOrderStatus(
     }
 
     if (newStatus === OrderStatus.COMPLETED && order.payment?.custodyHeld) {
-      // Liberta a custódia XKWANZA Protect para o(s) vendedor(es) assim que o comprador confirma a recepção.
+      // Liberta a custódia AO Market Protect para o(s) vendedor(es) assim que o comprador confirma a recepção.
       await creditSellersForOrder(tx, order);
       await tx.payment.update({
         where: { orderId },

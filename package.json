@@ -1,8 +1,8 @@
 {
-  "name": "xkwanza",
+  "name": "ao-market",
   "version": "0.1.0",
   "private": true,
-  "description": "XKWANZA — Ecossistema digital de comércio, formalização e protecção social em Angola",
+  "description": "AO Market — Ecossistema digital de comércio, formalização e protecção social em Angola",
   "engines": {
     "node": ">=22"
   },

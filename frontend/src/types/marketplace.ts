@@ -21,12 +21,12 @@ export const LISTING_TYPE_LABELS: Record<ListingType, string> = {
   SERVICE: 'Serviço',
 };
 
-export type DeliveryOption = 'SELLER_DELIVERS' | 'BUYER_PICKUP' | 'XKWANZA_TRANSPORT';
+export type DeliveryOption = 'SELLER_DELIVERS' | 'BUYER_PICKUP' | 'AO_MARKET_TRANSPORT';
 
 export const DELIVERY_OPTION_LABELS: Record<DeliveryOption, string> = {
   SELLER_DELIVERS: 'O vendedor entrega',
   BUYER_PICKUP: 'O comprador levanta',
-  XKWANZA_TRANSPORT: 'Usa um transportador XKWANZA',
+  AO_MARKET_TRANSPORT: 'Usa um transportador AO Market',
 };
 
 export interface ProductOwner {

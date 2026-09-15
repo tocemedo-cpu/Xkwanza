@@ -266,7 +266,7 @@ export function Landing() {
             <h2 className="text-3xl font-extrabold text-xkwanza-950">
               É simples. <span className="text-gold-600">Siga estes passos.</span>
             </h2>
-            <p className="mt-3 text-neutral-600">Em poucos minutos, já pode começar a sua actividade no XKWANZA.</p>
+            <p className="mt-3 text-neutral-600">Em poucos minutos, já pode começar a sua actividade na AO Market.</p>
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-4">
@@ -297,7 +297,7 @@ export function Landing() {
               </div>
               <h2 className="text-3xl font-extrabold text-xkwanza-950">Uma plataforma para todos.</h2>
               <p className="mt-3 text-neutral-600">
-                O XKWANZA é feito para pessoas que trabalham, produzem, vendem, transportam e querem crescer.
+                A AO Market é feita para pessoas que trabalham, produzem, vendem, transportam e querem crescer.
               </p>
               <Link
                 to="/registar"

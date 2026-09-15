@@ -6,16 +6,16 @@ export function Terms() {
     <LegalLayout title="Termos de Uso" updatedAt="10 de Setembro de 2026">
       <LegalSection title="1. Aceitação">
         <p>
-          Ao criar uma conta ou usar a plataforma XKWANZA, aceitas estes Termos de Uso e a nossa Política de
+          Ao criar uma conta ou usar a plataforma AO Market, aceitas estes Termos de Uso e a nossa Política de
           Privacidade. Se não concordares, não deves usar a plataforma.
         </p>
       </LegalSection>
 
-      <LegalSection title="2. O que é o XKWANZA">
+      <LegalSection title="2. O que é a AO Market">
         <p>
-          O XKWANZA é uma plataforma digital que liga compradores, produtores, comerciantes e transportadores
+          A AO Market é uma plataforma digital que liga compradores, produtores, comerciantes e transportadores
           em Angola, e acompanha a evolução da tua actividade económica — do comércio à formalização e
-          protecção social. A XKWANZA actua como intermediária: não é o vendedor, comprador nem transportador
+          protecção social. A AO Market actua como intermediária: não é o vendedor, comprador nem transportador
           de nenhum produto ou serviço listado por terceiros.
         </p>
       </LegalSection>
@@ -44,13 +44,13 @@ export function Terms() {
         </ul>
       </LegalSection>
 
-      <LegalSection title="5. Pagamentos — XKWANZA Protect">
+      <LegalSection title="5. Pagamentos — AO Market Protect">
         <p>
           Nesta fase, os pagamentos funcionam por confirmação manual: o comprador marca que efectuou o
           pagamento, e a equipa de suporte confirma-o após verificar o extracto bancário correspondente. A
-          XKWANZA <strong>ainda não está ligada a nenhum banco ou gateway de pagamento</strong> — pelo que a
+          AO Market <strong>ainda não está ligada a nenhum banco ou gateway de pagamento</strong> — pelo que a
           confirmação pode demorar, e é da responsabilidade do utilizador guardar comprovativo da sua
-          transferência. A XKWANZA reserva-se o direito de recusar ou reverter uma confirmação de pagamento
+          transferência. A AO Market reserva-se o direito de recusar ou reverter uma confirmação de pagamento
           em caso de suspeita de fraude.
         </p>
       </LegalSection>
@@ -68,7 +68,7 @@ export function Terms() {
           As funcionalidades de formalização (diagnóstico, dossiê, documentos) ajudam-te a organizar o teu
           processo, mas <strong>não substituem</strong> os procedimentos oficiais junto das entidades
           angolanas competentes. A secção INSS funciona em modo sandbox/simulação: os cálculos e estados
-          apresentados são estimativas internas da XKWANZA, e não constituem, nesta fase, um registo oficial
+          apresentados são estimativas internas da AO Market, e não constituem, nesta fase, um registo oficial
           junto do INSS nem de qualquer entidade governamental.
         </p>
       </LegalSection>
@@ -84,15 +84,15 @@ export function Terms() {
 
       <LegalSection title="9. Propriedade intelectual">
         <p>
-          A marca, o logótipo e o design da XKWANZA pertencem à XKWANZA. O conteúdo que publicas (fotos,
-          descrições de produto) continua teu, mas concedes à XKWANZA licença para o exibir na plataforma no
+          A marca, o logótipo e o design da AO Market pertencem à AO Market. O conteúdo que publicas (fotos,
+          descrições de produto) continua teu, mas concedes à AO Market licença para o exibir na plataforma no
           âmbito normal do serviço.
         </p>
       </LegalSection>
 
       <LegalSection title="10. Limitação de responsabilidade">
         <p>
-          A XKWANZA disponibiliza a plataforma "tal como está". Não garantimos disponibilidade
+          A AO Market disponibiliza a plataforma "tal como está". Não garantimos disponibilidade
           ininterrupta, nem somos responsáveis por disputas entre compradores, vendedores e transportadores
           fora do que estiver directamente sob o nosso controlo (ex: confirmação manual de pagamentos).
         </p>
@@ -117,7 +117,7 @@ export function Terms() {
       </LegalSection>
 
       <LegalSection title="14. Contacto">
-        <p>Para questões sobre estes termos, contacta o suporte XKWANZA.</p>
+        <p>Para questões sobre estes termos, contacta o suporte AO Market.</p>
       </LegalSection>
     </LegalLayout>
   );

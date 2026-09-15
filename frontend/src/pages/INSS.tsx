@@ -16,8 +16,8 @@ import { formatKwanza } from '../utils/angola';
 const inputClass =
   'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500';
 
-const CONSENT_PURPOSE = 'Preparar e acompanhar a minha ligação ao INSS através da XKWANZA';
-const AUTHORIZED_DATA = ['Nome', 'Telefone', 'Actividade económica', 'Histórico de vendas na XKWANZA'];
+const CONSENT_PURPOSE = 'Preparar e acompanhar a minha ligação ao INSS através da AO Market';
+const AUTHORIZED_DATA = ['Nome', 'Telefone', 'Actividade económica', 'Histórico de vendas na AO Market'];
 
 export function INSS() {
   const [linkage, setLinkage] = useState<INSSLinkage | null>(null);
@@ -97,7 +97,7 @@ export function INSS() {
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">INSS</h1>
         <p className="text-neutral-500">
-          Esta secção é apenas uma preparação e acompanhamento não-oficial — a XKWANZA não é o INSS nem substitui os
+          Esta secção é apenas uma preparação e acompanhamento não-oficial — a AO Market não é o INSS nem substitui os
           seus canais oficiais.
         </p>
       </div>
@@ -117,7 +117,7 @@ export function INSS() {
         <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">
           <p className="font-semibold text-neutral-900">Consentimento</p>
           <p className="text-sm text-neutral-600">
-            Para preparar a sua ligação ao INSS, autorize a XKWANZA a usar os seguintes dados: {AUTHORIZED_DATA.join(', ')}.
+            Para preparar a sua ligação ao INSS, autorize a AO Market a usar os seguintes dados: {AUTHORIZED_DATA.join(', ')}.
           </p>
           <button
             disabled={isBusy}
@@ -170,7 +170,7 @@ export function INSS() {
         <p className="font-semibold text-neutral-900">Já tem NISS?</p>
         <p className="text-sm text-neutral-500">
           Se já possui um Número de Identificação da Segurança Social obtido junto do INSS, registe-o aqui — nunca é
-          gerado pela XKWANZA.
+          gerado pela AO Market.
         </p>
         <div className="flex gap-2">
           <input value={niss} onChange={(e) => setNiss(e.target.value)} className={inputClass} placeholder="NISS" />
@@ -211,7 +211,7 @@ export function INSS() {
         <p className="font-semibold text-neutral-900">Simulador de contribuição</p>
         <p className="rounded-md bg-red-50 p-2 text-xs font-medium text-red-700">
           SIMULAÇÃO — NÃO É UMA GUIA DE PAGAMENTO. Confirme a taxa de contribuição em vigor junto do INSS antes de
-          decidir; a XKWANZA não define nem garante taxas oficiais.
+          decidir; a AO Market não define nem garante taxas oficiais.
         </p>
         <div className="grid grid-cols-2 gap-3">
           <div>

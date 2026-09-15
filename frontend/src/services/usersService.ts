@@ -54,7 +54,7 @@ export async function updateUserStatus(
   return data;
 }
 
-// Validação formal de perfil (selo XKWANZA Verificado) — o próprio utilizador pede, a
+// Validação formal de perfil (selo AO Market Verificado) — o próprio utilizador pede, a
 // administração decide.
 export async function requestVerification(): Promise<User> {
   const { data } = await apiClient.post<User>('/users/me/request-verification');

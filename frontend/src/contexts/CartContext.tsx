@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { Product } from '../types/marketplace';
 
-const CART_STORAGE_KEY = 'xkwanza.cart';
+const CART_STORAGE_KEY = 'ao-market.cart';
 
 export interface CartItem {
   productId: string;

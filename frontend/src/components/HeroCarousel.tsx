@@ -20,7 +20,7 @@ interface Slide {
 const FALLBACK_SLIDES: Slide[] = [
   {
     icon: ShoppingBag,
-    eyebrow: 'XKWANZA — Do comércio à formalização',
+    eyebrow: 'AO Market — Do comércio à formalização',
     title: 'Tudo começa com uma actividade.',
     subtitle: 'Compre, venda, entregue e transforme a sua actividade económica numa história de crescimento.',
     ctaLabel: 'Começar agora',
@@ -55,7 +55,7 @@ const FALLBACK_SLIDES: Slide[] = [
 function toSlide(banner: Banner): Slide {
   return {
     imageUrl: banner.imageUrl,
-    eyebrow: 'XKWANZA',
+    eyebrow: 'AO MARKET',
     title: banner.title ?? '',
     subtitle: banner.subtitle ?? '',
     ctaLabel: banner.ctaLabel ?? 'Explorar',

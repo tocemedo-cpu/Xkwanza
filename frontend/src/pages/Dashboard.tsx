@@ -92,11 +92,11 @@ export function Dashboard() {
         <div className="rounded-xl border border-neutral-200 bg-white p-5">
           <div className="mb-2 flex items-center gap-2 text-xkwanza-600">
             <ShieldCheck size={18} />
-            <h2 className="font-semibold text-neutral-900">Meu nível XKWANZA</h2>
+            <h2 className="font-semibold text-neutral-900">Meu nível AO Market</h2>
           </div>
           <p className="text-sm font-medium text-neutral-800">{TRUST_LEVEL_LABELS[user.trustLevel]}</p>
           <p className="mt-1 text-sm text-neutral-500">
-            {user.isVerifiedBadge ? 'Selo XKWANZA Verificado activo.' : 'Ainda sem o Selo XKWANZA Verificado.'}
+            {user.isVerifiedBadge ? 'Selo AO Market Verificado activo.' : 'Ainda sem o Selo AO Market Verificado.'}
           </p>
         </div>
       </div>

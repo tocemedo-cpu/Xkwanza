@@ -163,7 +163,7 @@ export function Checkout() {
       <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-6">
         <h2 className="font-semibold text-neutral-900">Método de pagamento</h2>
         <p className="text-sm text-neutral-500">
-          Os fundos ficam em custódia XKWANZA Protect até confirmar a recepção da encomenda.
+          Os fundos ficam em custódia AO Market Protect até confirmar a recepção da encomenda.
         </p>
         {CHECKOUT_PAYMENT_METHODS.map((method) => (
           <label key={method} className="flex items-center gap-3 rounded-md border border-neutral-200 p-3">

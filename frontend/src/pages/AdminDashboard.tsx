@@ -31,7 +31,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Painel administrativo</h1>
-        <p className="text-neutral-500">Visão geral da plataforma XKWANZA.</p>
+        <p className="text-neutral-500">Visão geral da plataforma AO Market.</p>
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar...</p>}

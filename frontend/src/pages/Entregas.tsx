@@ -29,14 +29,14 @@ export function Entregas() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Entregas</h1>
-        <p className="text-neutral-500">Acompanhe o transporte dos seus pedidos com transportador XKWANZA.</p>
+        <p className="text-neutral-500">Acompanhe o transporte dos seus pedidos com transportador AO Market.</p>
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar...</p>}
 
       {!isLoading && withTransport.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          Ainda não há entregas com transportador XKWANZA associado.
+          Ainda não há entregas com transportador AO Market associado.
         </p>
       )}
 

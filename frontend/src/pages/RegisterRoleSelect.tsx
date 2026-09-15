@@ -12,7 +12,7 @@ const ROLE_CARDS = [
 
 export function RegisterRoleSelect() {
   return (
-    <AuthLayout title="Criar conta" subtitle="Primeiro, diz-nos o que vais fazer no XKWANZA">
+    <AuthLayout title="Criar conta" subtitle="Primeiro, diz-nos o que vais fazer na AO Market">
       <div className="grid gap-3 sm:grid-cols-2">
         {ROLE_CARDS.map(({ role, icon: Icon }) => (
           <Link

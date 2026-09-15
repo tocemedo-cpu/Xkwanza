@@ -58,7 +58,7 @@ export function createApp() {
   app.use(apiRateLimiter);
 
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', service: 'xkwanza-backend', timestamp: new Date().toISOString() });
+    res.status(200).json({ status: 'ok', service: 'ao-market-backend', timestamp: new Date().toISOString() });
   });
 
   app.use('/api/auth', authRouter);

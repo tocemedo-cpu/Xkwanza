@@ -19,7 +19,7 @@ export function MyOrders() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Meus pedidos</h1>
-        <p className="text-neutral-500">Compras feitas no marketplace XKWANZA.</p>
+        <p className="text-neutral-500">Compras feitas no marketplace AO Market.</p>
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar...</p>}

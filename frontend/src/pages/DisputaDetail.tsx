@@ -186,7 +186,7 @@ export function DisputaDetail() {
             <li key={message.id} className="rounded-lg bg-neutral-50 p-3 text-sm">
               <p className="font-medium text-neutral-900">
                 {message.author.name}
-                {message.authorId === complaint.complainant.id ? '' : ' · equipa XKWANZA'}
+                {message.authorId === complaint.complainant.id ? '' : ' · equipa AO Market'}
               </p>
               <p className="mt-1 whitespace-pre-wrap text-neutral-700">{message.body}</p>
               <p className="mt-1 text-xs text-neutral-400">{new Date(message.createdAt).toLocaleString('pt-PT')}</p>

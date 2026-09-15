@@ -148,7 +148,7 @@ export function OrderDetail() {
 
       {order.payment && (
         <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm">
-          <p className="mb-1 font-semibold text-neutral-900">Pagamento — XKWANZA Protect</p>
+          <p className="mb-1 font-semibold text-neutral-900">Pagamento — AO Market Protect</p>
           <p className="text-neutral-600">
             {PAYMENT_METHOD_LABELS[order.payment.method]} · {PAYMENT_STATUS_LABELS[order.payment.status]}
             {order.payment.custodyHeld && ' · fundos em custódia'}
@@ -190,7 +190,7 @@ export function OrderDetail() {
         ) : order.status === 'READY_FOR_PICKUP' && (isBuyer || isSeller) ? (
           <div className="space-y-2">
             <p className="text-neutral-500">
-              Peça a um transportador XKWANZA para recolher e entregar esta encomenda, com rastreio e código de
+              Peça a um transportador AO Market para recolher e entregar esta encomenda, com rastreio e código de
               confirmação.
             </p>
             <button
@@ -198,11 +198,11 @@ export function OrderDetail() {
               onClick={handleRequestTransport}
               className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60"
             >
-              Solicitar transporte XKWANZA
+              Solicitar transporte AO Market
             </button>
           </div>
         ) : (
-          <p className="text-neutral-500">Sem transporte XKWANZA associado a este pedido.</p>
+          <p className="text-neutral-500">Sem transporte AO Market associado a este pedido.</p>
         )}
       </div>
 

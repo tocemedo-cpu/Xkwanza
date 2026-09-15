@@ -71,7 +71,7 @@ export function AdminVerifications() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Validação de perfis</h1>
-        <p className="text-neutral-500">Pedidos de validação do selo XKWANZA Verificado, por ordem de chegada.</p>
+        <p className="text-neutral-500">Pedidos de validação do selo AO Market Verificado, por ordem de chegada.</p>
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

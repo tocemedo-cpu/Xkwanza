@@ -275,7 +275,7 @@ export async function requestPasswordReset(identifierRaw: string, req: Request) 
     if (user.email && user.notifyByEmail) {
       void sendEmail({
         to: user.email,
-        subject: 'Recuperação de password — XKWANZA',
+        subject: 'Recuperação de password — AO Market',
         text: `Recebemos um pedido para repor a sua password. Use este código nos próximos 30 minutos: ${token}\n\nSe não foi você a pedir, pode ignorar este email — a sua password actual continua válida.`,
       });
     }

@@ -30,7 +30,7 @@ export const documentIdParamSchema = z.object({
   params: z.object({ id: z.string().uuid() }),
 });
 
-// A taxa de contribuição é sempre indicada por quem simula — nunca fixada pela XKWANZA,
+// A taxa de contribuição é sempre indicada por quem simula — nunca fixada pela AO Market,
 // que não pode apresentar valores como se fossem a tabela oficial do INSS.
 export const createSimulationSchema = z.object({
   body: z.object({

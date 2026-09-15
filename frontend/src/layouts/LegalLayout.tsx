@@ -19,7 +19,7 @@ export function LegalLayout({
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-gold-300 to-gold-500 text-lg font-black text-xkwanza-950">
               X
             </span>
-            <span className="text-lg font-bold tracking-tight text-white">XKWANZA</span>
+            <span className="text-lg font-bold tracking-tight text-white">AO MARKET</span>
           </Link>
           <Link to="/" className="flex items-center gap-1 text-sm text-white/75 hover:text-white">
             <ArrowLeft size={16} />
@@ -34,7 +34,7 @@ export function LegalLayout({
           <p className="mt-1 text-sm text-neutral-500">Última actualização: {updatedAt}</p>
 
           <div className="mt-4 rounded-lg border border-gold-300 bg-gold-50 p-4 text-sm text-gold-900">
-            Este documento é um modelo inicial gerado para a plataforma XKWANZA, com base no funcionamento real
+            Este documento é um modelo inicial gerado para a plataforma AO Market, com base no funcionamento real
             do produto. Ainda não foi revisto por um advogado angolano e não deve ser considerado aconselhamento
             jurídico. Recomenda-se revisão legal antes de qualquer lançamento com utilizadores reais.
           </div>

@@ -6,7 +6,7 @@ export function Privacy() {
     <LegalLayout title="Política de Privacidade" updatedAt="10 de Setembro de 2026">
       <LegalSection title="1. Quem somos">
         <p>
-          A XKWANZA é uma plataforma digital angolana que liga compradores, produtores, comerciantes e
+          A AO Market é uma plataforma digital angolana que liga compradores, produtores, comerciantes e
           transportadores, e acompanha a evolução económica dos seus utilizadores — do comércio à
           formalização. Esta política explica que dados pessoais recolhemos, para quê, e quais os teus
           direitos sobre eles.
@@ -57,13 +57,13 @@ export function Privacy() {
         <p>
           Os dados de um pedido (nome, morada, contacto) são partilhados apenas com a contraparte necessária
           para o cumprir — o vendedor, o comprador ou o transportador envolvidos nesse pedido específico. A
-          equipa de suporte/administração da XKWANZA pode aceder a dados de pagamentos e pedidos para
+          equipa de suporte/administração da AO Market pode aceder a dados de pagamentos e pedidos para
           confirmar transacções e responder a problemas (ver ponto 5). Não partilhamos os teus dados com
           entidades externas para fins comerciais.
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Pagamentos — XKWANZA Protect">
+      <LegalSection title="5. Pagamentos — AO Market Protect">
         <p>
           Nesta fase, a confirmação de pagamentos é feita manualmente pela nossa equipa de suporte: quando
           marcas um pagamento como enviado, um membro da equipa confirma-o depois de verificar o extracto
@@ -77,7 +77,7 @@ export function Privacy() {
         <p>
           A secção INSS da plataforma funciona actualmente em modo <strong>sandbox/simulação</strong>: os
           dados que aí introduzas (com o teu consentimento explícito) são usados apenas para calcular
-          simulações e preparar o teu processo dentro da XKWANZA. Não existe, nesta fase, qualquer envio
+          simulações e preparar o teu processo dentro da AO Market. Não existe, nesta fase, qualquer envio
           automático desses dados ao INSS ou a outra entidade governamental — isso só acontecerá após um
           acordo institucional formal, e seremos claros na app quando isso mudar.
         </p>
@@ -110,7 +110,7 @@ export function Privacy() {
 
       <LegalSection title="10. Cookies e armazenamento local">
         <p>
-          A XKWANZA não usa cookies de publicidade nem de terceiros. Usamos apenas armazenamento local do
+          A AO Market não usa cookies de publicidade nem de terceiros. Usamos apenas armazenamento local do
           teu browser (<code>localStorage</code>) para manter a tua sessão iniciada entre visitas.
         </p>
       </LegalSection>
@@ -127,7 +127,7 @@ export function Privacy() {
       </LegalSection>
 
       <LegalSection title="13. Contacto">
-        <p>Para questões sobre privacidade ou para exercer os teus direitos, contacta o suporte XKWANZA.</p>
+        <p>Para questões sobre privacidade ou para exercer os teus direitos, contacta o suporte AO Market.</p>
       </LegalSection>
     </LegalLayout>
   );
