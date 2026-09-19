@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard';
 import { Marketplace } from './pages/Marketplace';
 import { ProductDetail } from './pages/ProductDetail';
 import { MyProducts } from './pages/MyProducts';
+import { Stock } from './pages/Stock';
 import { ProductForm } from './pages/ProductForm';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
@@ -24,7 +25,6 @@ import { MyProfile } from './pages/MyProfile';
 import { TransportJobs } from './pages/TransportJobs';
 import { MyTransportJobs } from './pages/MyTransportJobs';
 import { TransportOrderDetail } from './pages/TransportOrderDetail';
-import { Wallet } from './pages/Wallet';
 import { BankAccounts } from './pages/BankAccounts';
 import { AdminPayments } from './pages/AdminPayments';
 import { EconomicHistory } from './pages/EconomicHistory';
@@ -60,6 +60,10 @@ import { AdminQuotes } from './pages/AdminQuotes';
 import { AdminReviews } from './pages/AdminReviews';
 import { AdminNotifications } from './pages/AdminNotifications';
 import { AdminReports } from './pages/AdminReports';
+import { Mensagens } from './pages/Mensagens';
+import { ConversationDetail } from './pages/ConversationDetail';
+import { Favoritos } from './pages/Favoritos';
+import { Definicoes } from './pages/Definicoes';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleGuard } from './components/RoleGuard';
@@ -83,10 +87,11 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={['PRODUCER']} />}>
             <Route path="/produtor/dashboard" element={<Dashboard />} />
             <Route path="/produtor/marketplace" element={<Marketplace />} />
+            <Route path="/produtor/produtos" element={<MyProducts />} />
+            <Route path="/produtor/produtos/novo" element={<ProductForm />} />
+            <Route path="/produtor/produtos/:id/editar" element={<ProductForm />} />
             <Route path="/produtor/produtos/:id" element={<ProductDetail />} />
-            <Route path="/produtor/stock" element={<MyProducts />} />
-            <Route path="/produtor/stock/novo" element={<ProductForm />} />
-            <Route path="/produtor/stock/:id/editar" element={<ProductForm />} />
+            <Route path="/produtor/stock" element={<Stock />} />
             <Route path="/produtor/pedidos" element={<ReceivedOrders />} />
             <Route path="/produtor/pedidos/:id" element={<OrderDetail />} />
             <Route path="/produtor/negociacoes" element={<Negociacoes />} />
@@ -98,26 +103,32 @@ export default function App() {
             <Route path="/produtor/documentos" element={<Formalization />} />
             <Route path="/produtor/documentos/diagnostico" element={<FormalizationDiagnosis />} />
             <Route path="/produtor/inss" element={<INSS />} />
-            <Route path="/produtor/carteira" element={<Wallet />} />
             <Route path="/produtor/contas-bancarias" element={<BankAccounts />} />
             <Route path="/produtor/historico" element={<EconomicHistory />} />
             <Route path="/produtor/notificacoes" element={<Notificacoes />} />
+            <Route path="/produtor/mensagens" element={<Mensagens />} />
+            <Route path="/produtor/mensagens/:id" element={<ConversationDetail />} />
             <Route path="/produtor/suporte" element={<Support />} />
             <Route path="/produtor/suporte/:id" element={<SupportTicketDetail />} />
             <Route path="/produtor/conta" element={<MyProfile />} />
             <Route path="/produtor/perfil" element={<ProducerProfile />} />
+            <Route path="/produtor/definicoes" element={<Definicoes />} />
           </Route>
 
           {/* Comerciante */}
           <Route element={<RoleGuard allowedRoles={['MERCHANT']} />}>
             <Route path="/comerciante/dashboard" element={<Dashboard />} />
             <Route path="/comerciante/marketplace" element={<Marketplace />} />
+            <Route path="/comerciante/produtos" element={<MyProducts />} />
+            <Route path="/comerciante/produtos/novo" element={<ProductForm />} />
+            <Route path="/comerciante/produtos/:id/editar" element={<ProductForm />} />
             <Route path="/comerciante/produtos/:id" element={<ProductDetail />} />
-            <Route path="/comerciante/stock" element={<MyProducts />} />
-            <Route path="/comerciante/stock/novo" element={<ProductForm />} />
-            <Route path="/comerciante/stock/:id/editar" element={<ProductForm />} />
+            <Route path="/comerciante/stock" element={<Stock />} />
             <Route path="/comerciante/pedidos" element={<ReceivedOrders />} />
             <Route path="/comerciante/pedidos/:id" element={<OrderDetail />} />
+            <Route path="/comerciante/carrinho" element={<Cart />} />
+            <Route path="/comerciante/checkout" element={<Checkout />} />
+            <Route path="/comerciante/compras" element={<MyOrders />} />
             <Route path="/comerciante/negociacoes" element={<Negociacoes />} />
             <Route path="/comerciante/entregas" element={<Entregas />} />
             <Route path="/comerciante/disputas" element={<Disputas />} />
@@ -127,14 +138,16 @@ export default function App() {
             <Route path="/comerciante/documentos" element={<Formalization />} />
             <Route path="/comerciante/documentos/diagnostico" element={<FormalizationDiagnosis />} />
             <Route path="/comerciante/inss" element={<INSS />} />
-            <Route path="/comerciante/carteira" element={<Wallet />} />
             <Route path="/comerciante/contas-bancarias" element={<BankAccounts />} />
             <Route path="/comerciante/historico" element={<EconomicHistory />} />
             <Route path="/comerciante/notificacoes" element={<Notificacoes />} />
+            <Route path="/comerciante/mensagens" element={<Mensagens />} />
+            <Route path="/comerciante/mensagens/:id" element={<ConversationDetail />} />
             <Route path="/comerciante/suporte" element={<Support />} />
             <Route path="/comerciante/suporte/:id" element={<SupportTicketDetail />} />
             <Route path="/comerciante/conta" element={<MyProfile />} />
             <Route path="/comerciante/perfil" element={<MerchantProfile />} />
+            <Route path="/comerciante/definicoes" element={<Definicoes />} />
           </Route>
 
           {/* Comprador */}
@@ -152,10 +165,14 @@ export default function App() {
             <Route path="/comprador/disputas/:id" element={<DisputaDetail />} />
             <Route path="/comprador/fretes/:id" element={<TransportOrderDetail />} />
             <Route path="/comprador/avaliacoes" element={<MinhasAvaliacoes />} />
+            <Route path="/comprador/favoritos" element={<Favoritos />} />
             <Route path="/comprador/notificacoes" element={<Notificacoes />} />
+            <Route path="/comprador/mensagens" element={<Mensagens />} />
+            <Route path="/comprador/mensagens/:id" element={<ConversationDetail />} />
             <Route path="/comprador/suporte" element={<Support />} />
             <Route path="/comprador/suporte/:id" element={<SupportTicketDetail />} />
             <Route path="/comprador/conta" element={<MyProfile />} />
+            <Route path="/comprador/definicoes" element={<Definicoes />} />
           </Route>
 
           {/* Transportador */}
@@ -175,12 +192,14 @@ export default function App() {
             <Route path="/transportador/documentos" element={<Formalization />} />
             <Route path="/transportador/documentos/diagnostico" element={<FormalizationDiagnosis />} />
             <Route path="/transportador/inss" element={<INSS />} />
-            <Route path="/transportador/carteira" element={<Wallet />} />
             <Route path="/transportador/contas-bancarias" element={<BankAccounts />} />
             <Route path="/transportador/notificacoes" element={<Notificacoes />} />
+            <Route path="/transportador/mensagens" element={<Mensagens />} />
+            <Route path="/transportador/mensagens/:id" element={<ConversationDetail />} />
             <Route path="/transportador/suporte" element={<Support />} />
             <Route path="/transportador/suporte/:id" element={<SupportTicketDetail />} />
             <Route path="/transportador/conta" element={<MyProfile />} />
+            <Route path="/transportador/definicoes" element={<Definicoes />} />
           </Route>
 
           {/* Administrador da plataforma */}

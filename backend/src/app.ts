@@ -19,7 +19,6 @@ import { producersRouter } from './modules/producers/producers.routes';
 import { merchantsRouter } from './modules/merchants/merchants.routes';
 import { transportRouter } from './modules/transport/transport.routes';
 import { paymentsRouter } from './modules/payments/payments.routes';
-import { walletRouter } from './modules/wallet/wallet.routes';
 import { bankAccountsRouter } from './modules/bankAccounts/bankAccounts.routes';
 import { reviewsRouter } from './modules/reviews/reviews.routes';
 import { economicsRouter } from './modules/economics/economics.routes';
@@ -33,6 +32,8 @@ import { complaintsRouter } from './modules/complaints/complaints.routes';
 import { settingsRouter } from './modules/settings/settings.routes';
 import { transporterRoutesRouter } from './modules/transporterRoutes/transporterRoutes.routes';
 import { bannersRouter } from './modules/banners/banners.routes';
+import { messagesRouter } from './modules/messages/messages.routes';
+import { favoritesRouter } from './modules/favorites/favorites.routes';
 import { dbTasksRouter } from './admin/dbTasks.routes';
 
 export function createApp() {
@@ -72,7 +73,6 @@ export function createApp() {
   app.use('/api/merchants', merchantsRouter);
   app.use('/api/transport-orders', transportRouter);
   app.use('/api/payments', paymentsRouter);
-  app.use('/api/wallet', walletRouter);
   app.use('/api/bank-accounts', bankAccountsRouter);
   app.use('/api/reviews', reviewsRouter);
   app.use('/api/economics', economicsRouter);
@@ -86,6 +86,8 @@ export function createApp() {
   app.use('/api/settings', settingsRouter);
   app.use('/api/transporter-routes', transporterRoutesRouter);
   app.use('/api/banners', bannersRouter);
+  app.use('/api/messages', messagesRouter);
+  app.use('/api/favorites', favoritesRouter);
   app.use('/internal/tasks', dbTasksRouter);
 
   app.use(notFoundHandler);

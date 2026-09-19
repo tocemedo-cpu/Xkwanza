@@ -17,8 +17,6 @@ export function MyProfile() {
   const [locality, setLocality] = useState(user?.locality ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl ?? '');
   const [nif, setNif] = useState(user?.nif ?? '');
-  const [notifyByEmail, setNotifyByEmail] = useState(user?.notifyByEmail ?? true);
-  const [notifyByPush, setNotifyByPush] = useState(user?.notifyByPush ?? true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -41,8 +39,6 @@ export function MyProfile() {
         locality: locality.trim() || undefined,
         avatarUrl: avatarUrl.trim() || undefined,
         nif: nif.trim() || undefined,
-        notifyByEmail,
-        notifyByPush,
       });
       await refreshUser();
       setSaved(true);
@@ -139,6 +135,13 @@ export function MyProfile() {
           <label className="mb-1 block text-sm font-medium text-neutral-700">Email</label>
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />
         </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Telefone</label>
+          <input value={user.phone ?? ''} disabled className={`${inputClass} bg-neutral-50 text-neutral-500`} />
+          <p className="mt-1 text-xs text-neutral-500">
+            Contacte o suporte para alterar o telefone associado à sua conta.
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-neutral-700">Província</label>
@@ -171,28 +174,6 @@ export function MyProfile() {
             placeholder="https://..."
             className={inputClass}
           />
-        </div>
-
-        <div className="space-y-2 border-t border-neutral-100 pt-4">
-          <p className="text-sm font-medium text-neutral-700">Notificações</p>
-          <label className="flex items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              checked={notifyByEmail}
-              onChange={(e) => setNotifyByEmail(e.target.checked)}
-              className="h-4 w-4 rounded border-neutral-300 text-xkwanza-600 focus:ring-xkwanza-500"
-            />
-            Receber notificações por email
-          </label>
-          <label className="flex items-center gap-2 text-sm text-neutral-700">
-            <input
-              type="checkbox"
-              checked={notifyByPush}
-              onChange={(e) => setNotifyByPush(e.target.checked)}
-              className="h-4 w-4 rounded border-neutral-300 text-xkwanza-600 focus:ring-xkwanza-500"
-            />
-            Receber notificações push
-          </label>
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

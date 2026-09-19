@@ -45,7 +45,7 @@ export function BankAccounts() {
     <div className="max-w-md space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Contas bancárias</h1>
-        <p className="text-neutral-500">Usadas como referência para levantamentos do saldo da carteira.</p>
+        <p className="text-neutral-500">Usadas para receber os pagamentos confirmados dos seus pedidos.</p>
       </div>
 
       {accounts.length > 0 && (

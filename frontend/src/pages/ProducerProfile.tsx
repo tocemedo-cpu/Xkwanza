@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { fetchMyProducerProfile, upsertMyProducerProfile } from '../services/producersService';
 import { createDocument, fetchMyDocuments } from '../services/formalizationService';
+import { updateMyProfile } from '../services/usersService';
 import { ProducerProfile as ProducerProfileType } from '../types/producers';
 import { DOCUMENT_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DocumentType, FormalizationDocument } from '../types/formalization';
 
@@ -23,7 +25,9 @@ function fromCsv(text: string): string[] {
 }
 
 export function ProducerProfile() {
+  const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState<ProducerProfileType | null>(null);
+  const [shopPhotoUrl, setShopPhotoUrl] = useState(user?.avatarUrl ?? '');
   const [productionLocation, setProductionLocation] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [productCategoriesText, setProductCategoriesText] = useState('');
@@ -77,6 +81,8 @@ export function ProducerProfile() {
         availability: availability || undefined,
         description: description || undefined,
       });
+      await updateMyProfile({ avatarUrl: shopPhotoUrl.trim() || undefined });
+      await refreshUser();
       setProfile(updated);
     } catch (err: unknown) {
       const message =
@@ -103,14 +109,23 @@ export function ProducerProfile() {
   return (
     <div className="max-w-md space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Perfil de produtor</h1>
-        <p className="text-neutral-500">Dados da actividade, descrição e documentação.</p>
+        <h1 className="text-2xl font-bold text-neutral-900">Minha Loja</h1>
+        <p className="text-neutral-500">Nome, descrição, fotografia e informações da sua produção.</p>
         {!profile && <p className="mt-1 text-xs text-neutral-400">Ainda não guardaste nada — tudo é opcional.</p>}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
-        <p className="font-semibold text-neutral-900">Dados da actividade</p>
+        <p className="font-semibold text-neutral-900">Dados da loja</p>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Fotografia da loja (URL)</label>
+          <input
+            value={shopPhotoUrl}
+            onChange={(e) => setShopPhotoUrl(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Localização da produção</label>
           <input value={productionLocation} onChange={(e) => setProductionLocation(e.target.value)} className={inputClass} />

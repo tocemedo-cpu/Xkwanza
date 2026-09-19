@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { fetchMyMerchantProfile, upsertMyMerchantProfile } from '../services/merchantsService';
 import { createDocument, fetchMyDocuments } from '../services/formalizationService';
+import { updateMyProfile } from '../services/usersService';
 import { FORMALIZATION_STATE_LABELS, MerchantProfile as MerchantProfileType, SelfDeclaredFormalizationState } from '../types/merchants';
 import { DOCUMENT_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DocumentType, FormalizationDocument } from '../types/formalization';
 
@@ -23,7 +25,9 @@ function fromCsv(text: string): string[] {
 }
 
 export function MerchantProfile() {
+  const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState<MerchantProfileType | null>(null);
+  const [shopPhotoUrl, setShopPhotoUrl] = useState(user?.avatarUrl ?? '');
   const [businessName, setBusinessName] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
   const [productCategoriesText, setProductCategoriesText] = useState('');
@@ -65,6 +69,8 @@ export function MerchantProfile() {
         productsSold: fromCsv(productsSoldText),
         formalizationState,
       });
+      await updateMyProfile({ avatarUrl: shopPhotoUrl.trim() || undefined });
+      await refreshUser();
       setProfile(updated);
     } catch (err: unknown) {
       const message =
@@ -91,14 +97,23 @@ export function MerchantProfile() {
   return (
     <div className="max-w-md space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Perfil de comerciante</h1>
-        <p className="text-neutral-500">Dados do negócio e formalização.</p>
+        <h1 className="text-2xl font-bold text-neutral-900">Minha Loja</h1>
+        <p className="text-neutral-500">Nome, descrição, fotografia e apresentação da sua loja.</p>
         {!profile && <p className="mt-1 text-xs text-neutral-400">Ainda não guardaste nada — tudo é opcional.</p>}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
-        <p className="font-semibold text-neutral-900">Dados do negócio</p>
+        <p className="font-semibold text-neutral-900">Dados da loja</p>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-neutral-700">Fotografia da loja (URL)</label>
+          <input
+            value={shopPhotoUrl}
+            onChange={(e) => setShopPhotoUrl(e.target.value)}
+            placeholder="https://..."
+            className={inputClass}
+          />
+        </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-neutral-700">Nome comercial</label>
           <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className={inputClass} />

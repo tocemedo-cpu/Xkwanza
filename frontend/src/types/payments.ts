@@ -1,11 +1,10 @@
-export type PaymentMethod = 'BANK_TRANSFER' | 'PAYMENT_REFERENCE' | 'WALLET' | 'BANK_INTEGRATION' | 'FINTECH_INTEGRATION';
+export type PaymentMethod = 'BANK_TRANSFER' | 'PAYMENT_REFERENCE' | 'BANK_INTEGRATION' | 'FINTECH_INTEGRATION';
 
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   BANK_TRANSFER: 'Transferência bancária',
   PAYMENT_REFERENCE: 'Referência de pagamento',
-  WALLET: 'Carteira AO Market',
   BANK_INTEGRATION: 'Integração bancária',
   FINTECH_INTEGRATION: 'Integração fintech',
 };
@@ -40,15 +39,6 @@ export interface Payment {
   createdAt: string;
   updatedAt: string;
   statusHistory: PaymentStatusEvent[];
-}
-
-export interface Wallet {
-  id: string;
-  userId: string;
-  balance: string;
-  currency: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface BankAccount {

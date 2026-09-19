@@ -24,6 +24,7 @@ export function MyProducts() {
   const { user } = useAuth();
   const prefix = user ? getRolePrefix(user.role) : 'produtor';
   const [products, setProducts] = useState<Product[]>([]);
+  const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,23 +60,27 @@ export function MyProducts() {
     reload();
   }
 
+  const visibleProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Stock</h1>
+          <h1 className="text-2xl font-bold text-neutral-900">Produtos</h1>
           <p className="text-neutral-500">Gira o seu catálogo no marketplace AO Market.</p>
         </div>
         <div className="flex gap-2">
           <Link
-            to={`/${prefix}/stock/novo`}
+            to={`/${prefix}/produtos/novo`}
             className="flex items-center gap-2 rounded-md bg-xkwanza-600 px-4 py-2 font-medium text-white hover:bg-xkwanza-700"
           >
             <Plus size={18} />
             Novo produto
           </Link>
           <Link
-            to={`/${prefix}/stock/novo?tipo=servico`}
+            to={`/${prefix}/produtos/novo?tipo=servico`}
             className="flex items-center gap-2 rounded-md border border-xkwanza-300 px-4 py-2 font-medium text-xkwanza-700 hover:bg-xkwanza-50"
           >
             <Plus size={18} />
@@ -83,6 +88,15 @@ export function MyProducts() {
           </Link>
         </div>
       </div>
+
+      {products.length > 0 && (
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Pesquisar por nome..."
+          className="w-full max-w-sm rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-xkwanza-500 focus:outline-none focus:ring-1 focus:ring-xkwanza-500"
+        />
+      )}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -94,7 +108,13 @@ export function MyProducts() {
         </p>
       )}
 
-      {!isLoading && products.length > 0 && (
+      {!isLoading && products.length > 0 && visibleProducts.length === 0 && (
+        <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
+          Nenhum anúncio corresponde a "{search}".
+        </p>
+      )}
+
+      {!isLoading && visibleProducts.length > 0 && (
         <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white">
           <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-neutral-50 text-left text-neutral-500">
@@ -107,7 +127,7 @@ export function MyProducts() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              {products.map((product) => (
+              {visibleProducts.map((product) => (
                 <tr key={product.id}>
                   <td className="px-4 py-2 font-medium text-neutral-900">
                     <span className="mr-1.5 rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-neutral-500">
@@ -129,7 +149,7 @@ export function MyProducts() {
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-3">
-                      <Link to={`/${prefix}/stock/${product.id}/editar`} className="text-neutral-500 hover:text-xkwanza-600">
+                      <Link to={`/${prefix}/produtos/${product.id}/editar`} className="text-neutral-500 hover:text-xkwanza-600">
                         <Pencil size={16} />
                       </Link>
                       <button onClick={() => handleDelete(product)} className="text-neutral-500 hover:text-red-600">

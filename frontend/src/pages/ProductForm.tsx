@@ -126,7 +126,7 @@ export function ProductForm() {
             ? { unit, stock: Number(stock), province, municipality, deliveryOption, origin: origin || undefined }
             : { serviceArea, availability, contact }),
         });
-        navigate(`/${prefix}/stock`);
+        navigate(`/${prefix}/produtos`);
       } else {
         const payload: CreateProductPayload =
           listingType === 'PRODUCT'
@@ -156,7 +156,7 @@ export function ProductForm() {
                 contact,
               };
         const created = await createProduct(payload);
-        navigate(`/${prefix}/stock/${created.id}/editar`);
+        navigate(`/${prefix}/produtos/${created.id}/editar`);
       }
     } catch (err: unknown) {
       const message =

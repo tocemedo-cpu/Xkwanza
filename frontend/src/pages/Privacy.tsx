@@ -26,8 +26,8 @@ export function Privacy() {
             transporte e respectivo estado.
           </li>
           <li>
-            <strong>Pagamentos:</strong> estado de pagamentos, saldo de carteira e dados de contas bancárias
-            que adiciones para receber levantamentos.
+            <strong>Pagamentos:</strong> estado de pagamentos e dados de contas bancárias que adiciones para
+            receber pagamentos.
           </li>
           <li>
             <strong>Histórico económico e formalização:</strong> indicadores de vendas/rendimento, respostas ao

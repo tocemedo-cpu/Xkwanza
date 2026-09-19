@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
+import { useAuth } from '../hooks/useAuth';
 import { fetchMyOrders } from '../services/ordersService';
 import { Order } from '../types/marketplace';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 export function MyOrders() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
+  const isMerchant = user?.role === 'MERCHANT';
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,8 +23,12 @@ export function MyOrders() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">Meus pedidos</h1>
-        <p className="text-neutral-500">Compras feitas no marketplace AO Market.</p>
+        <h1 className="text-2xl font-bold text-neutral-900">{isMerchant ? 'Compras' : 'Meus pedidos'}</h1>
+        <p className="text-neutral-500">
+          {isMerchant
+            ? 'Pedidos feitos a produtores e fornecedores para reposição do seu stock.'
+            : 'Compras feitas no marketplace AO Market.'}
+        </p>
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar...</p>}
@@ -27,7 +36,7 @@ export function MyOrders() {
       {!isLoading && orders.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           Ainda não fez nenhum pedido.{' '}
-          <Link to="/comprador/marketplace" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to={`/${prefix}/marketplace`} className="font-medium text-xkwanza-600 hover:underline">
             Explorar produtos
           </Link>
         </p>
@@ -38,7 +47,7 @@ export function MyOrders() {
           {orders.map((order) => (
             <Link
               key={order.id}
-              to={`/comprador/pedidos/${order.id}`}
+              to={`/${prefix}/pedidos/${order.id}`}
               className="flex items-center justify-between p-4 hover:bg-neutral-50"
             >
               <div>

@@ -5,7 +5,6 @@ import { useCart } from '../hooks/useCart';
 import { getRolePrefix, ROLE_LABELS } from '../types/user';
 import { Logo } from '../components/Logo';
 
-const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
 const TRANSPORTER_ROLE = 'TRANSPORTER';
 const BUYER_ROLE = 'BUYER';
 const STAFF_ROLES = ['ADMIN', 'SUPPORT'];
@@ -49,8 +48,8 @@ function buildStaffGroups(p: string) {
       links: [
         { to: `/${p}/negociacoes`, label: 'Negociações' },
         { to: `/${p}/avaliacoes`, label: 'Avaliações' },
-        { to: `/${p}/disputas`, label: 'Disputas' },
-        { to: `/${p}/reclamacoes`, label: 'Reclamações' },
+        { to: `/${p}/disputas`, label: 'Reclamações' },
+        { to: `/${p}/reclamacoes`, label: 'Suporte' },
       ],
     },
     {
@@ -79,6 +78,95 @@ function buildStaffGroups(p: string) {
   ];
 }
 
+// Cada persona vê apenas a sua própria navegação — construída aqui um bloco por perfil,
+// exactamente sobre as páginas definidas para essa persona. Negociações/Disputas/Suporte/INSS
+// são funcionalidades pré-existentes e compatíveis (cotações, resolução de conflitos, apoio ao
+// cliente, ligação ao INSS) mantidas por baixo dos itens principais — remover acesso a algo que
+// já funciona quebraria funcionalidade existente sem motivo relacionado com esta reestruturação.
+function buildLinks(p: string, role: string) {
+  const links: { to: string; label: string; shortLabel?: string }[] = [];
+
+  if (role === 'PRODUCER') {
+    links.push(
+      { to: `/${p}/dashboard`, label: 'Painel' },
+      { to: `/${p}/conta`, label: 'Meu Perfil' },
+      { to: `/${p}/perfil`, label: 'Minha Loja' },
+      { to: `/${p}/produtos`, label: 'Produtos' },
+      { to: `/${p}/stock`, label: 'Stock' },
+      { to: `/${p}/pedidos`, label: 'Pedidos' },
+      { to: `/${p}/historico`, label: 'Vendas' },
+      { to: `/${p}/entregas`, label: 'Entregas' },
+      { to: `/${p}/negociacoes`, label: 'Negociações' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
+      { to: `/${p}/mensagens`, label: 'Mensagens' },
+      { to: `/${p}/notificacoes`, label: 'Notificações' },
+      { to: `/${p}/documentos`, label: 'Documentos' },
+      { to: `/${p}/inss`, label: 'INSS' },
+      { to: `/${p}/suporte`, label: 'Suporte' },
+      { to: `/${p}/definicoes`, label: 'Definições' },
+    );
+  } else if (role === 'MERCHANT') {
+    links.push(
+      { to: `/${p}/dashboard`, label: 'Painel' },
+      { to: `/${p}/conta`, label: 'Meu Perfil' },
+      { to: `/${p}/perfil`, label: 'Minha Loja' },
+      { to: `/${p}/produtos`, label: 'Produtos' },
+      { to: `/${p}/stock`, label: 'Stock' },
+      { to: `/${p}/compras`, label: 'Compras' },
+      { to: `/${p}/marketplace`, label: 'Novo Pedido de Compra', shortLabel: 'Comprar' },
+      { to: `/${p}/pedidos`, label: 'Pedidos de Venda', shortLabel: 'Vendas' },
+      { to: `/${p}/historico`, label: 'Vendas', shortLabel: 'Histórico' },
+      { to: `/${p}/entregas`, label: 'Entregas' },
+      { to: `/${p}/negociacoes`, label: 'Negociações' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
+      { to: `/${p}/mensagens`, label: 'Mensagens' },
+      { to: `/${p}/notificacoes`, label: 'Notificações' },
+      { to: `/${p}/documentos`, label: 'Documentos' },
+      { to: `/${p}/inss`, label: 'INSS' },
+      { to: `/${p}/suporte`, label: 'Suporte' },
+      { to: `/${p}/definicoes`, label: 'Definições' },
+    );
+  } else if (role === TRANSPORTER_ROLE) {
+    links.push(
+      { to: `/${p}/dashboard`, label: 'Painel' },
+      { to: `/${p}/conta`, label: 'Meu Perfil' },
+      { to: `/${p}/veiculo`, label: 'Meu Veículo' },
+      { to: `/${p}/fretes`, label: 'Entregas Disponíveis', shortLabel: 'Disponíveis' },
+      { to: `/${p}/meus-fretes`, label: 'Minhas Entregas' },
+      { to: `/${p}/rotas`, label: 'Rotas' },
+      { to: `/${p}/rendimentos`, label: 'Ganhos' },
+      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
+      { to: `/${p}/mensagens`, label: 'Mensagens' },
+      { to: `/${p}/documentos`, label: 'Documentos' },
+      { to: `/${p}/inss`, label: 'INSS' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/notificacoes`, label: 'Notificações' },
+      { to: `/${p}/suporte`, label: 'Suporte' },
+      { to: `/${p}/definicoes`, label: 'Definições' },
+    );
+  } else if (role === BUYER_ROLE) {
+    links.push(
+      { to: `/${p}/dashboard`, label: 'Início' },
+      { to: `/${p}/marketplace`, label: 'Marketplace' },
+      { to: `/${p}/pedidos`, label: 'Meus Pedidos', shortLabel: 'Pedidos' },
+      { to: `/${p}/favoritos`, label: 'Favoritos' },
+      { to: `/${p}/negociacoes`, label: 'Negociações' },
+      { to: `/${p}/entregas`, label: 'Entregas' },
+      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
+      { to: `/${p}/mensagens`, label: 'Mensagens' },
+      { to: `/${p}/notificacoes`, label: 'Notificações' },
+      { to: `/${p}/suporte`, label: 'Suporte' },
+      { to: `/${p}/conta`, label: 'Perfil' },
+      { to: `/${p}/definicoes`, label: 'Definições' },
+    );
+  }
+
+  return links;
+}
+
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
@@ -86,13 +174,12 @@ export function DashboardLayout() {
   if (!user) return null;
 
   const p = getRolePrefix(user.role);
-  const isSeller = SELLER_ROLES.includes(user.role);
   const isBuyer = user.role === BUYER_ROLE;
-  const isTransporter = user.role === TRANSPORTER_ROLE;
+  const isMerchant = user.role === 'MERCHANT';
   const isStaff = STAFF_ROLES.includes(user.role);
-  const hasWallet = isSeller || isTransporter;
+  const canCheckout = isBuyer || isMerchant;
 
-  const links: { to: string; label: string; shortLabel?: string }[] = [];
+  const links = isStaff ? [] : buildLinks(p, user.role);
 
   if (isStaff) {
     links.push(
@@ -111,64 +198,14 @@ export function DashboardLayout() {
       { to: `/${p}/notificacoes`, label: 'Notificações' },
       { to: `/${p}/formalizacao`, label: 'Formalização' },
       { to: `/${p}/inss`, label: 'INSS' },
-      { to: `/${p}/reclamacoes`, label: 'Reclamações' },
-      { to: `/${p}/disputas`, label: 'Disputas' },
+      { to: `/${p}/reclamacoes`, label: 'Suporte' },
+      { to: `/${p}/disputas`, label: 'Reclamações' },
       { to: `/${p}/verificacoes`, label: 'Verificações' },
       { to: `/${p}/banners`, label: 'Banners' },
       { to: `/${p}/configuracoes`, label: 'Configurações' },
       { to: `/${p}/auditoria`, label: 'Auditoria' },
       { to: `/${p}/relatorios`, label: 'Relatórios' },
     );
-  } else {
-    links.push({ to: `/${p}/dashboard`, label: 'Painel' }, { to: `/${p}/marketplace`, label: 'Marketplace' });
-
-    if (isBuyer) {
-      links.push({ to: `/${p}/pedidos`, label: 'Meus pedidos', shortLabel: 'Pedidos' });
-    }
-
-    if (isSeller) {
-      links.push(
-        { to: `/${p}/stock`, label: 'Stock' },
-        { to: `/${p}/pedidos`, label: 'Pedidos recebidos', shortLabel: 'Recebidos' },
-      );
-    }
-
-    if (isTransporter) {
-      links.push(
-        { to: `/${p}/fretes`, label: 'Fretes disponíveis', shortLabel: 'Fretes' },
-        { to: `/${p}/meus-fretes`, label: 'Meus fretes' },
-        { to: `/${p}/veiculo`, label: 'Meu veículo', shortLabel: 'Veículo' },
-        { to: `/${p}/rotas`, label: 'Rotas' },
-      );
-    }
-
-    links.push(
-      { to: `/${p}/negociacoes`, label: 'Negociações' },
-      { to: `/${p}/entregas`, label: 'Entregas' },
-      { to: `/${p}/disputas`, label: 'Disputas' },
-    );
-
-    if (isSeller && user.role === 'PRODUCER') {
-      links.push({ to: `/${p}/perfil`, label: 'Meu perfil de produtor', shortLabel: 'Perfil produtor' });
-    }
-    if (isSeller && user.role === 'MERCHANT') {
-      links.push({ to: `/${p}/perfil`, label: 'Meu perfil de comerciante', shortLabel: 'Perfil comerciante' });
-    }
-
-    if (hasWallet) {
-      links.push(
-        { to: isTransporter ? `/${p}/rendimentos` : `/${p}/historico`, label: isTransporter ? 'Rendimentos' : 'Histórico' },
-        { to: `/${p}/carteira`, label: 'Carteira' },
-      );
-    }
-
-    links.push({ to: `/${p}/avaliacoes`, label: 'Avaliações' }, { to: `/${p}/notificacoes`, label: 'Notificações' });
-
-    if (hasWallet) {
-      links.push({ to: `/${p}/documentos`, label: 'Documentos' }, { to: `/${p}/inss`, label: 'INSS' });
-    }
-
-    links.push({ to: `/${p}/suporte`, label: 'Suporte' });
   }
 
   const topBar = (
@@ -186,7 +223,7 @@ export function DashboardLayout() {
         </nav>
       )}
       <div className="flex shrink-0 items-center gap-4 text-sm">
-        {isBuyer && (
+        {canCheckout && (
           <NavLink to={`/${p}/carrinho`} className="relative text-white/75 hover:text-white">
             <ShoppingCart size={20} />
             {totalItems > 0 && (

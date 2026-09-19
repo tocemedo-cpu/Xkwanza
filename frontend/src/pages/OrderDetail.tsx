@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderReviews } from '../components/OrderReviews';
 import { useAuth } from '../hooks/useAuth';
+import { startConversation } from '../services/messagesService';
 import { fetchOrder, updateOrderStatus } from '../services/ordersService';
 import { markPaymentSent } from '../services/paymentsService';
 import { requestTransport } from '../services/transportService';
@@ -80,6 +82,19 @@ export function OrderDetail() {
     }
   }
 
+  async function handleMessageCounterpart() {
+    if (!order) return;
+    const otherUserId = isBuyer ? order.items[0]?.product.ownerId : order.buyerId;
+    if (!otherUserId) return;
+    setIsUpdating(true);
+    try {
+      const conversation = await startConversation({ otherUserId, contextOrderId: order.id });
+      navigate(`/${prefix}/mensagens/${conversation.id}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   async function handleRequestTransport() {
     if (!id) return;
     setIsUpdating(true);
@@ -116,6 +131,17 @@ export function OrderDetail() {
         </div>
         <OrderStatusBadge status={order.status} />
       </div>
+
+      {(isBuyer || isSeller) && (
+        <button
+          onClick={handleMessageCounterpart}
+          disabled={isUpdating}
+          className="flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+        >
+          <MessageCircle size={16} />
+          Mensagem sobre este pedido
+        </button>
+      )}
 
       <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
         {order.items.map((item) => (

@@ -20,27 +20,6 @@ function generatePaymentReference(): string {
   return `XKW-${randomInt(0, 100_000_000).toString().padStart(8, '0')}`;
 }
 
-// Agrupa os itens do pedido por vendedor (uma encomenda pode juntar produtos de vários
-// vendedores) e credita a cada um o valor correspondente aos seus itens.
-async function creditSellersForOrder(
-  tx: Prisma.TransactionClient,
-  order: { items: { lineTotal: Prisma.Decimal; product: { ownerId: string } }[] },
-) {
-  const bySeller = new Map<string, Prisma.Decimal>();
-  for (const item of order.items) {
-    const current = bySeller.get(item.product.ownerId) ?? new Prisma.Decimal(0);
-    bySeller.set(item.product.ownerId, current.plus(item.lineTotal));
-  }
-
-  for (const [sellerId, amount] of bySeller.entries()) {
-    await tx.wallet.upsert({
-      where: { userId: sellerId },
-      update: { balance: { increment: amount } },
-      create: { userId: sellerId, balance: amount },
-    });
-  }
-}
-
 // Estados alcançáveis a partir de cada estado. PICKED_UP/IN_TRANSIT/DELIVERED são normalmente
 // avançados pelo módulo de transporte (Fase 3) através do transportador atribuído; READY_FOR_PICKUP
 // -> COMPLETED continua disponível para entregas geridas directamente pelo vendedor, sem transportador.
@@ -99,17 +78,17 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
   // Cobrança via gateway (BANK_INTEGRATION/FINTECH_INTEGRATION) inicia-se fora da transacção —
   // é uma chamada a um adapter externo (simulado em sandbox), nunca deve prender a transacção
   // da base de dados à espera de rede. Se o adapter recusar (ex: produção sem credenciais), o
-  // checkout falha aqui, antes de tocar em stock/carteira.
+  // checkout falha aqui, antes de tocar no stock.
   const gatewayCharge =
     input.paymentMethod === PaymentMethod.BANK_INTEGRATION || input.paymentMethod === PaymentMethod.FINTECH_INTEGRATION
       ? await paymentGatewayAdapter.initiateCharge({ orderId: randomUUID(), amount: subtotal.toString(), currency: 'AOA' })
       : null;
 
-  // AO Market Protect: para WALLET o débito é imediato e os fundos ficam logo em custódia;
-  // para BANK_TRANSFER/PAYMENT_REFERENCE não há gateway real — o pagamento fica PENDING até
-  // o comprador assinalar que pagou e o suporte/administração confirmar manualmente o depósito.
-  // Para BANK_INTEGRATION/FINTECH_INTEGRATION a cobrança já foi iniciada acima — o pagamento
-  // fica PROCESSING até o webhook do provedor (ou, em sandbox, confirmação manual) o resolver.
+  // AO Market Protect: para BANK_TRANSFER/PAYMENT_REFERENCE não há gateway real — o pagamento
+  // fica PENDING até o comprador assinalar que pagou e o suporte/administração confirmar
+  // manualmente o depósito. Para BANK_INTEGRATION/FINTECH_INTEGRATION a cobrança já foi
+  // iniciada acima — o pagamento fica PROCESSING até o webhook do provedor (ou, em sandbox,
+  // confirmação manual) o resolver.
   const order = await prisma.$transaction(async (tx) => {
     for (const item of input.items) {
       const result = await tx.product.updateMany({
@@ -122,20 +101,7 @@ export async function checkout(buyerId: string, input: CreateOrderInput, req: Re
     }
 
     let paymentData: Prisma.PaymentCreateWithoutOrderInput;
-    if (input.paymentMethod === PaymentMethod.WALLET) {
-      const wallet = await tx.wallet.findUnique({ where: { userId: buyerId } });
-      if (!wallet || wallet.balance.lessThan(subtotal)) {
-        throw ApiError.badRequest('Saldo insuficiente na carteira AO Market');
-      }
-      await tx.wallet.update({ where: { userId: buyerId }, data: { balance: { decrement: subtotal } } });
-      paymentData = {
-        method: PaymentMethod.WALLET,
-        status: PaymentStatus.PAID,
-        amount: subtotal,
-        custodyHeld: true,
-        statusHistory: { create: { status: PaymentStatus.PAID, note: 'Pago com a carteira AO Market' } },
-      };
-    } else if (gatewayCharge) {
+    if (gatewayCharge) {
       paymentData = {
         method: input.paymentMethod,
         status: PaymentStatus.PROCESSING,
@@ -295,14 +261,6 @@ export async function updateOrderStatus(
 
       if (order.payment) {
         if (order.payment.status === PaymentStatus.PAID) {
-          // Fundos já em custódia (inclui carteira, já debitada) — devolve ao comprador.
-          if (order.payment.method === PaymentMethod.WALLET) {
-            await tx.wallet.upsert({
-              where: { userId: order.buyerId },
-              update: { balance: { increment: order.payment.amount } },
-              create: { userId: order.buyerId, balance: order.payment.amount },
-            });
-          }
           await tx.payment.update({
             where: { orderId },
             data: {
@@ -324,8 +282,8 @@ export async function updateOrderStatus(
     }
 
     if (newStatus === OrderStatus.COMPLETED && order.payment?.custodyHeld) {
-      // Liberta a custódia AO Market Protect para o(s) vendedor(es) assim que o comprador confirma a recepção.
-      await creditSellersForOrder(tx, order);
+      // Liberta a custódia AO Market Protect assim que o comprador confirma a recepção — o
+      // pagamento aos vendedores segue-se fora da plataforma (transferência bancária directa).
       await tx.payment.update({
         where: { orderId },
         data: { custodyHeld: false, releasedAt: new Date() },
