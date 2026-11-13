@@ -64,6 +64,7 @@ import { Mensagens } from './pages/Mensagens';
 import { ConversationDetail } from './pages/ConversationDetail';
 import { Favoritos } from './pages/Favoritos';
 import { Payments } from './pages/Payments';
+import { MerchantReports } from './pages/MerchantReports';
 import { Definicoes } from './pages/Definicoes';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -131,6 +132,8 @@ export default function App() {
             <Route path="/comerciante/carrinho" element={<Cart />} />
             <Route path="/comerciante/checkout" element={<Checkout />} />
             <Route path="/comerciante/compras" element={<MyOrders />} />
+            <Route path="/comerciante/pagamentos" element={<Payments />} />
+            <Route path="/comerciante/relatorios" element={<MerchantReports />} />
             <Route path="/comerciante/negociacoes" element={<Negociacoes />} />
             <Route path="/comerciante/entregas" element={<Entregas />} />
             <Route path="/comerciante/disputas" element={<Disputas />} />
@@ -212,6 +215,7 @@ export default function App() {
             <Route path="/admin/produtores" element={<AdminUsers role="PRODUCER" />} />
             <Route path="/admin/compradores" element={<AdminUsers role="BUYER" />} />
             <Route path="/admin/transportadores" element={<AdminTransporters />} />
+            <Route path="/admin/comerciantes" element={<AdminUsers role="MERCHANT" />} />
             <Route path="/admin/categorias" element={<AdminCategories />} />
             <Route path="/admin/produtos" element={<AdminProducts />} />
             <Route path="/admin/pedidos" element={<AdminOrders />} />

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Package, ShoppingBag, HandCoins, LifeBuoy } from 'lucide-react';
+import { Users, Package, ShoppingBag, HandCoins, LifeBuoy, Sprout, ShoppingCart, Store, Truck, AlertTriangle } from 'lucide-react';
 import { fetchPlatformReport } from '../services/economicsService';
+import { fetchComplaints } from '../services/complaintsService';
 import { PlatformReport } from '../types/economics';
 import { ROLE_LABELS } from '../types/user';
 import { formatKwanza } from '../utils/angola';
@@ -17,15 +18,21 @@ const QUICK_LINKS = [
 
 export function AdminDashboard() {
   const [report, setReport] = useState<PlatformReport | null>(null);
+  const [openComplaints, setOpenComplaints] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchPlatformReport()
-      .then(setReport)
+    setIsLoading(true);
+    Promise.all([fetchPlatformReport(), fetchComplaints('OPEN', 1, 1)])
+      .then(([platformReport, complaintsResult]) => {
+        setReport(platformReport);
+        setOpenComplaints(complaintsResult.total);
+      })
       .finally(() => setIsLoading(false));
   }, []);
 
   const totalUsers = report ? Object.values(report.usersByRole).reduce((sum, n) => sum + (n ?? 0), 0) : 0;
+  const totalOrders = report ? Object.values(report.ordersByStatus).reduce((sum, n) => sum + (n ?? 0), 0) : 0;
 
   return (
     <div className="space-y-6">
@@ -41,28 +48,70 @@ export function AdminDashboard() {
           <div className="rounded-xl border border-neutral-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
               <Users size={18} />
-              <span className="text-sm font-medium text-neutral-500">Utilizadores</span>
+              <span className="text-sm font-medium text-neutral-500">Total de utilizadores</span>
             </div>
             <p className="text-2xl font-bold text-neutral-900">{totalUsers}</p>
           </div>
           <div className="rounded-xl border border-neutral-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <Sprout size={18} />
+              <span className="text-sm font-medium text-neutral-500">Produtores registados</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{report.usersByRole.PRODUCER ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <ShoppingCart size={18} />
+              <span className="text-sm font-medium text-neutral-500">Compradores registados</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{report.usersByRole.BUYER ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <Store size={18} />
+              <span className="text-sm font-medium text-neutral-500">Comerciantes registados</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{report.usersByRole.MERCHANT ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <Truck size={18} />
+              <span className="text-sm font-medium text-neutral-500">Transportadoras registadas</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{report.usersByRole.TRANSPORTER ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
               <Package size={18} />
-              <span className="text-sm font-medium text-neutral-500">Produtos activos</span>
+              <span className="text-sm font-medium text-neutral-500">Produtos publicados</span>
             </div>
             <p className="text-2xl font-bold text-neutral-900">{report.activeProducts}</p>
           </div>
           <div className="rounded-xl border border-neutral-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <ShoppingBag size={18} />
+              <span className="text-sm font-medium text-neutral-500">Pedidos realizados</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{totalOrders}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
               <HandCoins size={18} />
-              <span className="text-sm font-medium text-neutral-500">Receita concluída</span>
+              <span className="text-sm font-medium text-neutral-500">Volume de transacções</span>
             </div>
             <p className="text-2xl font-bold text-neutral-900">{formatKwanza(report.totalRevenue)}</p>
           </div>
           <div className="rounded-xl border border-neutral-200 bg-white p-5">
             <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
+              <AlertTriangle size={18} />
+              <span className="text-sm font-medium text-neutral-500">Reclamações pendentes</span>
+            </div>
+            <p className="text-2xl font-bold text-neutral-900">{openComplaints ?? 0}</p>
+          </div>
+          <div className="rounded-xl border border-neutral-200 bg-white p-5">
+            <div className="mb-1 flex items-center gap-2 text-xkwanza-600">
               <LifeBuoy size={18} />
-              <span className="text-sm font-medium text-neutral-500">Tickets abertos</span>
+              <span className="text-sm font-medium text-neutral-500">Tickets de suporte abertos</span>
             </div>
             <p className="text-2xl font-bold text-neutral-900">{report.openSupportTickets}</p>
           </div>
