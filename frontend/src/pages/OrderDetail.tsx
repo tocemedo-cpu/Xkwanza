@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderReviews } from '../components/OrderReviews';
 import { useAuth } from '../hooks/useAuth';
+import { startConversation } from '../services/messagesService';
 import { fetchOrder, updateOrderStatus } from '../services/ordersService';
 import { markPaymentSent } from '../services/paymentsService';
 import { requestTransport } from '../services/transportService';
@@ -80,6 +82,19 @@ export function OrderDetail() {
     }
   }
 
+  async function handleMessageCounterpart() {
+    if (!order) return;
+    const otherUserId = isBuyer ? order.items[0]?.product.ownerId : order.buyerId;
+    if (!otherUserId) return;
+    setIsUpdating(true);
+    try {
+      const conversation = await startConversation({ otherUserId, contextOrderId: order.id });
+      navigate(`/${prefix}/mensagens/${conversation.id}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
   async function handleRequestTransport() {
     if (!id) return;
     setIsUpdating(true);
@@ -117,6 +132,17 @@ export function OrderDetail() {
         <OrderStatusBadge status={order.status} />
       </div>
 
+      {(isBuyer || isSeller) && (
+        <button
+          onClick={handleMessageCounterpart}
+          disabled={isUpdating}
+          className="flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+        >
+          <MessageCircle size={16} />
+          Mensagem sobre este pedido
+        </button>
+      )}
+
       <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
         {order.items.map((item) => (
           <div key={item.id} className="flex items-center justify-between p-4 text-sm">
@@ -148,7 +174,7 @@ export function OrderDetail() {
 
       {order.payment && (
         <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm">
-          <p className="mb-1 font-semibold text-neutral-900">Pagamento — XKWANZA Protect</p>
+          <p className="mb-1 font-semibold text-neutral-900">Pagamento — AO Market Protect</p>
           <p className="text-neutral-600">
             {PAYMENT_METHOD_LABELS[order.payment.method]} · {PAYMENT_STATUS_LABELS[order.payment.status]}
             {order.payment.custodyHeld && ' · fundos em custódia'}
@@ -190,7 +216,7 @@ export function OrderDetail() {
         ) : order.status === 'READY_FOR_PICKUP' && (isBuyer || isSeller) ? (
           <div className="space-y-2">
             <p className="text-neutral-500">
-              Peça a um transportador XKWANZA para recolher e entregar esta encomenda, com rastreio e código de
+              Peça a um transportador AO Market para recolher e entregar esta encomenda, com rastreio e código de
               confirmação.
             </p>
             <button
@@ -198,11 +224,11 @@ export function OrderDetail() {
               onClick={handleRequestTransport}
               className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium hover:bg-neutral-50 disabled:opacity-60"
             >
-              Solicitar transporte XKWANZA
+              Solicitar transporte AO Market
             </button>
           </div>
         ) : (
-          <p className="text-neutral-500">Sem transporte XKWANZA associado a este pedido.</p>
+          <p className="text-neutral-500">Sem transporte AO Market associado a este pedido.</p>
         )}
       </div>
 

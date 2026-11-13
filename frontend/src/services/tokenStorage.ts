@@ -1,5 +1,5 @@
-const ACCESS_TOKEN_KEY = 'xkwanza.accessToken';
-const REFRESH_TOKEN_KEY = 'xkwanza.refreshToken';
+const ACCESS_TOKEN_KEY = 'ao-market.accessToken';
+const REFRESH_TOKEN_KEY = 'ao-market.refreshToken';
 
 // Nota: em produção, o refresh token deve idealmente viver num cookie httpOnly.
 // Nesta fase o backend expõe-o via corpo da resposta, pelo que é guardado em localStorage.

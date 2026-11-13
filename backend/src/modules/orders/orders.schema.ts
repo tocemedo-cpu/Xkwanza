@@ -7,7 +7,6 @@ import { OrderStatus, PaymentMethod } from '@prisma/client';
 const CHECKOUT_PAYMENT_METHODS = [
   PaymentMethod.BANK_TRANSFER,
   PaymentMethod.PAYMENT_REFERENCE,
-  PaymentMethod.WALLET,
   PaymentMethod.BANK_INTEGRATION,
   PaymentMethod.FINTECH_INTEGRATION,
 ] as const;

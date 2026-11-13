@@ -6,6 +6,7 @@ import { getContact, ROLE_LABELS, User, UserRole } from '../types/user';
 const PAGE_TITLES: Partial<Record<UserRole, { title: string; subtitle: string }>> = {
   PRODUCER: { title: 'Produtores', subtitle: 'Todas as contas de produtores registadas na plataforma.' },
   BUYER: { title: 'Compradores', subtitle: 'Todas as contas de compradores registadas na plataforma.' },
+  MERCHANT: { title: 'Comerciantes', subtitle: 'Todas as contas de comerciantes registadas na plataforma.' },
 };
 
 export function AdminUsers({ role }: { role?: UserRole } = {}) {

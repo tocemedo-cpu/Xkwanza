@@ -177,7 +177,7 @@ export async function updateUserStatus(
   return toPublicUser(updated);
 }
 
-// Pedido de validação formal de perfil (selo XKWANZA Verificado) — o próprio utilizador inicia,
+// Pedido de validação formal de perfil (selo AO Market Verificado) — o próprio utilizador inicia,
 // a administração decide (ver reviewVerification). Distinto do dossiê de formalização fiscal/
 // INSS: este é só sobre a confiança/selo dentro da plataforma.
 export async function requestVerification(userId: string, req: Request) {
@@ -261,7 +261,7 @@ export async function reviewVerification(
     type: NotificationType.STATUS_CHANGE,
     title: input.approve ? 'Perfil verificado' : 'Pedido de verificação rejeitado',
     body: input.approve
-      ? 'O seu perfil foi validado — já tem o selo XKWANZA Verificado.'
+      ? 'O seu perfil foi validado — já tem o selo AO Market Verificado.'
       : `O seu pedido de verificação foi rejeitado. Motivo: ${input.note}`,
   });
 

@@ -5,12 +5,12 @@ function Mark({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden="true">
       <defs>
-        <linearGradient id="xkwanza-mark-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <linearGradient id="ao-market-mark-grad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#14735E" />
           <stop offset="100%" stopColor="#0A3830" />
         </linearGradient>
       </defs>
-      <rect width="40" height="40" rx="11" fill="url(#xkwanza-mark-grad)" />
+      <rect width="40" height="40" rx="11" fill="url(#ao-market-mark-grad)" />
       <g transform="translate(20 20)">
         <rect x="-3" y="-13" width="6" height="26" rx="3" fill="white" transform="rotate(45)" />
         <rect x="-3" y="-13" width="6" height="26" rx="3" fill="white" fillOpacity="0.85" transform="rotate(-45)" />
@@ -38,7 +38,7 @@ export function Logo({
         <span
           className={`text-lg font-extrabold tracking-tight ${onDark ? 'text-white' : 'text-xkwanza-900'}`}
         >
-          XKWANZA
+          AO MARKET
         </span>
       )}
     </span>

@@ -37,7 +37,7 @@ export function Login() {
   }
 
   return (
-    <AuthLayout title="Entrar" subtitle="Aceda à sua conta XKWANZA">
+    <AuthLayout title="Entrar" subtitle="Aceda à sua conta AO Market">
       <form onSubmit={handleSubmit} className="space-y-4">
         <IdentifierMethodToggle value={method} onChange={handleMethodChange} />
 

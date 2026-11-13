@@ -1,7 +1,9 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { MessageCircle } from 'lucide-react';
 import { TransportStatusBadge } from '../components/TransportStatusBadge';
 import { useAuth } from '../hooks/useAuth';
+import { startConversation } from '../services/messagesService';
 import {
   acceptAssignment,
   acceptProposal,
@@ -23,6 +25,7 @@ const inputClass =
 export function TransportOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [job, setJob] = useState<TransportOrder | null>(null);
   const [proposals, setProposals] = useState<TransportProposal[]>([]);
@@ -76,6 +79,17 @@ export function TransportOrderDetail() {
     }
   }
 
+  async function handleMessageBuyer() {
+    if (!job) return;
+    setIsBusy(true);
+    try {
+      const conversation = await startConversation({ otherUserId: job.order.buyerId, contextOrderId: job.orderId });
+      navigate(`/transportador/mensagens/${conversation.id}`);
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
   async function handleSubmitProposal(event: FormEvent) {
     event.preventDefault();
     if (!id) return;
@@ -120,6 +134,17 @@ export function TransportOrderDetail() {
         </div>
         <TransportStatusBadge status={job.status} />
       </div>
+
+      {user.role === 'TRANSPORTER' && job.transporterId === user.id && (
+        <button
+          onClick={handleMessageBuyer}
+          disabled={isBusy}
+          className="flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+        >
+          <MessageCircle size={16} />
+          Mensagem ao comprador
+        </button>
+      )}
 
       <div className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
         <p className="font-semibold text-neutral-900">Entrega em</p>

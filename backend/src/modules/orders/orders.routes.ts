@@ -17,7 +17,14 @@ export const ordersRouter = Router();
 
 ordersRouter.use(authenticate);
 
-ordersRouter.post('/', validate(createOrderSchema), checkoutHandler);
+// Checkout é uma acção de comprador — Comprador compra sempre; Comerciante também compra
+// (de produtores/fornecedores, para repor o próprio stock). Produtor/Transportador não compram.
+ordersRouter.post(
+  '/',
+  requireRole(UserRole.BUYER, UserRole.MERCHANT),
+  validate(createOrderSchema),
+  checkoutHandler,
+);
 ordersRouter.get('/mine', listMyOrdersHandler);
 ordersRouter.get('/received', listReceivedOrdersHandler);
 ordersRouter.get(

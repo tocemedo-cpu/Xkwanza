@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Heart, MessageCircle, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { StarRating } from '../components/StarRating';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
+import { addFavorite, fetchMyFavorites, removeFavorite } from '../services/favoritesService';
+import { startConversation } from '../services/messagesService';
 import { fetchProduct } from '../services/productsService';
 import { fetchProductReviews } from '../services/reviewsService';
 import { Product } from '../types/marketplace';
@@ -22,6 +24,8 @@ export function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [added, setAdded] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isMessaging, setIsMessaging] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -31,7 +35,34 @@ export function ProductDetail() {
     fetchProductReviews(id)
       .then((result) => setReviews(result.items))
       .catch(() => setReviews([]));
-  }, [id]);
+    if (user?.role === 'BUYER') {
+      fetchMyFavorites()
+        .then((favorites) => setIsFavorited(favorites.some((p) => p.id === id)))
+        .catch(() => setIsFavorited(false));
+    }
+  }, [id, user?.role]);
+
+  async function handleToggleFavorite() {
+    if (!id) return;
+    if (isFavorited) {
+      await removeFavorite(id);
+      setIsFavorited(false);
+    } else {
+      await addFavorite(id);
+      setIsFavorited(true);
+    }
+  }
+
+  async function handleMessageSeller() {
+    if (!product) return;
+    setIsMessaging(true);
+    try {
+      const conversation = await startConversation({ otherUserId: product.ownerId, contextProductId: product.id });
+      navigate(`/${prefix}/mensagens/${conversation.id}`);
+    } finally {
+      setIsMessaging(false);
+    }
+  }
 
   if (error) {
     return <p className="text-neutral-500">{error}</p>;
@@ -42,7 +73,8 @@ export function ProductDetail() {
   }
 
   const isOwnProduct = user?.id === product.ownerId;
-  const isBuyer = user?.role === 'BUYER';
+  // Comerciante também compra — de produtores/fornecedores, para repor o próprio stock.
+  const canBuy = user?.role === 'BUYER' || user?.role === 'MERCHANT';
   const prefix = user ? getRolePrefix(user.role) : 'comprador';
 
   function handleAddToCart() {
@@ -133,7 +165,7 @@ export function ProductDetail() {
             >
               Pedir orçamento para este serviço
             </Link>
-          ) : isBuyer ? (
+          ) : canBuy ? (
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-neutral-700">Quantidade</label>
@@ -155,7 +187,7 @@ export function ProductDetail() {
                 Adicionar ao carrinho
               </button>
               {added && (
-                <button onClick={() => navigate('/comprador/carrinho')} className="w-full text-center text-sm text-xkwanza-600 hover:underline">
+                <button onClick={() => navigate(`/${prefix}/carrinho`)} className="w-full text-center text-sm text-xkwanza-600 hover:underline">
                   Adicionado. Ir para o carrinho →
                 </button>
               )}
@@ -167,6 +199,32 @@ export function ProductDetail() {
             >
               Pedir cotação para este produto
             </Link>
+          )}
+
+          {!isOwnProduct && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleMessageSeller}
+                disabled={isMessaging}
+                className="flex items-center gap-2 rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+              >
+                <MessageCircle size={16} />
+                Mensagem
+              </button>
+              {user?.role === 'BUYER' && (
+                <button
+                  onClick={handleToggleFavorite}
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium ${
+                    isFavorited
+                      ? 'border-red-200 bg-red-50 text-red-600'
+                      : 'border-neutral-300 text-neutral-700 hover:bg-neutral-50'
+                  }`}
+                >
+                  <Heart size={16} fill={isFavorited ? 'currentColor' : 'none'} />
+                  {isFavorited ? 'Nos favoritos' : 'Adicionar aos favoritos'}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>

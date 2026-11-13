@@ -1,10 +1,10 @@
-# XKWANZA
+# AO Market
 
 Ecossistema digital de comércio, formalização e protecção social em Angola.
 
 > Do comércio à formalização — a infraestrutura digital para a evolução económica do cidadão angolano.
 
-O XKWANZA liga **actividade económica → comércio → rendimento → histórico económico → formalização → INSS → protecção social**.
+A AO Market liga **actividade económica → comércio → rendimento → histórico económico → formalização → INSS → protecção social**.
 
 Esta é uma plataforma **privada** de comércio e inclusão económica. Não representa nem substitui o INSS, a AGT ou qualquer entidade pública — apenas orienta e prepara o utilizador para a interacção com essas instituições, através de adaptadores (`Adapter + Mock/Sandbox`) claramente identificados como não-oficiais até existir integração institucional autorizada.
 
@@ -37,10 +37,10 @@ Finanças, Formalização, Sistema) — ver `frontend/src/layouts/DashboardLayou
 - [x] **Fase 1 — Fundação**: arquitectura, base de dados, autenticação, perfis, RBAC, segurança
 - [x] **Fase 2 — Marketplace**: categorias, produtos (CRUD, fotos, publicação), pesquisa e filtros, moradas, carrinho, checkout e gestão de pedidos
 - [x] **Fase 3 — Logística**: perfil de transportador, pedidos de transporte, propostas e negociação, atribuição, recolha e entrega confirmadas por código OTP (recolha visível apenas ao vendedor, entrega apenas ao comprador)
-- [x] **Fase 4 — Pagamentos**: XKWANZA Protect — checkout com transferência bancária/referência/carteira, fundos em custódia até confirmação de recepção, libertação para a carteira do(s) vendedor(es), reembolso ao cancelar, contas bancárias, confirmação manual de depósitos pelo suporte (sem gateway bancário real)
+- [x] **Fase 4 — Pagamentos**: AO Market Protect — checkout com transferência bancária/referência/carteira, fundos em custódia até confirmação de recepção, libertação para a carteira do(s) vendedor(es), reembolso ao cancelar, contas bancárias, confirmação manual de depósitos pelo suporte (sem gateway bancário real)
 - [x] **Fase 5 — Histórico económico**: avaliações (produto/vendedor/transportador/comprador) após pedidos concluídos, indicadores de rendimento/vendas/reputação para vendedores e transportadores
 - [x] **Fase 6 — Formalização**: diagnóstico, dossiê com 6 etapas (1-5 auto-reportadas, a etapa final só confirmada pelo suporte após verificação real dos documentos), índice de progresso, gestão de documentos
-- [x] **Fase 7 — INSS**: consentimento explícito e revogável, INSSAdapter em modo SANDBOX apenas (nunca avança sozinho para estados oficiais), NISS sempre auto-declarado pelo utilizador, documentos, simulador de contribuição (taxa sempre indicada por quem simula, nunca fixada pela XKWANZA) claramente marcado "SIMULAÇÃO — NÃO É GUIA DE PAGAMENTO"
+- [x] **Fase 7 — INSS**: consentimento explícito e revogável, INSSAdapter em modo SANDBOX apenas (nunca avança sozinho para estados oficiais), NISS sempre auto-declarado pelo utilizador, documentos, simulador de contribuição (taxa sempre indicada por quem simula, nunca fixada pela AO Market) claramente marcado "SIMULAÇÃO — NÃO É GUIA DE PAGAMENTO"
 - [x] **Fase 8 (parcial) — Administração e suporte**: moderação de produtos, visão geral de pedidos e transportadores, bloqueio/desbloqueio e validação de contas, auditoria (só leitura), tickets de suporte/reclamações com conversa, painel de disputas dedicado, validação formal de perfil (selo Verificado), configurações da plataforma, planeamento manual de rotas do transportador, recuperação de password self-service, notificações por email/push (adapters env-gated) e gateway de pagamento bancário/fintech em modo sandbox — ver secções abaixo. (A parte de integração institucional oficial da Fase 8 continua bloqueada — ver nota.)
 - [ ] Fase 8 (restante) — Integração institucional oficial (bloqueada até existir acordo formal com o INSS/AGT — ver nota abaixo)
 - [ ] Fase 9 — Ecossistema — AGT, bancos, fintechs, seguros (bloqueada pela mesma razão)
@@ -172,7 +172,7 @@ o mesmo acesso a estas ferramentas (não há distinção de permissões entre AD
 | Auditoria | `/admin/auditoria` | Consulta só de leitura ao `AuditLog` (`GET /api/audit-logs`, filtros por entidade/acção/utilizador/resultado) — a tabela nunca é actualizada nem apagada pela aplicação. |
 | Suporte | `/admin/reclamacoes` (staff) e `/{prefixo}/suporte` (qualquer utilizador) | Tickets com conversa (`SupportTicket` + `SupportTicketMessage`): qualquer utilizador cria um ticket e responde ao seu; ADMIN/SUPPORT vêem todos, respondem (a primeira resposta atribui-lhes o ticket) e mudam o estado (Aberto → Em curso → Aguarda o utilizador → Resolvido/Fechado). |
 | Disputas | `/admin/disputas` (staff) e `/{prefixo}/disputas` (qualquer utilizador) | Painel dedicado (`Complaint` + `ComplaintMessage`, distinto do Suporte acima), opcionalmente associado a um pedido/produto/utilizador/frete concreto. Mesmo fluxo de conversa e atribuição do Suporte, mas fecho (Resolvida/Rejeitada) exige sempre um motivo (`resolutionNote`). |
-| Verificações | `/admin/verificacoes` | Fila de pedidos de validação formal de perfil (selo XKWANZA Verificado) — qualquer utilizador pede em `Conta` (`POST /api/users/me/request-verification`); ADMIN/SUPPORT aprovam (activa `isVerifiedBadge`) ou rejeitam com motivo obrigatório (`PATCH /api/users/:id/verification`), notificando o utilizador. Distinto do dossiê de formalização fiscal/INSS. |
+| Verificações | `/admin/verificacoes` | Fila de pedidos de validação formal de perfil (selo AO Market Verificado) — qualquer utilizador pede em `Conta` (`POST /api/users/me/request-verification`); ADMIN/SUPPORT aprovam (activa `isVerifiedBadge`) ou rejeitam com motivo obrigatório (`PATCH /api/users/:id/verification`), notificando o utilizador. Distinto do dossiê de formalização fiscal/INSS. |
 | Configurações | `/admin/configuracoes` | Pares chave/valor geridos pela administração (`PlatformSetting`, `GET`/`PUT`/`DELETE /api/settings/:key`) — infra-estrutura para configuração futura de módulos, sem uso rico ainda além do CRUD em si. |
 | Banners | `/admin/banners` | Gere as imagens/textos do carrossel de destaque da homepage pública (`Banner`, `GET /api/banners/active` pública + `GET`/`POST`/`PATCH`/`DELETE /api/banners` para ADMIN/SUPPORT), incluindo upload de imagem (`POST /api/banners/upload`, reutiliza o Supabase Storage das fotos de produto) ou URL colado directamente, ordenação (`position`) e activar/desactivar sem apagar. Sem nenhum banner activo, a homepage mostra o conteúdo ilustrativo por omissão do `HeroCarousel`. |
 
@@ -214,7 +214,7 @@ conjunto de campos, e os campos do outro tipo ficam a `null`:
 | 6 | Unidade | Área de atendimento |
 | 7 | Stock | Disponibilidade |
 | 8 | Localização (província/município) | Contacto |
-| 9 | Entrega (`SELLER_DELIVERS` / `BUYER_PICKUP` / `XKWANZA_TRANSPORT`) | — |
+| 9 | Entrega (`SELLER_DELIVERS` / `BUYER_PICKUP` / `AO_MARKET_TRANSPORT`) | — |
 | 10 | Publicar (`/stock`, exige pelo menos 1 foto + stock > 0) | Publicar (idem, exige área/disponibilidade/contacto preenchidos) |
 
 Quem publica: Produtor e Comerciante, para ambos os tipos (o formulário mostra um selector
@@ -229,7 +229,7 @@ carrinho", e o backend rejeita no checkout qualquer item cujo `listingType` não
 - Nunca inventar API, NISS ou dados oficiais do INSS/AGT.
 - Nunca marcar formalização/documentos como validados sem verificação real.
 - Nunca expor credenciais institucionais no frontend.
-- Nunca tratar simulação como pagamento nem vendas XKWANZA como base contributiva automática.
+- Nunca tratar simulação como pagamento nem vendas AO Market como base contributiva automática.
 - Nunca criar entidades ou funcionalidades empresariais (Company, CompanyMember, etc).
 
 ## Desenvolvimento local

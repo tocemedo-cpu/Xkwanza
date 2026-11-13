@@ -18,7 +18,7 @@ export function AdminReports() {
     <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Relatórios</h1>
-        <p className="text-neutral-500">Indicadores agregados de toda a plataforma XKWANZA.</p>
+        <p className="text-neutral-500">Indicadores agregados de toda a plataforma AO Market.</p>
       </div>
 
       {isLoading && <p className="text-neutral-500">A carregar...</p>}

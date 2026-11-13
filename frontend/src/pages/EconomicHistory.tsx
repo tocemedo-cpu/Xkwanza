@@ -44,7 +44,7 @@ export function EconomicHistory() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Meu histórico económico</h1>
-          <p className="text-neutral-500">Rendimento e reputação como transportador XKWANZA.</p>
+          <p className="text-neutral-500">Rendimento e reputação como transportador AO Market.</p>
         </div>
 
         {transporterStats && (
@@ -95,7 +95,7 @@ export function EconomicHistory() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Meu histórico económico</h1>
-        <p className="text-neutral-500">Vendas, rendimento e reputação no marketplace XKWANZA.</p>
+        <p className="text-neutral-500">Vendas, rendimento e reputação no marketplace AO Market.</p>
       </div>
 
       {sellerStats && (

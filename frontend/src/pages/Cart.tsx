@@ -1,9 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
+import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
 
 export function Cart() {
+  const { user } = useAuth();
+  const prefix = user ? getRolePrefix(user.role) : 'comprador';
   const { items, totalAmount, updateQuantity, removeItem } = useCart();
   const navigate = useNavigate();
 
@@ -13,7 +17,7 @@ export function Cart() {
         <h1 className="text-2xl font-bold text-neutral-900">Carrinho</h1>
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
           O seu carrinho está vazio.{' '}
-          <Link to="/comprador/marketplace" className="font-medium text-xkwanza-600 hover:underline">
+          <Link to={`/${prefix}/marketplace`} className="font-medium text-xkwanza-600 hover:underline">
             Explorar produtos
           </Link>
         </p>
@@ -63,7 +67,7 @@ export function Cart() {
       </div>
 
       <button
-        onClick={() => navigate('/comprador/checkout')}
+        onClick={() => navigate(`/${prefix}/checkout`)}
         className="w-full rounded-md bg-xkwanza-600 px-4 py-3 font-medium text-white hover:bg-xkwanza-700"
       >
         Finalizar compra
