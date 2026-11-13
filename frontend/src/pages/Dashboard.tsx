@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import { ShieldCheck, TrendingUp, FileCheck2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { getRolePrefix, ROLE_LABELS, TrustLevel } from '../types/user';
+import { ProducerDashboard } from './ProducerDashboard';
+import { BuyerDashboard } from './BuyerDashboard';
 
 const SELLER_ROLES = ['PRODUCER', 'MERCHANT'];
 const TRANSPORTER_ROLE = 'TRANSPORTER';
@@ -17,6 +19,10 @@ const TRUST_LEVEL_LABELS: Record<TrustLevel, string> = {
 export function Dashboard() {
   const { user } = useAuth();
   if (!user) return null;
+
+  if (user.role === 'PRODUCER') return <ProducerDashboard />;
+  if (user.role === 'BUYER') return <BuyerDashboard />;
+
   const p = getRolePrefix(user.role);
 
   return (
@@ -59,11 +65,6 @@ export function Dashboard() {
                 <Link to={`/${p}/marketplace`} className="hover:underline">
                   Marketplace
                 </Link>
-                {user.role === 'BUYER' && (
-                  <Link to={`/${p}/pedidos`} className="hover:underline">
-                    Meus pedidos
-                  </Link>
-                )}
                 {SELLER_ROLES.includes(user.role) && (
                   <>
                     <Link to={`/${p}/stock`} className="hover:underline">

@@ -1,11 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { useAuth } from '../hooks/useAuth';
 import { fetchMyOrders } from '../services/ordersService';
-import { Order } from '../types/marketplace';
+import { Order, OrderStatus } from '../types/marketplace';
 import { getRolePrefix } from '../types/user';
 import { formatKwanza } from '../utils/angola';
+
+const OPEN_STATUSES: OrderStatus[] = [
+  'CREATED',
+  'CONFIRMED',
+  'PREPARING',
+  'READY_FOR_PICKUP',
+  'PICKED_UP',
+  'IN_TRANSIT',
+  'DELIVERED',
+];
+const HISTORY_STATUSES: OrderStatus[] = ['COMPLETED', 'CANCELLED'];
 
 export function MyOrders() {
   const { user } = useAuth();
@@ -13,12 +24,20 @@ export function MyOrders() {
   const isMerchant = user?.role === 'MERCHANT';
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') ?? 'todos';
 
   useEffect(() => {
-    fetchMyOrders()
+    fetchMyOrders(1, 100)
       .then((result) => setOrders(result.items))
       .finally(() => setIsLoading(false));
   }, []);
+
+  const visibleOrders = useMemo(() => {
+    if (tab === 'aberto') return orders.filter((o) => OPEN_STATUSES.includes(o.status));
+    if (tab === 'historico') return orders.filter((o) => HISTORY_STATUSES.includes(o.status));
+    return orders;
+  }, [orders, tab]);
 
   return (
     <div className="space-y-6">
@@ -31,20 +50,46 @@ export function MyOrders() {
         </p>
       </div>
 
+      <div className="flex items-center gap-2">
+        {[
+          { value: 'todos', label: 'Todos' },
+          { value: 'aberto', label: 'Em aberto' },
+          { value: 'historico', label: 'Histórico' },
+        ].map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setSearchParams(opt.value === 'todos' ? {} : { tab: opt.value })}
+            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+              tab === opt.value
+                ? 'border-xkwanza-950 bg-xkwanza-950 text-white'
+                : 'border-neutral-200 text-neutral-700 hover:border-xkwanza-600 hover:text-xkwanza-700'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       {isLoading && <p className="text-neutral-500">A carregar...</p>}
 
-      {!isLoading && orders.length === 0 && (
+      {!isLoading && visibleOrders.length === 0 && (
         <p className="rounded-xl border border-dashed border-neutral-300 p-8 text-center text-neutral-500">
-          Ainda não fez nenhum pedido.{' '}
-          <Link to={`/${prefix}/marketplace`} className="font-medium text-xkwanza-600 hover:underline">
-            Explorar produtos
-          </Link>
+          {orders.length === 0 ? (
+            <>
+              Ainda não fez nenhum pedido.{' '}
+              <Link to={`/${prefix}/marketplace`} className="font-medium text-xkwanza-600 hover:underline">
+                Explorar produtos
+              </Link>
+            </>
+          ) : (
+            'Nenhum pedido nesta vista.'
+          )}
         </p>
       )}
 
-      {!isLoading && orders.length > 0 && (
+      {!isLoading && visibleOrders.length > 0 && (
         <div className="divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
-          {orders.map((order) => (
+          {visibleOrders.map((order) => (
             <Link
               key={order.id}
               to={`/${prefix}/pedidos/${order.id}`}

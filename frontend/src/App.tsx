@@ -63,6 +63,7 @@ import { AdminReports } from './pages/AdminReports';
 import { Mensagens } from './pages/Mensagens';
 import { ConversationDetail } from './pages/ConversationDetail';
 import { Favoritos } from './pages/Favoritos';
+import { Payments } from './pages/Payments';
 import { Definicoes } from './pages/Definicoes';
 import { NotFound } from './pages/NotFound';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -94,6 +95,7 @@ export default function App() {
             <Route path="/produtor/stock" element={<Stock />} />
             <Route path="/produtor/pedidos" element={<ReceivedOrders />} />
             <Route path="/produtor/pedidos/:id" element={<OrderDetail />} />
+            <Route path="/produtor/pagamentos" element={<Payments />} />
             <Route path="/produtor/negociacoes" element={<Negociacoes />} />
             <Route path="/produtor/entregas" element={<Entregas />} />
             <Route path="/produtor/disputas" element={<Disputas />} />
@@ -159,6 +161,7 @@ export default function App() {
             <Route path="/comprador/checkout" element={<Checkout />} />
             <Route path="/comprador/pedidos" element={<MyOrders />} />
             <Route path="/comprador/pedidos/:id" element={<OrderDetail />} />
+            <Route path="/comprador/pagamentos" element={<Payments />} />
             <Route path="/comprador/negociacoes" element={<Negociacoes />} />
             <Route path="/comprador/entregas" element={<Entregas />} />
             <Route path="/comprador/disputas" element={<Disputas />} />

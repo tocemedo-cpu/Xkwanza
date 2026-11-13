@@ -1,13 +1,18 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { LogOut, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCart } from '../hooks/useCart';
 import { getRolePrefix, ROLE_LABELS } from '../types/user';
 import { Logo } from '../components/Logo';
+import { NavDropdown, NavDropdownItem } from '../components/NavDropdown';
 
 const TRANSPORTER_ROLE = 'TRANSPORTER';
 const BUYER_ROLE = 'BUYER';
 const STAFF_ROLES = ['ADMIN', 'SUPPORT'];
+
+type NavEntry =
+  | { type: 'link'; to: string; label: string; shortLabel?: string }
+  | { type: 'dropdown'; label: string; items: NavDropdownItem[] };
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
@@ -78,6 +83,90 @@ function buildStaffGroups(p: string) {
   ];
 }
 
+// Navegação horizontal do Produtor — os 10 itens de topo seguem exactamente a estrutura
+// pedida (Visão geral / Minha produção / Meus produtos / Stock / Pedidos recebidos / Vendas /
+// Pagamentos / Transportes / Avaliações / Meu perfil). Nenhuma página existente foi removida:
+// Negociações, Disputas, Documentos, INSS, Contas bancárias, Mensagens, Notificações e Suporte
+// continuam acessíveis, agrupadas por afinidade dentro dos dropdowns dos itens mais próximos.
+function buildProducerNav(p: string): NavEntry[] {
+  return [
+    { type: 'link', to: `/${p}/dashboard`, label: 'Visão geral', shortLabel: 'Painel' },
+    { type: 'link', to: `/${p}/perfil`, label: 'Minha produção', shortLabel: 'Minha Loja' },
+    { type: 'link', to: `/${p}/produtos`, label: 'Meus produtos', shortLabel: 'Produtos' },
+    { type: 'link', to: `/${p}/stock`, label: 'Stock' },
+    {
+      type: 'dropdown',
+      label: 'Pedidos recebidos',
+      items: [
+        { to: `/${p}/pedidos`, label: 'Pedidos recebidos' },
+        { to: `/${p}/negociacoes`, label: 'Negociações' },
+      ],
+    },
+    { type: 'link', to: `/${p}/historico`, label: 'Vendas' },
+    {
+      type: 'dropdown',
+      label: 'Pagamentos',
+      items: [
+        { to: `/${p}/pagamentos`, label: 'Pagamentos' },
+        { to: `/${p}/contas-bancarias`, label: 'Contas bancárias' },
+      ],
+    },
+    { type: 'link', to: `/${p}/entregas`, label: 'Transportes', shortLabel: 'Entregas' },
+    { type: 'link', to: `/${p}/avaliacoes`, label: 'Avaliações' },
+    {
+      type: 'dropdown',
+      label: 'Meu perfil',
+      items: [
+        { to: `/${p}/conta`, label: 'Meu perfil' },
+        { to: `/${p}/documentos`, label: 'Documentos' },
+        { to: `/${p}/inss`, label: 'INSS' },
+        { to: `/${p}/disputas`, label: 'Disputas' },
+        { to: `/${p}/mensagens`, label: 'Mensagens' },
+        { to: `/${p}/notificacoes`, label: 'Notificações' },
+        { to: `/${p}/suporte`, label: 'Suporte' },
+        { to: `/${p}/definicoes`, label: 'Definições' },
+      ],
+    },
+  ];
+}
+
+// Navegação horizontal do Comprador — os 11 itens de topo seguem a estrutura pedida (Visão
+// geral / Explorar produtos / Favoritos / Carrinho / Meus pedidos / Pagamentos / Entregas /
+// Histórico / Reclamações / Avaliações / Meu perfil). "Histórico" reaproveita a mesma página de
+// "Meus pedidos" com um filtro por separador — não há endpoint nem página duplicados.
+function buildBuyerNav(p: string): NavEntry[] {
+  return [
+    { type: 'link', to: `/${p}/dashboard`, label: 'Visão geral', shortLabel: 'Início' },
+    { type: 'link', to: `/${p}/marketplace`, label: 'Explorar produtos', shortLabel: 'Explorar' },
+    { type: 'link', to: `/${p}/favoritos`, label: 'Favoritos' },
+    { type: 'link', to: `/${p}/carrinho`, label: 'Carrinho' },
+    {
+      type: 'dropdown',
+      label: 'Meus pedidos',
+      items: [
+        { to: `/${p}/pedidos?tab=aberto`, label: 'Meus pedidos' },
+        { to: `/${p}/negociacoes`, label: 'Negociações' },
+      ],
+    },
+    { type: 'link', to: `/${p}/pagamentos`, label: 'Pagamentos' },
+    { type: 'link', to: `/${p}/entregas`, label: 'Entregas' },
+    { type: 'link', to: `/${p}/pedidos?tab=historico`, label: 'Histórico' },
+    { type: 'link', to: `/${p}/disputas`, label: 'Reclamações', shortLabel: 'Reclamações' },
+    { type: 'link', to: `/${p}/avaliacoes`, label: 'Avaliações' },
+    {
+      type: 'dropdown',
+      label: 'Meu perfil',
+      items: [
+        { to: `/${p}/conta`, label: 'Meu perfil' },
+        { to: `/${p}/mensagens`, label: 'Mensagens' },
+        { to: `/${p}/notificacoes`, label: 'Notificações' },
+        { to: `/${p}/suporte`, label: 'Suporte' },
+        { to: `/${p}/definicoes`, label: 'Definições' },
+      ],
+    },
+  ];
+}
+
 // Cada persona vê apenas a sua própria navegação — construída aqui um bloco por perfil,
 // exactamente sobre as páginas definidas para essa persona. Negociações/Disputas/Suporte/INSS
 // são funcionalidades pré-existentes e compatíveis (cotações, resolução de conflitos, apoio ao
@@ -86,27 +175,7 @@ function buildStaffGroups(p: string) {
 function buildLinks(p: string, role: string) {
   const links: { to: string; label: string; shortLabel?: string }[] = [];
 
-  if (role === 'PRODUCER') {
-    links.push(
-      { to: `/${p}/dashboard`, label: 'Painel' },
-      { to: `/${p}/conta`, label: 'Meu Perfil' },
-      { to: `/${p}/perfil`, label: 'Minha Loja' },
-      { to: `/${p}/produtos`, label: 'Produtos' },
-      { to: `/${p}/stock`, label: 'Stock' },
-      { to: `/${p}/pedidos`, label: 'Pedidos' },
-      { to: `/${p}/historico`, label: 'Vendas' },
-      { to: `/${p}/entregas`, label: 'Entregas' },
-      { to: `/${p}/negociacoes`, label: 'Negociações' },
-      { to: `/${p}/disputas`, label: 'Disputas' },
-      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
-      { to: `/${p}/mensagens`, label: 'Mensagens' },
-      { to: `/${p}/notificacoes`, label: 'Notificações' },
-      { to: `/${p}/documentos`, label: 'Documentos' },
-      { to: `/${p}/inss`, label: 'INSS' },
-      { to: `/${p}/suporte`, label: 'Suporte' },
-      { to: `/${p}/definicoes`, label: 'Definições' },
-    );
-  } else if (role === 'MERCHANT') {
+  if (role === 'MERCHANT') {
     links.push(
       { to: `/${p}/dashboard`, label: 'Painel' },
       { to: `/${p}/conta`, label: 'Meu Perfil' },
@@ -146,22 +215,6 @@ function buildLinks(p: string, role: string) {
       { to: `/${p}/suporte`, label: 'Suporte' },
       { to: `/${p}/definicoes`, label: 'Definições' },
     );
-  } else if (role === BUYER_ROLE) {
-    links.push(
-      { to: `/${p}/dashboard`, label: 'Início' },
-      { to: `/${p}/marketplace`, label: 'Marketplace' },
-      { to: `/${p}/pedidos`, label: 'Meus Pedidos', shortLabel: 'Pedidos' },
-      { to: `/${p}/favoritos`, label: 'Favoritos' },
-      { to: `/${p}/negociacoes`, label: 'Negociações' },
-      { to: `/${p}/entregas`, label: 'Entregas' },
-      { to: `/${p}/disputas`, label: 'Disputas' },
-      { to: `/${p}/avaliacoes`, label: 'Avaliações' },
-      { to: `/${p}/mensagens`, label: 'Mensagens' },
-      { to: `/${p}/notificacoes`, label: 'Notificações' },
-      { to: `/${p}/suporte`, label: 'Suporte' },
-      { to: `/${p}/conta`, label: 'Perfil' },
-      { to: `/${p}/definicoes`, label: 'Definições' },
-    );
   }
 
   return links;
@@ -170,6 +223,7 @@ function buildLinks(p: string, role: string) {
 export function DashboardLayout() {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
+  const location = useLocation();
 
   if (!user) return null;
 
@@ -179,10 +233,10 @@ export function DashboardLayout() {
   const isStaff = STAFF_ROLES.includes(user.role);
   const canCheckout = isBuyer || isMerchant;
 
-  const links = isStaff ? [] : buildLinks(p, user.role);
+  const staffLinks: { to: string; label: string; shortLabel?: string }[] = [];
 
   if (isStaff) {
-    links.push(
+    staffLinks.push(
       { to: `/${p}/dashboard`, label: 'Painel' },
       { to: `/${p}/utilizadores`, label: 'Utilizadores' },
       { to: `/${p}/produtores`, label: 'Produtores' },
@@ -208,6 +262,18 @@ export function DashboardLayout() {
     );
   }
 
+  const navEntries: NavEntry[] = isStaff
+    ? []
+    : user.role === 'PRODUCER'
+      ? buildProducerNav(p)
+      : user.role === BUYER_ROLE
+        ? buildBuyerNav(p)
+        : buildLinks(p, user.role).map((link) => ({ type: 'link' as const, ...link }));
+
+  const mobileEntries: { to: string; label: string; shortLabel?: string }[] = navEntries.flatMap((entry) =>
+    entry.type === 'link' ? [{ to: entry.to, label: entry.label, shortLabel: entry.shortLabel }] : entry.items,
+  );
+
   const topBar = (
     <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 lg:px-6">
       <NavLink to={`/${p}/dashboard`}>
@@ -215,11 +281,15 @@ export function DashboardLayout() {
       </NavLink>
       {!isStaff && (
         <nav className="hidden min-w-0 flex-1 flex-wrap items-center gap-1 px-4 md:flex">
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} className={navLinkClass} end>
-              {link.label}
-            </NavLink>
-          ))}
+          {navEntries.map((entry) =>
+            entry.type === 'dropdown' ? (
+              <NavDropdown key={entry.label} label={entry.label} items={entry.items} />
+            ) : (
+              <NavLink key={entry.to} to={entry.to} className={navLinkClass} end>
+                {entry.label}
+              </NavLink>
+            ),
+          )}
         </nav>
       )}
       <div className="flex shrink-0 items-center gap-4 text-sm">
@@ -258,7 +328,7 @@ export function DashboardLayout() {
       <div className="min-h-screen bg-xkwanza-50/30">
         <header className="bg-xkwanza-950">{topBar}</header>
         <nav className="flex items-center gap-1 overflow-x-auto bg-xkwanza-900 px-4 py-2 md:hidden">
-          {links.map((link) => (
+          {staffLinks.map((link) => (
             <NavLink key={link.to} to={link.to} className={navLinkClass} end>
               {link.shortLabel ?? link.label}
             </NavLink>
@@ -294,11 +364,21 @@ export function DashboardLayout() {
       <header className="bg-xkwanza-950">
         {topBar}
         <nav className="flex items-center gap-1 overflow-x-auto bg-xkwanza-900 px-4 py-2 md:hidden">
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} className={navLinkClass} end>
-              {link.shortLabel ?? link.label}
-            </NavLink>
-          ))}
+          {mobileEntries.map((entry) => {
+            const currentFullPath = location.pathname + location.search;
+            const active = entry.to.includes('?') ? currentFullPath === entry.to : location.pathname === entry.to;
+            return (
+              <Link
+                key={entry.to}
+                to={entry.to}
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                  active ? 'bg-gold-400 text-xkwanza-950' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {entry.shortLabel ?? entry.label}
+              </Link>
+            );
+          })}
         </nav>
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">

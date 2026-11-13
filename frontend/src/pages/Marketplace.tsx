@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { ProductCard } from '../components/ProductCard';
 import { fetchCategories } from '../services/categoriesService';
@@ -18,13 +19,15 @@ export function Marketplace() {
   const { user } = useAuth();
   const prefix = user ? getRolePrefix(user.role) : 'comprador';
 
+  const [searchParams] = useSearchParams();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [result, setResult] = useState<PaginatedResult<Product> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [listingType, setListingType] = useState<ListingType | ''>('');
-  const [categoryId, setCategoryId] = useState('');
+  const [categoryId, setCategoryId] = useState(() => searchParams.get('categoryId') ?? '');
   const [province, setProvince] = useState('');
   const [municipality, setMunicipality] = useState('');
   const [page, setPage] = useState(1);
