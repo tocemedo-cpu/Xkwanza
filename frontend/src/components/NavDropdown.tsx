@@ -34,7 +34,7 @@ export function NavDropdown({ label, items }: { label: string; items: NavDropdow
         type="button"
         onClick={() => setIsOpen((v) => !v)}
         className={`flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
-          isActive ? 'bg-gold-400 text-xkwanza-950' : 'text-white/75 hover:bg-white/10 hover:text-white'
+          isActive ? 'bg-gold-400 text-xkwanza-950' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
         }`}
         aria-haspopup="true"
         aria-expanded={isOpen}

@@ -16,7 +16,7 @@ type NavEntry =
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
-    isActive ? 'bg-gold-400 text-xkwanza-950' : 'text-white/75 hover:bg-white/10 hover:text-white'
+    isActive ? 'bg-gold-400 text-xkwanza-950' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
   }`;
 
 // Navegação horizontal do Produtor — os 10 itens de topo seguem exactamente a estrutura
@@ -275,7 +275,7 @@ export function DashboardLayout() {
   const topBar = (
     <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3 lg:px-6">
       <NavLink to={`/${p}/dashboard`}>
-        <Logo size={32} />
+        <Logo size={32} onDark={false} />
       </NavLink>
       <nav className="hidden min-w-0 flex-1 flex-wrap items-center gap-1 px-4 md:flex">
         {navEntries.map((entry) =>
@@ -290,7 +290,7 @@ export function DashboardLayout() {
       </nav>
       <div className="flex shrink-0 items-center gap-4 text-sm">
         {canCheckout && (
-          <NavLink to={`/${p}/carrinho`} className="relative text-white/75 hover:text-white">
+          <NavLink to={`/${p}/carrinho`} className="relative text-neutral-500 hover:text-neutral-900">
             <ShoppingCart size={20} />
             {totalItems > 0 && (
               <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-gold-400 text-[10px] font-bold text-xkwanza-950">
@@ -299,17 +299,17 @@ export function DashboardLayout() {
             )}
           </NavLink>
         )}
-        <span className="hidden text-white/60 sm:inline">{ROLE_LABELS[user.role]}</span>
+        <span className="hidden text-neutral-400 sm:inline">{ROLE_LABELS[user.role]}</span>
         <NavLink
           to={`/${p}/conta`}
-          className="flex min-w-0 items-center gap-1 font-medium text-white hover:text-gold-300"
+          className="flex min-w-0 items-center gap-1 font-medium text-neutral-800 hover:text-xkwanza-700"
         >
-          {user.isVerifiedBadge && <ShieldCheck size={16} className="shrink-0 text-gold-400" />}
+          {user.isVerifiedBadge && <ShieldCheck size={16} className="shrink-0 text-gold-500" />}
           <span className="max-w-[84px] truncate sm:max-w-[160px]">{user.name}</span>
         </NavLink>
         <button
           onClick={() => logout()}
-          className="flex items-center gap-1 rounded-lg px-2 py-1 text-white/75 hover:bg-white/10 hover:text-white"
+          className="flex items-center gap-1 rounded-lg px-2 py-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900"
         >
           <LogOut size={16} />
           <span className="hidden sm:inline">Sair</span>
@@ -319,10 +319,10 @@ export function DashboardLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-xkwanza-50/30">
-      <header className="bg-xkwanza-950">
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-neutral-200 bg-white">
         {topBar}
-        <nav className="flex items-center gap-1 overflow-x-auto bg-xkwanza-900 px-4 py-2 md:hidden">
+        <nav className="flex items-center gap-1 overflow-x-auto border-t border-neutral-100 bg-neutral-50 px-4 py-2 md:hidden">
           {mobileEntries.map((entry) => {
             const currentFullPath = location.pathname + location.search;
             const active = entry.to.includes('?') ? currentFullPath === entry.to : location.pathname === entry.to;
@@ -331,7 +331,7 @@ export function DashboardLayout() {
                 key={entry.to}
                 to={entry.to}
                 className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                  active ? 'bg-gold-400 text-xkwanza-950' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  active ? 'bg-gold-400 text-xkwanza-950' : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                 }`}
               >
                 {entry.shortLabel ?? entry.label}

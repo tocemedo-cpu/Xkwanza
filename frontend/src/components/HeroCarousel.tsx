@@ -87,15 +87,17 @@ export function HeroCarousel() {
   const Icon = slide.icon;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-xkwanza-950 via-xkwanza-900 to-xkwanza-800 py-7 text-white sm:py-9">
+    <section className="relative overflow-hidden border-b border-neutral-200 bg-neutral-50 py-7 sm:py-9">
       <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:gap-8 lg:px-8">
         <div>
-          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-gold-300 sm:text-sm">
+          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-gold-600 sm:text-sm">
             <span className="inline-block h-3 w-1 rounded-full bg-gold-400" />
             {slide.eyebrow}
           </div>
-          <h1 className="text-xl font-extrabold leading-tight tracking-tight sm:text-2xl lg:text-3xl">{slide.title}</h1>
-          <p className="mt-2 max-w-lg text-sm text-white/80 sm:text-base">{slide.subtitle}</p>
+          <h1 className="text-xl font-extrabold leading-tight tracking-tight text-xkwanza-950 sm:text-2xl lg:text-3xl">
+            {slide.title}
+          </h1>
+          <p className="mt-2 max-w-lg text-sm text-neutral-600 sm:text-base">{slide.subtitle}</p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link
               to={slide.ctaTo}
@@ -106,7 +108,7 @@ export function HeroCarousel() {
             </Link>
             <a
               href="#marketplace"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-lg border border-neutral-300 px-5 py-2.5 text-sm font-semibold text-neutral-700 transition hover:bg-white"
             >
               Explorar produtos
             </a>
@@ -117,18 +119,18 @@ export function HeroCarousel() {
                 key={`${s.title}-${i}`}
                 aria-label={`Destaque ${i + 1}`}
                 onClick={() => setActive(i)}
-                className={`h-1.5 rounded-full transition-all ${i === active ? 'w-8 bg-gold-400' : 'w-3 bg-white/30 hover:bg-white/50'}`}
+                className={`h-1.5 rounded-full transition-all ${i === active ? 'w-8 bg-gold-400' : 'w-3 bg-neutral-300 hover:bg-neutral-400'}`}
               />
             ))}
           </div>
         </div>
 
         {(slide.imageUrl || Icon) && (
-          <div className="relative hidden h-32 w-48 items-center justify-center overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 lg:flex">
+          <div className="relative hidden h-32 w-48 items-center justify-center overflow-hidden rounded-2xl bg-white ring-1 ring-neutral-200 lg:flex">
             {slide.imageUrl ? (
               <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
             ) : Icon ? (
-              <Icon size={48} className="text-gold-300" strokeWidth={1.25} />
+              <Icon size={48} className="text-xkwanza-600" strokeWidth={1.25} />
             ) : null}
           </div>
         )}

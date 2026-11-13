@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { Logo } from '../components/Logo';
 
 export function LegalLayout({
   title,
@@ -12,16 +13,13 @@ export function LegalLayout({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-xkwanza-50/40">
-      <header className="bg-xkwanza-950">
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-gold-300 to-gold-500 text-lg font-black text-xkwanza-950">
-              X
-            </span>
-            <span className="text-lg font-bold tracking-tight text-white">AO MARKET</span>
+          <Link to="/">
+            <Logo size={32} onDark={false} />
           </Link>
-          <Link to="/" className="flex items-center gap-1 text-sm text-white/75 hover:text-white">
+          <Link to="/" className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900">
             <ArrowLeft size={16} />
             Início
           </Link>

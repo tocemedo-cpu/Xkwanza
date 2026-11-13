@@ -4,11 +4,11 @@ import { Logo } from '../components/Logo';
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col bg-xkwanza-50/40">
-      <header className="bg-xkwanza-950">
+    <div className="flex min-h-screen flex-col bg-white">
+      <header className="border-b border-neutral-200 bg-white">
         <div className="mx-auto flex max-w-7xl items-center px-4 py-4 sm:px-6 lg:px-8">
           <Link to="/">
-            <Logo size={32} />
+            <Logo size={32} onDark={false} />
           </Link>
         </div>
       </header>
