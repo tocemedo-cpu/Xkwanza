@@ -35,6 +35,7 @@ export function ProductCard({ product, linkTo }: { product: Product; linkTo: str
         <p className="mt-0.5 text-xs text-neutral-500">
           {isService ? (product.serviceArea ?? 'Área de atendimento não indicada') : `${product.municipality}, ${product.province}`}
         </p>
+        <p className="mt-0.5 line-clamp-1 text-xs text-neutral-400">Vendido por {product.owner.name}</p>
         <div className="mt-2 flex items-center justify-between">
           <p className="font-semibold text-xkwanza-700">
             {product.isEstimatedPrice && <span className="mr-1 text-xs font-normal text-neutral-500">A partir de</span>}

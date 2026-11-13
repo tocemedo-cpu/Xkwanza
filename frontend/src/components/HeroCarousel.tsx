@@ -87,33 +87,31 @@ export function HeroCarousel() {
   const Icon = slide.icon;
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-xkwanza-950 via-xkwanza-900 to-xkwanza-800 pb-28 pt-14 text-white sm:pb-32">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-8 lg:px-8">
+    <section className="relative overflow-hidden bg-gradient-to-br from-xkwanza-950 via-xkwanza-900 to-xkwanza-800 py-7 text-white sm:py-9">
+      <div className="mx-auto grid max-w-7xl items-center gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:gap-8 lg:px-8">
         <div>
-          <div className="mb-5 flex items-center gap-2 text-sm font-medium text-gold-300">
-            <span className="inline-block h-4 w-1 rounded-full bg-gold-400" />
+          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-gold-300 sm:text-sm">
+            <span className="inline-block h-3 w-1 rounded-full bg-gold-400" />
             {slide.eyebrow}
           </div>
-          <h1 className="min-h-[5rem] text-4xl font-extrabold leading-tight tracking-tight sm:min-h-[7rem] sm:text-5xl">
-            {slide.title}
-          </h1>
-          <p className="mt-5 max-w-lg text-white/80">{slide.subtitle}</p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
+          <h1 className="text-xl font-extrabold leading-tight tracking-tight sm:text-2xl lg:text-3xl">{slide.title}</h1>
+          <p className="mt-2 max-w-lg text-sm text-white/80 sm:text-base">{slide.subtitle}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <Link
               to={slide.ctaTo}
-              className="inline-flex items-center gap-2 rounded-lg bg-gold-400 px-6 py-3 font-semibold text-xkwanza-950 transition hover:bg-gold-300"
+              className="inline-flex items-center gap-2 rounded-lg bg-gold-400 px-5 py-2.5 text-sm font-semibold text-xkwanza-950 transition hover:bg-gold-300"
             >
               {slide.ctaLabel}
-              <ArrowRight size={18} />
+              <ArrowRight size={16} />
             </Link>
             <a
               href="#marketplace"
-              className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               Explorar produtos
             </a>
           </div>
-          <div className="mt-8 flex items-center gap-2">
+          <div className="mt-4 flex items-center gap-2">
             {slides.map((s, i) => (
               <button
                 key={`${s.title}-${i}`}
@@ -125,13 +123,15 @@ export function HeroCarousel() {
           </div>
         </div>
 
-        <div className="relative hidden aspect-[4/3] items-center justify-center overflow-hidden rounded-3xl bg-white/5 ring-1 ring-white/10 lg:flex">
-          {slide.imageUrl ? (
-            <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
-          ) : Icon ? (
-            <Icon size={96} className="text-gold-300" strokeWidth={1.25} />
-          ) : null}
-        </div>
+        {(slide.imageUrl || Icon) && (
+          <div className="relative hidden h-32 w-48 items-center justify-center overflow-hidden rounded-2xl bg-white/5 ring-1 ring-white/10 lg:flex">
+            {slide.imageUrl ? (
+              <img src={slide.imageUrl} alt={slide.title} className="h-full w-full object-cover" />
+            ) : Icon ? (
+              <Icon size={48} className="text-gold-300" strokeWidth={1.25} />
+            ) : null}
+          </div>
+        )}
       </div>
     </section>
   );

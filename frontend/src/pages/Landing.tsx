@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -9,9 +9,11 @@ import {
   ShoppingBag,
   ShoppingCart,
   Sprout,
+  Star,
   Store,
   Truck,
   UserPlus,
+  X,
 } from 'lucide-react';
 import { Logo } from '../components/Logo';
 import { HeroCarousel } from '../components/HeroCarousel';
@@ -54,57 +56,89 @@ const AUDIENCES = [
   { icon: Truck, title: 'Transportador', desc: 'Encontre oportunidades de transporte e apresente o seu preço.' },
 ];
 
+type SortOption = 'recent' | 'price_asc' | 'price_desc' | 'rating';
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: 'recent', label: 'Mais recentes' },
+  { value: 'price_asc', label: 'Preço: menor para maior' },
+  { value: 'price_desc', label: 'Preço: maior para menor' },
+  { value: 'rating', label: 'Melhor avaliados' },
+];
+
 export function Landing() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [newProducts, setNewProducts] = useState<Product[]>([]);
+  const [mainProducts, setMainProducts] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [services, setServices] = useState<Product[]>([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
   const [search, setSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<Product[] | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const [appliedSearch, setAppliedSearch] = useState('');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('recent');
 
   useEffect(() => {
     fetchCategories()
       .then((all) => setCategories(all.filter((c) => !c.parentId).slice(0, 8)))
       .catch(() => setCategories([]));
 
-    setIsLoadingProducts(true);
-    Promise.all([
-      fetchProducts({ listingType: 'PRODUCT', page: 1, pageSize: 8 }),
-      fetchProducts({ listingType: 'SERVICE', page: 1, pageSize: 4 }),
-    ])
-      .then(([products, servicesResult]) => {
-        setNewProducts(products.items);
-        setServices(servicesResult.items);
-      })
-      .catch(() => {
-        setNewProducts([]);
-        setServices([]);
-      })
-      .finally(() => setIsLoadingProducts(false));
+    fetchProducts({ listingType: 'PRODUCT', page: 1, pageSize: 20 })
+      .then((result) => setFeaturedProducts(result.items.filter((p) => p.isVerified).slice(0, 4)))
+      .catch(() => setFeaturedProducts([]));
+
+    fetchProducts({ listingType: 'SERVICE', page: 1, pageSize: 4 })
+      .then((result) => setServices(result.items))
+      .catch(() => setServices([]));
   }, []);
 
-  async function handleSearch(event: FormEvent) {
+  useEffect(() => {
+    setIsLoadingProducts(true);
+    fetchProducts({
+      listingType: 'PRODUCT',
+      search: appliedSearch || undefined,
+      categoryId: categoryId ?? undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      page: 1,
+      pageSize: 12,
+    })
+      .then((result) => setMainProducts(result.items))
+      .catch(() => setMainProducts([]))
+      .finally(() => setIsLoadingProducts(false));
+  }, [appliedSearch, categoryId, minPrice, maxPrice]);
+
+  function handleSearch(event: FormEvent) {
     event.preventDefault();
-    const term = search.trim();
-    if (!term) {
-      setSearchResults(null);
-      return;
-    }
-    setIsSearching(true);
-    try {
-      const result = await fetchProducts({ search: term, page: 1, pageSize: 12 });
-      setSearchResults(result.items);
-      document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth' });
-    } catch {
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
+    setAppliedSearch(search.trim());
+    document.getElementById('marketplace')?.scrollIntoView({ behavior: 'smooth' });
   }
 
-  const productsToShow = searchResults ?? newProducts;
+  function clearFilters() {
+    setSearch('');
+    setAppliedSearch('');
+    setCategoryId(null);
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('recent');
+  }
+
+  const hasActiveFilters = Boolean(appliedSearch || categoryId || minPrice || maxPrice);
+
+  const productsToShow = useMemo(() => {
+    const items = [...mainProducts];
+    switch (sortBy) {
+      case 'price_asc':
+        return items.sort((a, b) => Number(a.price) - Number(b.price));
+      case 'price_desc':
+        return items.sort((a, b) => Number(b.price) - Number(a.price));
+      case 'rating':
+        return items.sort((a, b) => Number(b.averageRating) - Number(a.averageRating));
+      default:
+        return items;
+    }
+  }, [mainProducts, sortBy]);
 
   return (
     <div id="inicio" className="min-h-screen bg-white">
@@ -153,10 +187,9 @@ export function Landing() {
             </div>
             <button
               type="submit"
-              disabled={isSearching}
-              className="shrink-0 rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-xkwanza-950 transition hover:bg-gold-300 disabled:opacity-60"
+              className="shrink-0 rounded-lg bg-gold-400 px-4 py-2 text-sm font-semibold text-xkwanza-950 transition hover:bg-gold-300"
             >
-              {isSearching ? '...' : 'Pesquisar'}
+              Pesquisar
             </button>
           </form>
         </div>
@@ -164,62 +197,114 @@ export function Landing() {
 
       <HeroCarousel />
 
-      <div className="relative z-10 mx-auto -mt-16 max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-6 rounded-2xl bg-white p-6 shadow-xl shadow-xkwanza-950/10 sm:p-8 lg:grid-cols-4">
-          {FEATURE_STRIP.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-xkwanza-950 text-gold-300">
-                <Icon size={20} />
-              </span>
-              <span className="text-sm font-medium text-xkwanza-950">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {categories.length > 0 && (
-        <section id="categorias" className="mx-auto max-w-7xl px-4 pt-16 sm:px-6 lg:px-8">
+        <section id="categorias" className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
           <h2 className="text-lg font-bold text-xkwanza-950">Categorias</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => setCategoryId(null)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                categoryId === null
+                  ? 'border-xkwanza-950 bg-xkwanza-950 text-white'
+                  : 'border-neutral-200 text-neutral-700 hover:border-xkwanza-600 hover:text-xkwanza-700'
+              }`}
+            >
+              Todas
+            </button>
             {categories.map((c) => (
-              <Link
+              <button
                 key={c.id}
-                to="/entrar"
-                className="rounded-full border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition hover:border-xkwanza-600 hover:text-xkwanza-700"
+                onClick={() => setCategoryId(c.id)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  categoryId === c.id
+                    ? 'border-xkwanza-950 bg-xkwanza-950 text-white'
+                    : 'border-neutral-200 text-neutral-700 hover:border-xkwanza-600 hover:text-xkwanza-700'
+                }`}
               >
                 {c.name}
-              </Link>
+              </button>
             ))}
           </div>
         </section>
       )}
 
-      <section id="marketplace" className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-6 flex items-center justify-between">
+      <div className="mx-auto mt-4 max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 gap-3 rounded-2xl bg-white p-4 shadow-xl shadow-xkwanza-950/10 sm:gap-6 sm:p-8 lg:grid-cols-4">
+          {FEATURE_STRIP.map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-2 sm:gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-xkwanza-950 text-gold-300 sm:h-11 sm:w-11">
+                <Icon size={16} className="sm:hidden" />
+                <Icon size={20} className="hidden sm:block" />
+              </span>
+              <span className="text-xs font-medium leading-tight text-xkwanza-950 sm:text-sm">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <section id="marketplace" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-2xl font-extrabold text-xkwanza-950">
-              {searchResults ? `Resultados para "${search}"` : 'Novidades no Marketplace'}
+              {appliedSearch ? `Resultados para "${appliedSearch}"` : 'Produtos recentes'}
             </h2>
             <p className="mt-1 text-neutral-600">Produtos reais publicados por produtores e comerciantes.</p>
           </div>
-          {searchResults && (
+          {hasActiveFilters && (
             <button
-              onClick={() => {
-                setSearchResults(null);
-                setSearch('');
-              }}
-              className="shrink-0 text-sm font-medium text-xkwanza-700 hover:underline"
+              onClick={clearFilters}
+              className="flex shrink-0 items-center gap-1 text-sm font-medium text-xkwanza-700 hover:underline"
             >
-              Limpar pesquisa
+              <X size={14} />
+              Limpar filtros
             </button>
           )}
+        </div>
+
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+          <label className="flex items-center gap-2 text-sm text-neutral-600">
+            Preço mín.
+            <input
+              type="number"
+              min="0"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              placeholder="Kz"
+              className="w-24 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-xkwanza-600"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm text-neutral-600">
+            Preço máx.
+            <input
+              type="number"
+              min="0"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              placeholder="Kz"
+              className="w-24 rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-xkwanza-600"
+            />
+          </label>
+          <label className="ml-auto flex items-center gap-2 text-sm text-neutral-600">
+            Ordenar por
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm outline-none focus:border-xkwanza-600"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {isLoadingProducts && <p className="text-neutral-500">A carregar...</p>}
 
         {!isLoadingProducts && productsToShow.length === 0 && (
           <p className="rounded-xl border border-dashed border-neutral-300 p-10 text-center text-neutral-500">
-            {searchResults ? 'Nenhum resultado encontrado.' : 'Ainda não há produtos publicados.'}
+            {hasActiveFilters ? 'Nenhum resultado encontrado.' : 'Ainda não há produtos publicados.'}
           </p>
         )}
 
@@ -241,6 +326,23 @@ export function Landing() {
           </Link>
         </div>
       </section>
+
+      {featuredProducts.length > 0 && (
+        <section id="destaques" className="bg-xkwanza-50/70 py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2">
+              <Star size={22} className="text-gold-500" />
+              <h2 className="text-2xl font-extrabold text-xkwanza-950">Produtos em destaque</h2>
+            </div>
+            <p className="mt-1 text-neutral-600">Produtos verificados por vendedores de confiança na AO Market.</p>
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {featuredProducts.map((p) => (
+                <ProductCard key={p.id} product={p} linkTo="/entrar" />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {services.length > 0 && (
         <section id="servicos" className="bg-xkwanza-50/70 py-16">
