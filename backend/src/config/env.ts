@@ -10,11 +10,20 @@ function required(name: string): string {
   return value;
 }
 
+// CORS_ORIGIN aceita uma ou várias origens separadas por vírgula — cada uma aparada e sem
+// barra final, já que "https://app.onrender.com/" (barra a mais) ou um espaço colado por
+// engano nunca dá match exacto com o cabeçalho Origin do browser, e o pedido fica bloqueado
+// sem nenhum aviso explícito (só "No 'Access-Control-Allow-Origin' header" na consola).
+const corsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
+  .filter(Boolean);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
   port: Number(process.env.PORT ?? 4000),
-  corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:5173',
+  corsOrigins,
   adminTaskSecret: process.env.ADMIN_TASK_SECRET ?? '',
 
   jwt: {

@@ -46,7 +46,14 @@ export function createApp() {
   app.use(helmet());
   app.use(
     cors({
-      origin: env.corsOrigin,
+      origin(origin, callback) {
+        // Sem cabeçalho Origin (ex: pedidos servidor-a-servidor, curl, o webhook do gateway de
+        // pagamento) — não é um pedido de browser sujeito a CORS, deixa passar.
+        if (!origin) return callback(null, true);
+        const normalized = origin.replace(/\/+$/, '');
+        if (env.corsOrigins.includes(normalized)) return callback(null, true);
+        callback(new Error(`Origem não permitida por CORS: ${origin}`));
+      },
       credentials: true,
     }),
   );
